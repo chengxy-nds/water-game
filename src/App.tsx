@@ -14,7 +14,7 @@ import { generateSolvableLevel } from './generator/levelGenerator';
 import { soundManager } from './utils/audio';
 
 import { GameHeader } from './components/GameHeader';
-import { GiftBagsBar } from './components/GiftBagsBar';
+import { ShoppingBags } from './components/ShoppingBags';
 import { GameBoard } from './components/GameBoard';
 import { ControlBar } from './components/ControlBar';
 import { WinModal } from './components/WinModal';
@@ -47,19 +47,19 @@ export default function App() {
   const [isWon, setIsWon] = useState<boolean>(false);
   const [isAutoSolving, setIsAutoSolving] = useState<boolean>(false);
 
-  // Rule 10: Lightweight Invalid Operation Feedback (tube shake & soft acoustic feedback)
+  // Lightweight Invalid Operation Feedback
   const [shakingTubeIndex, setShakingTubeIndex] = useState<number | null>(null);
 
-  // Rule 15 & 16: Deadlock detection state
+  // Deadlock detection state
   const [isDeadlocked, setIsDeadlocked] = useState<boolean>(false);
 
-  // Rule 18: Reset confirmation modal state
+  // Reset confirmation modal state
   const [resetConfirmOpen, setResetConfirmOpen] = useState<boolean>(false);
 
-  // Rule 19 & 20: 3-Tier Hint Modal state
+  // 3-Tier Hint Modal state
   const [activeHintData, setActiveHintData] = useState<HintData | null>(null);
 
-  // Pouring Animation state with multi-phase fluid physics
+  // Pouring Animation state
   const [pourAnimation, setPourAnimation] = useState<{
     sourceIndex: number;
     targetIndex: number;
@@ -118,7 +118,6 @@ export default function App() {
     }
   }, []);
 
-  // Save preferences
   const savePreferences = (sound: boolean, vib: boolean, sym: boolean) => {
     try {
       localStorage.setItem(
@@ -130,7 +129,6 @@ export default function App() {
     }
   };
 
-  // Save stats
   const saveStats = (newStats: PlayerStats) => {
     setStats(newStats);
     try {
@@ -140,7 +138,6 @@ export default function App() {
     }
   };
 
-  // Start a specific level
   const startLevel = useCallback((lvl: Level) => {
     setCurrentLevel(lvl);
     setTubes(lvl.tubes.map((t) => [...t]));
@@ -156,13 +153,6 @@ export default function App() {
     setActiveHintData(null);
   }, []);
 
-  // Total stars collected
-  const starsCollected = Object.values(stats.completedLevels).reduce(
-    (sum, record) => sum + record.stars,
-    0
-  );
-
-  // Handle Pour action with physical 4-stage liquid animation
   const performPour = useCallback(
     (fromIdx: number, toIdx: number) => {
       const check = canPour(tubes[fromIdx], tubes[toIdx], TUBE_CAPACITY);
@@ -198,7 +188,7 @@ export default function App() {
 
       if (vibrateEnabled) soundManager.vibrate(20);
 
-        // Phase 2: Tilt, spout water stream and dynamic liquid exchange
+      // Phase 2: Tilt, spout water stream
       setTimeout(() => {
         setPourAnimation({
           sourceIndex: fromIdx,
@@ -213,7 +203,6 @@ export default function App() {
           riseCount: 0.85,
         });
 
-        // Dynamic physical water stream sound is triggered in GameBoard during 'pouring' phase based on liquid volume
         if (vibrateEnabled) soundManager.vibrate(35);
       }, 220);
 
@@ -221,17 +210,14 @@ export default function App() {
       setTimeout(() => {
         const result = executePour(tubes, fromIdx, toIdx, TUBE_CAPACITY);
         if (result) {
-          // Save history
           setHistory((prev) => [...prev, tubes.map((t) => [...t])]);
           setTubes(result.newTubes);
           setMovesCount((m) => m + 1);
 
-          // Check if target tube is now full & monochromatic
           if (isTubeComplete(result.newTubes[toIdx], TUBE_CAPACITY)) {
             if (soundEnabled) soundManager.playTubeComplete();
           }
 
-          // Check for victory
           if (isPuzzleSolved(result.newTubes, TUBE_CAPACITY)) {
             setIsWon(true);
             setIsAutoSolving(false);
@@ -271,7 +257,6 @@ export default function App() {
 
             saveStats(updatedStats);
           } else {
-            // Check for Deadlock (Section 15 & 16: No valid moves remaining, and not yet won)
             const hasMove = hasAnyLegalMove(result.newTubes, TUBE_CAPACITY);
             if (!hasMove) {
               setTimeout(() => {
@@ -281,7 +266,6 @@ export default function App() {
           }
         }
 
-        // Return tube smoothly
         setPourAnimation((prev) =>
           prev
             ? {
@@ -307,11 +291,6 @@ export default function App() {
     [tubes, soundEnabled, vibrateEnabled, movesCount, currentLevel, stats]
   );
 
-  // Helper to trigger Section 10 lightweight invalid operation feedback:
-  // - Target bottle gently shakes horizontally (anim-invalid-shake)
-  // - Soft non-intrusive sound tone
-  // - Gentle haptic vibration
-  // - Step count does NOT increase
   const triggerInvalidFeedback = useCallback(
     (tubeIdx: number) => {
       setShakingTubeIndex(tubeIdx);
@@ -324,15 +303,12 @@ export default function App() {
     [soundEnabled, vibrateEnabled]
   );
 
-  // Tube click handler
   const handleTubeClick = useCallback(
     (clickedIdx: number) => {
       if (isWon || pourAnimation || isAutoSolving || isDeadlocked) return;
 
       if (selectedIndex === null) {
-        // First click: Select tube
         if (tubes[clickedIdx].length === 0) {
-          // Rule 9.2: Empty bottle cannot be poured from
           triggerInvalidFeedback(clickedIdx);
           return;
         }
@@ -340,11 +316,9 @@ export default function App() {
         if (soundEnabled) soundManager.playSelect();
         if (vibrateEnabled) soundManager.vibrate(15);
       } else if (selectedIndex === clickedIdx) {
-        // Rule 9.1: Pour into self is ignored / deselects
         setSelectedIndex(null);
         if (soundEnabled) soundManager.playSelect();
       } else {
-        // Second click: Attempt pour from selectedIndex to clickedIdx
         const sourceTube = tubes[selectedIndex];
         const targetTube = tubes[clickedIdx];
         const canDoPour = canPour(sourceTube, targetTube, TUBE_CAPACITY).valid;
@@ -352,9 +326,6 @@ export default function App() {
         if (canDoPour) {
           performPour(selectedIndex, clickedIdx);
         } else {
-          // Section 9: Check reasons why it cannot pour:
-          // 9.3: Pour into full bottle
-          // 9.4: Color mismatch
           const isTargetFull = targetTube.length >= TUBE_CAPACITY;
           const isColorMismatch =
             targetTube.length > 0 &&
@@ -362,18 +333,14 @@ export default function App() {
             targetTube[targetTube.length - 1] !== sourceTube[sourceTube.length - 1];
 
           if (isTargetFull || isColorMismatch) {
-            // Trigger lightweight invalid shake on target bottle
             triggerInvalidFeedback(clickedIdx);
-            // If clicked tube has water and is not full, user might have wanted to select it instead
             if (targetTube.length > 0 && !isTargetFull) {
               setSelectedIndex(clickedIdx);
             }
           } else if (targetTube.length === 0) {
-            // Target is empty but pour invalid (e.g. source empty or monochromatic redundant)
             triggerInvalidFeedback(clickedIdx);
             setSelectedIndex(null);
           } else {
-            // General invalid switch
             if (targetTube.length > 0) {
               setSelectedIndex(clickedIdx);
               if (soundEnabled) soundManager.playSelect();
@@ -389,7 +356,7 @@ export default function App() {
     [selectedIndex, tubes, isWon, pourAnimation, isAutoSolving, isDeadlocked, soundEnabled, vibrateEnabled, performPour, triggerInvalidFeedback]
   );
 
-  // Section 17: Undo move (Section 17.2: Undo restores movesCount to previous effective state)
+  // Undo move
   const handleUndo = () => {
     if (history.length === 0 || isAutoSolving) return;
     const previousState = history[history.length - 1];
@@ -403,12 +370,47 @@ export default function App() {
     if (vibrateEnabled) soundManager.vibrate(15);
   };
 
-  // Section 18: Reset level (Opens confirmation modal first)
-  const handleRequestReset = () => {
-    if (isAutoSolving) setIsAutoSolving(false);
-    setResetConfirmOpen(true);
+  // Shuffle Item Logic: Rearrange liquids in unfinished tubes
+  const handleShuffle = () => {
+    if (isWon || isAutoSolving || pourAnimation) return;
+
+    const unfinishedIndices: number[] = [];
+    const poolOfLiquids: string[] = [];
+
+    tubes.forEach((tube, idx) => {
+      if (!isTubeComplete(tube, TUBE_CAPACITY)) {
+        unfinishedIndices.push(idx);
+        poolOfLiquids.push(...tube);
+      }
+    });
+
+    if (poolOfLiquids.length === 0 || unfinishedIndices.length <= 1) return;
+
+    // Fisher-Yates shuffle
+    const shuffled = [...poolOfLiquids];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+
+    const newTubes = tubes.map((t) => [...t]);
+    let ptr = 0;
+    unfinishedIndices.forEach((idx) => {
+      const origCount = tubes[idx].length;
+      newTubes[idx] = shuffled.slice(ptr, ptr + origCount);
+      ptr += origCount;
+    });
+
+    setHistory((prev) => [...prev, tubes.map((t) => [...t])]);
+    setTubes(newTubes);
+    setSelectedIndex(null);
+    setHint(null);
+    setIsDeadlocked(false);
+    if (soundEnabled) soundManager.playSelect();
+    if (vibrateEnabled) soundManager.vibrate(30);
   };
 
+  // Reset level
   const handleConfirmReset = () => {
     setResetConfirmOpen(false);
     setTubes(currentLevel.tubes.map((t) => [...t]));
@@ -434,47 +436,8 @@ export default function App() {
     if (vibrateEnabled) soundManager.vibrate(20);
   };
 
-  // Section 19 & 20: 3-Tier Hint System powered by Solver
-  const handleHint = () => {
-    if (isWon || isAutoSolving) return;
-
-    // Run solver on current board state
-    const result = solveWaterSort(tubes, TUBE_CAPACITY, 35000);
-    if (result.solvable && result.moves.length > 0) {
-      const nextMove = result.moves[0];
-      const fromTube = tubes[nextMove.from];
-      const colorId = fromTube && fromTube.length > 0 ? fromTube[fromTube.length - 1] : nextMove.colorId;
-
-      setActiveHintData({
-        tier: 1, // Start with Tier 1 (Direction hint)
-        colorId,
-        fromTubeIndex: nextMove.from,
-        toTubeIndex: nextMove.to,
-      });
-
-      if (soundEnabled) soundManager.playSelect();
-
-      // Record hints used in stats
-      saveStats({
-        ...stats,
-        hintsUsedTotal: stats.hintsUsedTotal + 1,
-      });
-    } else {
-      if (soundEnabled) soundManager.playError();
-    }
-  };
-
   // Auto-Solve loop
   const autoSolveTimerRef = useRef<NodeJS.Timeout | null>(null);
-
-  const toggleAutoSolve = () => {
-    if (isAutoSolving) {
-      setIsAutoSolving(false);
-      if (autoSolveTimerRef.current) clearInterval(autoSolveTimerRef.current);
-    } else {
-      setIsAutoSolving(true);
-    }
-  };
 
   useEffect(() => {
     if (!isAutoSolving) {
@@ -487,14 +450,12 @@ export default function App() {
       return;
     }
 
-    // Step the solver once every 980ms to allow smooth physical pouring
     autoSolveTimerRef.current = setTimeout(() => {
       const result = solveWaterSort(tubes, TUBE_CAPACITY, 25000);
       if (result.solvable && result.moves.length > 0) {
         const move = result.moves[0];
         performPour(move.from, move.to);
       } else {
-        // Done or unsolvable
         setIsAutoSolving(false);
       }
     }, 980);
@@ -504,14 +465,12 @@ export default function App() {
     };
   }, [isAutoSolving, tubes, isWon, performPour]);
 
-  // Next level navigation
   const handleNextLevel = () => {
     const currentId = typeof currentLevel.id === 'number' ? currentLevel.id : 0;
     const nextCurated = CURATED_LEVELS.find((l) => l.id === currentId + 1);
     if (nextCurated) {
       startLevel(nextCurated);
     } else {
-      // Reached end of curated, generate a challenging level
       const generated = generateSolvableLevel({ numColors: 7, minSteps: 20 });
       if (generated) {
         startLevel(generated.level);
@@ -521,7 +480,6 @@ export default function App() {
     }
   };
 
-  // Generate procedural level
   const handleGenerateProceduralLevel = (diff: Difficulty) => {
     const numColors = diff === 'easy' ? 4 : diff === 'medium' ? 6 : 8;
     const minSteps = diff === 'easy' ? 8 : diff === 'medium' ? 14 : 24;
@@ -532,51 +490,54 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-[#060b18] text-slate-100 flex flex-col justify-between overflow-x-hidden relative selection:bg-cyan-500 selection:text-slate-900">
-      {/* Background ambient lighting & starry sparkles */}
-      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[350px] bg-gradient-to-b from-blue-600/15 via-sky-500/5 to-transparent rounded-full blur-[100px]" />
-        <div className="absolute bottom-10 right-1/4 w-[450px] h-[450px] bg-indigo-600/10 rounded-full blur-[120px]" />
-
-        {/* Scattered 4-point twinkle stars (Reference Match!) */}
-        <div className="absolute top-12 left-10 text-cyan-200/40 text-xs anim-twinkle">✦</div>
-        <div className="absolute top-28 right-16 text-sky-200/30 text-sm anim-twinkle" style={{ animationDelay: '1.2s' }}>✦</div>
-        <div className="absolute top-1/3 left-8 text-blue-200/40 text-[10px] anim-twinkle" style={{ animationDelay: '0.6s' }}>✦</div>
-        <div className="absolute top-1/2 right-12 text-cyan-100/35 text-xs anim-twinkle" style={{ animationDelay: '1.8s' }}>✦</div>
-        <div className="absolute bottom-28 left-20 text-indigo-200/40 text-[10px] anim-twinkle" style={{ animationDelay: '2.1s' }}>✦</div>
-        <div className="absolute bottom-40 right-24 text-sky-200/30 text-xs anim-twinkle" style={{ animationDelay: '0.9s' }}>✦</div>
+    <div className="h-[100dvh] max-h-[100dvh] w-full flex flex-col justify-between overflow-hidden relative select-none bg-[#03081a]">
+      {/* Background Starry Twilight (Reference Screenshot Match) */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
+        <div
+          className="absolute inset-0"
+          style={{
+            background: 'radial-gradient(circle at 50% 30%, #0d2155 0%, #07153b 50%, #020718 100%)',
+          }}
+        />
+        {/* Subtle twinkling stars across cosmic sky */}
+        <span className="absolute top-[8%] left-[10%] text-sky-200/50 text-xs anim-twinkle">✦</span>
+        <span className="absolute top-[5%] right-[12%] text-sky-200/40 text-sm anim-twinkle" style={{ animationDelay: '1.2s' }}>✦</span>
+        <span className="absolute top-[26%] left-[4%] text-sky-300/35 text-xs anim-twinkle" style={{ animationDelay: '0.8s' }}>✦</span>
+        <span className="absolute top-[28%] right-[8%] text-sky-300/30 text-xs anim-twinkle" style={{ animationDelay: '1.6s' }}>✦</span>
+        <span className="absolute bottom-[22%] left-[8%] text-sky-200/40 text-xs anim-twinkle" style={{ animationDelay: '0.5s' }}>✦</span>
       </div>
 
-      {/* Main Game Interface */}
-      <div className="relative z-10 flex flex-col justify-between flex-1 max-w-5xl mx-auto w-full">
-        {/* Header */}
+      {/* Main Game Interface (Header -> Bags -> Central Game Area -> Hero Control Footer) */}
+      <div className="relative z-10 flex flex-col justify-between flex-1 max-w-lg mx-auto w-full h-full overflow-hidden">
+        {/* 1. Top Header: Settings, Level Capsule, Mobile Mini-App Pill */}
         <GameHeader
           currentLevel={currentLevel}
-          movesCount={movesCount}
-          optimalSteps={currentLevel.optimalSteps}
-          starsCollected={starsCollected}
-          totalLevelsCount={CURATED_LEVELS.length}
           onOpenLevelSelector={() => setLevelSelectorOpen(true)}
-          onOpenDaily={() => setDailyOpen(true)}
-          onOpenWorkshop={() => setWorkshopOpen(true)}
           onOpenSettings={() => setSettingsOpen(true)}
+          onOpenMoreMenu={() => setLevelSelectorOpen(true)}
         />
 
-        {/* Top Packaging Gift Bags Goal Bar (Matching Reference Image 1 & 3) */}
-        <GiftBagsBar tubes={tubes} />
+        {/* 2. Top Gift Shopping Bags Rack (4 Bags from Reference Image) */}
+        <div className="pt-0.5 pb-1">
+          <ShoppingBags
+            tubes={tubes}
+            onUnlockBonus={handleAddTube}
+            bonusUnlocked={extraTubesAdded > 0}
+          />
+        </div>
 
-        {/* Central Game Board */}
-        <main className="flex-1 flex flex-col items-center justify-center my-auto py-2">
-          {/* Hint callout banner if active */}
+        {/* 3. Central Game Board (70% Visual Core) */}
+        <main className="flex-1 flex flex-col items-center justify-center py-1 px-1">
+          {/* Clean Hint callout banner if active */}
           {hint && (
-            <div className="mb-2 px-4 py-1.5 rounded-full bg-amber-500/20 border border-amber-400/50 text-amber-300 text-xs font-bold flex items-center gap-2 shadow-lg animate-pulse">
-              <span>💡 Solver 提示：将 #{hint.from + 1} 倒入 #{hint.to + 1}</span>
+            <div className="mb-2 px-3 py-1 rounded-full bg-amber-100 border border-amber-300 text-amber-900 text-xs font-bold flex items-center gap-1.5 shadow-sm animate-pulse">
+              <span>💡 将 #{hint.from + 1} 瓶倒入 #{hint.to + 1} 瓶</span>
             </div>
           )}
 
           {isAutoSolving && (
-            <div className="mb-2 px-4 py-1.5 rounded-full bg-cyan-500/20 border border-cyan-400/50 text-cyan-300 text-xs font-bold flex items-center gap-2 shadow-lg animate-pulse">
-              <span>⚡ 自动演示中... (点击下方“暂停”随时接管)</span>
+            <div className="mb-2 px-3 py-1 rounded-full bg-sky-100 border border-sky-300 text-sky-900 text-xs font-bold flex items-center gap-1.5 shadow-sm animate-pulse">
+              <span>⚡ 自动演示中...</span>
             </div>
           )}
 
@@ -593,29 +554,19 @@ export default function App() {
           />
         </main>
 
-        {/* Footer / Controls */}
-        <footer className="pb-4 pt-2">
+        {/* 4. Bottom Hero Action Buttons: Shuffle & Undo (Exact Image Match) */}
+        <footer className="w-full">
           <ControlBar
             canUndo={history.length > 0}
-            canAddTube={extraTubesAdded < 2 && tubes.length < 14}
-            extraTubesAdded={extraTubesAdded}
-            isAutoSolving={isAutoSolving}
-            isHintActive={!!hint || !!activeHintData}
+            shuffleCount={1}
+            onShuffle={handleShuffle}
             onUndo={handleUndo}
-            onReset={handleRequestReset}
-            onAddTube={handleAddTube}
-            onHint={handleHint}
-            onToggleAutoSolve={toggleAutoSolve}
             disabled={isWon || isDeadlocked}
           />
-
-          <div className="text-center text-[10px] text-slate-500 font-medium">
-            《智力倒水》TapTap 精准版 · 内置 BFS 求解器与最优解推导
-          </div>
         </footer>
       </div>
 
-      {/* Deadlock Support Modal (Section 15 & 16: Non-punitive deadlock) */}
+      {/* Deadlock Support Modal */}
       {isDeadlocked && !isWon && (
         <DeadlockModal
           onUndo={handleUndo}
@@ -625,7 +576,7 @@ export default function App() {
         />
       )}
 
-      {/* Reset Confirmation Modal (Section 18) */}
+      {/* Reset Confirmation Modal */}
       {resetConfirmOpen && (
         <ResetConfirmModal
           onConfirm={handleConfirmReset}
@@ -633,7 +584,7 @@ export default function App() {
         />
       )}
 
-      {/* 3-Tier Hint Modal (Section 19 & 20) */}
+      {/* 3-Tier Hint Modal */}
       {activeHintData && (
         <HintModal
           hint={activeHintData}
@@ -648,7 +599,6 @@ export default function App() {
                 from: activeHintData.fromTubeIndex,
                 to: activeHintData.toTubeIndex,
               });
-              // Auto clear highlight after 6s
               setTimeout(() => {
                 setHint(null);
               }, 6000);
@@ -687,7 +637,7 @@ export default function App() {
         />
       )}
 
-      {/* Level Workshop & Solver Diagnostics */}
+      {/* Level Workshop */}
       {workshopOpen && (
         <LevelWorkshop
           onLoadCustomLevel={startLevel}

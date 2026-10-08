@@ -1,92 +1,65 @@
 import React from 'react';
 import { Level } from '../types/game';
-import { Settings, Sparkles, Map, Calendar } from 'lucide-react';
+import { Settings } from 'lucide-react';
 
 interface GameHeaderProps {
   currentLevel: Level;
-  movesCount: number;
-  optimalSteps?: number;
-  starsCollected: number;
-  totalLevelsCount: number;
   onOpenLevelSelector: () => void;
-  onOpenDaily: () => void;
-  onOpenWorkshop: () => void;
   onOpenSettings: () => void;
+  onOpenMoreMenu?: () => void;
 }
 
 export const GameHeader: React.FC<GameHeaderProps> = ({
   currentLevel,
-  movesCount,
-  optimalSteps,
-  starsCollected,
   onOpenLevelSelector,
-  onOpenDaily,
-  onOpenWorkshop,
   onOpenSettings,
+  onOpenMoreMenu,
 }) => {
   return (
-    <header className="w-full max-w-xl mx-auto px-4 pt-3 pb-1 flex flex-col gap-2 z-20 select-none">
-      {/* Top Navbar matching Image 1 & 3 */}
-      <div className="flex items-center justify-between">
-        {/* Left: 3D Glossy Settings Gear Button */}
-        <button
-          onClick={onOpenSettings}
-          title="设置"
-          className="w-10 h-10 rounded-2xl btn-candy-blue flex items-center justify-center text-white active:scale-90 transition-all shadow-lg"
-        >
-          <Settings className="w-5 h-5 drop-shadow" />
-        </button>
+    <header className="w-full max-w-md mx-auto px-4 pt-3 pb-1 select-none z-20 flex items-center justify-between">
+      {/* 1. Left: Pure Code 3D Crystal Settings Button */}
+      <button
+        onClick={onOpenSettings}
+        title="设置"
+        className="w-11 h-11 rounded-[14px] bg-gradient-to-b from-[#60a5fa] via-[#3b82f6] to-[#1e40af] border-2 border-[#93c5fd] shadow-[0_4px_12px_rgba(29,78,216,0.55),inset_0_1.5px_2px_rgba(255,255,255,0.85),inset_0_-2px_3px_rgba(30,58,138,0.5)] flex items-center justify-center text-white active:scale-95 transition-transform cursor-pointer relative overflow-hidden"
+      >
+        <div className="absolute top-0.5 left-1 right-1 h-3 rounded-t-[10px] bg-gradient-to-b from-white/60 to-transparent pointer-events-none" />
+        <Settings className="w-5 h-5 stroke-[2.4] text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]" />
+      </button>
 
-        {/* Center: Glossy Level Pill (Reference Match: "第 2 关") */}
-        <div className="flex flex-col items-center">
-          <div className="px-5 py-1.5 rounded-full btn-candy-blue border border-sky-300/40 shadow-lg flex items-center gap-1.5 text-white font-black text-sm tracking-wide">
-            <span>
-              {typeof currentLevel.id === 'number'
-                ? `第 ${currentLevel.id} 关`
-                : currentLevel.title}
-            </span>
-          </div>
+      {/* 2. Center: Pure Code 3D Glossy Blue Level Capsule */}
+      <button
+        onClick={onOpenLevelSelector}
+        title="选择关卡"
+        className="px-6 py-1.5 rounded-full bg-gradient-to-b from-[#60a5fa] via-[#3b82f6] to-[#1d4ed8] border-2 border-[#93c5fd] shadow-[0_4px_12px_rgba(29,78,216,0.45),inset_0_1.5px_2px_rgba(255,255,255,0.85),inset_0_-2px_3px_rgba(30,58,138,0.5)] text-white font-black text-sm tracking-wide flex items-center justify-center active:scale-95 transition-transform cursor-pointer relative overflow-hidden"
+      >
+        <div className="absolute top-0.5 left-2 right-2 h-2.5 rounded-full bg-gradient-to-b from-white/60 to-transparent pointer-events-none" />
+        <span className="drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">
+          {typeof currentLevel.id === 'number'
+            ? `第 ${currentLevel.id} 关`
+            : currentLevel.title}
+        </span>
+      </button>
 
-          {/* Subtext: Moves & Optimal */}
-          <div className="text-[11px] font-bold text-sky-200/90 mt-1 flex items-center gap-2">
-            <span>步数: <span className="text-white font-mono">{movesCount}</span></span>
-            {optimalSteps !== undefined && (
-              <span className="text-cyan-300">
-                (最优: <span className="font-mono">{optimalSteps}</span>步)
-              </span>
-            )}
-          </div>
+      {/* 3. Right: Mini-App / Mobile Capsule Pill ("··· | ◎") */}
+      <div
+        className="h-8 px-2.5 rounded-full bg-slate-900/80 border border-white/20 backdrop-blur-md flex items-center gap-2 text-white/90 shadow-sm cursor-pointer active:scale-95 transition-transform"
+        onClick={onOpenMoreMenu || onOpenLevelSelector}
+        title="更多选项"
+      >
+        {/* Three dots */}
+        <div className="flex items-center gap-0.5 px-0.5">
+          <span className="w-1 h-1 rounded-full bg-white"></span>
+          <span className="w-1.5 h-1.5 rounded-full bg-white"></span>
+          <span className="w-1 h-1 rounded-full bg-white"></span>
         </div>
 
-        {/* Right action buttons: Workshop & Map */}
-        <div className="flex items-center gap-1.5">
-          {/* Daily Challenge */}
-          <button
-            onClick={onOpenDaily}
-            title="每日挑战"
-            className="w-9 h-9 rounded-xl btn-candy-amber flex items-center justify-center text-slate-950 active:scale-90 transition-all shadow-md relative"
-          >
-            <Calendar className="w-4 h-4" />
-            <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-red-500 border-2 border-white animate-ping" />
-          </button>
+        {/* Divider */}
+        <span className="w-[1px] h-3.5 bg-white/25"></span>
 
-          {/* Level Workshop / Solver */}
-          <button
-            onClick={onOpenWorkshop}
-            title="关卡工坊 & Solver"
-            className="w-9 h-9 rounded-xl btn-candy-purple flex items-center justify-center text-white active:scale-90 transition-all shadow-md"
-          >
-            <Sparkles className="w-4 h-4" />
-          </button>
-
-          {/* Level Map */}
-          <button
-            onClick={onOpenLevelSelector}
-            title="选关"
-            className="w-9 h-9 rounded-xl btn-candy-blue flex items-center justify-center text-white active:scale-90 transition-all shadow-md"
-          >
-            <Map className="w-4 h-4" />
-          </button>
+        {/* Concentric Circle */}
+        <div className="w-4 h-4 rounded-full border-[1.8px] border-white flex items-center justify-center">
+          <div className="w-1.5 h-1.5 rounded-full bg-white"></div>
         </div>
       </div>
     </header>

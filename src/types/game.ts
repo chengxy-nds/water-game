@@ -2,6 +2,8 @@ export interface ColorDef {
   id: string;
   name: string;
   hex: string;
+  topHex?: string; // lighter shade for 3D top meniscus disk
+  shadeHex?: string; // darker shade for cylindrical 3D edge shading
   gradient: string;
   shadow: string;
   symbol: string; // for colorblind mode

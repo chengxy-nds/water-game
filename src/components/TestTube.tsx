@@ -1,6 +1,6 @@
 import React, { useRef, useImperativeHandle, forwardRef } from 'react';
-import { Tube } from '../types/game';
-import { LiquidLayer } from './LiquidLayer';
+import { Tube, ColorDef } from '../types/game';
+import { getColor, COLOR_PALETTE } from '../utils/colors';
 import { isTubeComplete, TUBE_CAPACITY } from '../solver/waterSortSolver';
 
 export interface TestTubeRef {
@@ -19,9 +19,9 @@ interface TestTubeProps {
   isPouringSource?: boolean;
   isPouringTarget?: boolean;
   isShaking?: boolean;
-  tiltAngle?: number; // degrees
-  translateX?: number; // pixels
-  translateY?: number; // pixels
+  tiltAngle?: number;
+  translateX?: number;
+  translateY?: number;
   showSymbols?: boolean;
   sourceDrainingCount?: number;
   targetRisingCount?: number;
@@ -64,7 +64,7 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
     getMouthPos: () => {
       if (!lipRef.current) return null;
       const rect = lipRef.current.getBoundingClientRect();
-      return { x: rect.left + rect.width * 0.5, y: rect.top + 4 };
+      return { x: rect.left + rect.width * 0.5, y: rect.top + 2 };
     },
     getBoundingBox: () => {
       if (!containerRef.current) return null;
@@ -74,35 +74,81 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
 
   const isComplete = isTubeComplete(tube, capacity);
 
-  // Compute visual tube contents
-  let displayTube = [...tube];
+  // Compute visual layers
+  const displayTube = [...tube];
   let drainingTopPercent = 100;
   if (isPouringSource && sourceDrainingCount > 0 && displayTube.length > 0) {
-    drainingTopPercent = Math.max(10, 100 - sourceDrainingCount * 85);
+    drainingTopPercent = Math.max(0, 100 - sourceDrainingCount * 100);
   }
 
   let risingColor: string | null = null;
   let risingPercent = 0;
   if (isPouringTarget && targetRisingCount > 0 && activePourColor) {
     risingColor = activePourColor;
-    risingPercent = Math.min(100, targetRisingCount * 90);
+    risingPercent = Math.min(100, targetRisingCount * 100);
   }
 
-  // Dynamic transform
   const transformStyle: React.CSSProperties = {
     transform: isPouringSource
       ? `translate(${translateX}px, ${translateY}px) rotate(${tiltAngle}deg)`
       : isSelected
-      ? 'translateY(-24px) scale(1.03)'
-      : 'translateY(0) scale(1)',
+      ? 'translateY(-22px)'
+      : 'translateY(0)',
     transition: isPouringSource
-      ? 'transform 0.38s cubic-bezier(0.25, 1, 0.5, 1)'
-      : 'transform 0.24s cubic-bezier(0.34, 1.56, 0.64, 1)',
-    zIndex: isPouringSource ? 40 : isSelected ? 30 : 10,
-    transformOrigin: isPouringSource
-      ? '50% 6px'
-      : 'center bottom',
+      ? 'transform 0.35s cubic-bezier(0.25, 1, 0.5, 1)'
+      : 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
+    zIndex: isPouringSource ? 45 : isSelected ? 30 : 10,
+    transformOrigin: isPouringSource ? '50% 12px' : 'center bottom',
   };
+
+  interface RenderLayer {
+    colorId: string;
+    heightPercent: number;
+    isTop: boolean;
+    isBottom: boolean;
+  }
+
+  const layers: RenderLayer[] = [];
+  displayTube.forEach((colorId, idx) => {
+    const isTop = idx === displayTube.length - 1 && !risingColor;
+    const isBottom = idx === 0;
+    const heightPct = isTop && isPouringSource ? drainingTopPercent : 100;
+    if (heightPct > 0) {
+      layers.push({
+        colorId,
+        heightPercent: heightPct,
+        isTop,
+        isBottom,
+      });
+    }
+  });
+
+  if (risingColor && risingPercent > 0) {
+    layers.push({
+      colorId: risingColor,
+      heightPercent: risingPercent,
+      isTop: true,
+      isBottom: layers.length === 0,
+    });
+  }
+
+  // Geometry inside SVG viewBox="0 0 60 190"
+  // Inner chamber: X from 8 to 52 (width 44, cx = 30)
+  // Inner bottom at Y = 164
+  // 4 blocks maximum. Block height = 27px. 164 - 4 * 27 = 56px (max height)
+  const CHAMBER_BOTTOM_Y = 164;
+  const BLOCK_HEIGHT = 27;
+  const RX = 22;
+  const RY = 5.6;
+
+  let currentY = CHAMBER_BOTTOM_Y;
+  const calculatedLayers = layers.map((layer) => {
+    const layerH = BLOCK_HEIGHT * (layer.heightPercent / 100);
+    const yBottom = currentY;
+    const yTop = yBottom - layerH;
+    currentY = yTop;
+    return { ...layer, yBottom, yTop };
+  });
 
   return (
     <div
@@ -113,199 +159,308 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
       style={transformStyle}
       onClick={() => !disabled && onClick(index)}
     >
-      {/* Hint Badge Indicator */}
-      {isHintSource && (
-        <div className="absolute -top-11 left-1/2 -translate-x-1/2 z-50 bg-gradient-to-r from-amber-400 to-orange-500 text-slate-950 font-black text-[11px] px-2.5 py-0.5 rounded-full shadow-lg shadow-amber-500/50 flex items-center gap-1 animate-bounce">
-          <span>起倒</span>
-          <span className="text-[9px]">▼</span>
-        </div>
-      )}
-      {isHintTarget && (
-        <div className="absolute -top-11 left-1/2 -translate-x-1/2 z-50 bg-gradient-to-r from-emerald-400 to-teal-500 text-slate-950 font-black text-[11px] px-2.5 py-0.5 rounded-full shadow-lg shadow-emerald-500/50 flex items-center gap-1 animate-bounce">
-          <span>注入</span>
-          <span className="text-[9px]">▼</span>
-        </div>
-      )}
+      {/* Anchor for pour stream tracking */}
+      <div
+        ref={lipRef}
+        className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-3 pointer-events-none z-50"
+      />
 
-      {/* Complete Golden Ribbon */}
+      {/* Completion Star Crown */}
       {isComplete && (
-        <div className="absolute -top-6 left-1/2 -translate-x-1/2 z-30 bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500 text-slate-950 rounded-full w-6 h-6 flex items-center justify-center text-xs font-black shadow-lg shadow-amber-400/50 animate-pulse border-2 border-white">
+        <div className="absolute -top-6 left-1/2 -translate-x-1/2 z-40 bg-amber-400 text-slate-950 rounded-full w-6 h-6 flex items-center justify-center text-xs font-black shadow-lg animate-bounce border border-white">
           ★
         </div>
       )}
 
-      {/* Potion Glass Bottle Container (9-Layer Spec Implementation) */}
-      <div className="relative flex flex-col items-center">
-        {/* Layer: 3D Glass Rim & Lip Collar (Section 10 & 11: Glass Thickness, Inner Hole, Specular Highlight) */}
-        <div
-          ref={lipRef}
-          className="w-9 h-3 rounded-full border border-white/70 z-30 relative flex items-center justify-center"
-          style={{
-            background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.85) 0%, rgba(191, 219, 254, 0.45) 50%, rgba(96, 165, 250, 0.3) 100%)',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.45), inset 0 1px 2px rgba(255,255,255,0.95), inset 0 -1px 2px rgba(30,58,138,0.3)',
-          }}
-        >
-          {/* Inner Mouth Opening (shows glass wall thickness) */}
-          <div
-            className="w-6 h-1.5 rounded-full"
-            style={{
-              background: 'radial-gradient(ellipse at center, rgba(15, 23, 42, 0.75) 0%, rgba(30, 58, 138, 0.5) 70%, rgba(147, 197, 253, 0.3) 100%)',
-              boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.7)',
-            }}
-          />
-          {/* Top Edge Specular White Crescent Highlight on Rim */}
-          <div
-            className="absolute top-0.5 left-2 right-2 h-0.5 rounded-full pointer-events-none"
-            style={{
-              background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.95) 30%, rgba(255,255,255,0.95) 70%, transparent 100%)',
-              filter: 'blur(0.2px)',
-            }}
-          />
-        </div>
-
-        {/* Layer: Bottle Neck (18% proportion, smooth tapering transition) */}
-        <div
-          className="w-6 h-3.5 -mt-0.5 border-x border-white/50 z-20 relative"
-          style={{
-            background: 'linear-gradient(90deg, rgba(255, 255, 255, 0.25) 0%, rgba(147, 197, 253, 0.1) 45%, rgba(255, 255, 255, 0.05) 75%, rgba(255, 255, 255, 0.2) 100%)',
-          }}
-        >
-          {/* Subtle Neck Glass Reflection Bar */}
-          <div className="absolute top-0 bottom-0 left-1 w-0.5 bg-white/60 pointer-events-none" />
-        </div>
-
-        {/* Layer: Bottle Shoulder Curve (Smooth rounded shoulder expanding into body) */}
-        <div
-          className="w-14 sm:w-16 h-4 -mt-0.5 rounded-t-[20px] border-t border-x border-white/60 z-20 relative overflow-hidden"
-          style={{
-            background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.3) 0%, rgba(147, 197, 253, 0.12) 60%, rgba(30, 58, 138, 0.35) 100%)',
-          }}
-        >
-          {/* Shoulder Specular Curved Shine */}
-          <div
-            className="absolute top-0.5 left-2 w-5 h-2 rounded-full bg-white/65 blur-[0.5px] -rotate-12 pointer-events-none"
-          />
-          <div
-            className="absolute top-0.5 right-2 w-3 h-1.5 rounded-full bg-white/35 blur-[0.5px] rotate-12 pointer-events-none"
-          />
-        </div>
-
-        {/* Layer: Bottle Main Cylindrical Body (Sections 6, 7, 8, 9, 12, 13) */}
-        <div
-          className={`relative w-14 sm:w-16 h-36 sm:h-40 rounded-b-[22px] transition-all duration-300 p-1 flex flex-col justify-end overflow-hidden
-            ${
-              isSelected
-                ? 'ring-4 ring-cyan-400 ring-offset-2 ring-offset-[#060b18] shadow-[0_0_28px_rgba(34,211,238,0.85)]'
-                : isHintSource
-                ? 'ring-4 ring-amber-400 ring-offset-2 ring-offset-[#060b18] shadow-[0_0_22px_rgba(251,191,36,0.75)]'
-                : isHintTarget
-                ? 'ring-4 ring-emerald-400 ring-offset-2 ring-offset-[#060b18] shadow-[0_0_22px_rgba(52,211,153,0.75)]'
-                : 'border-b-2 border-x border-white/55 shadow-2xl'
-            }
-          `}
-          style={{
-            background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(30, 58, 138, 0.2) 40%, rgba(15, 23, 42, 0.65) 100%)',
-            backdropFilter: 'blur(10px)',
-            boxShadow: `
-              inset 0 0 12px rgba(147, 197, 253, 0.25),
-              inset 2px 0 6px rgba(255, 255, 255, 0.35),
-              inset -2px 0 6px rgba(0, 0, 0, 0.45),
-              0 14px 28px rgba(0, 0, 0, 0.65)
-            `,
-          }}
-        >
-          {/* Section 8: Left Specular Vertical Highlight (Soft white, bright top/mid, tapering down, blurred) */}
-          <div
-            className="absolute top-1 left-2 bottom-5 w-1.5 rounded-full pointer-events-none z-30"
-            style={{
-              background: 'linear-gradient(180deg, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.55) 35%, rgba(255,255,255,0.2) 75%, transparent 100%)',
-              filter: 'blur(0.4px)',
-            }}
-          />
-
-          {/* Section 9: Right Ambient Rim Reflection (Subtle environmental light reflection 15-25%) */}
-          <div
-            className="absolute top-1 right-2 bottom-5 w-1 rounded-full pointer-events-none z-30"
-            style={{
-              background: 'linear-gradient(180deg, rgba(255,255,255,0.4) 0%, rgba(147,197,253,0.25) 50%, rgba(255,255,255,0.08) 100%)',
-              filter: 'blur(0.5px)',
-            }}
-          />
-
-          {/* Q-version Cute Specular Twinkle Star Accent ✦ */}
-          <div className="absolute top-3 right-3 text-cyan-200 pointer-events-none z-30 anim-twinkle drop-shadow-[0_0_4px_rgba(255,255,255,0.8)]">
-            ✦
-          </div>
-
-          {/* Layer: Liquid Segments Container (Clips neatly inside the inner glass walls) */}
-          <div className="w-full flex flex-col-reverse rounded-b-[20px] overflow-hidden z-10">
-            {displayTube.map((colorId, idx) => {
-              const isTopLayer = idx === displayTube.length - 1 && !risingColor;
-              const isBottomLayer = idx === 0;
-              const heightPct = isTopLayer && isPouringSource ? drainingTopPercent : 100;
-
-              return (
-                <LiquidLayer
-                  key={`${colorId}-${idx}`}
-                  colorId={colorId}
-                  isTop={isTopLayer}
-                  isBottom={isBottomLayer}
-                  showSymbol={showSymbols}
-                  heightPercent={heightPct}
-                  isDisturbed={isPouringTarget && idx === displayTube.length - 1}
-                  tiltAngle={isPouringSource ? tiltAngle : 0}
-                />
-              );
-            })}
-
-            {/* Dynamically Rising Liquid Layer on target during active pour */}
-            {risingColor && (
-              <LiquidLayer
-                colorId={risingColor}
-                isTop={true}
-                isBottom={displayTube.length === 0}
-                showSymbol={showSymbols}
-                heightPercent={risingPercent}
-                isDisturbed={true}
-                tiltAngle={0}
-              />
-            )}
-          </div>
-
-          {/* Section 12: Bottom Thick Glass Lens Base (Pedestal thickness, refraction arc, bottom rim highlight) */}
-          <div
-            className="absolute bottom-0 left-0 right-0 h-4 rounded-b-[20px] pointer-events-none z-20 border-b-2 border-white/60"
-            style={{
-              background: 'linear-gradient(0deg, rgba(255, 255, 255, 0.4) 0%, rgba(147, 197, 253, 0.15) 60%, transparent 100%)',
-              boxShadow: 'inset 0 1px 3px rgba(255,255,255,0.5)',
-            }}
-          >
-            {/* Curved bottom refraction highlight smile */}
-            <div
-              className="absolute bottom-1 left-3 right-3 h-1 rounded-full bg-white/70 blur-[0.4px]"
-            />
-          </div>
-
-          {/* Empty bottle glow indicator */}
-          {displayTube.length === 0 && !risingColor && (
-            <div className="h-full flex items-center justify-center text-blue-200/25 font-black text-[11px] tracking-widest pointer-events-none">
-              EMPTY
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Bottle Number Badge */}
-      <div className="mt-2 text-[11px] font-bold text-slate-400 group-hover:text-cyan-300 transition-colors flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-900/80 border border-slate-800">
-        <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-        <span className="font-mono">#{index + 1}</span>
-      </div>
-
-      {/* Drop shadow beneath bottle */}
+      {/* 100% Pure Code SVG 3D Crystal Bottle */}
       <div
-        className={`w-12 h-2 rounded-full bg-black/60 blur-sm mt-0.5 transition-all duration-300 pointer-events-none ${
-          isSelected || isPouringSource ? 'scale-75 opacity-20' : 'scale-100 opacity-70'
+        className={`relative flex flex-col items-center transition-all duration-200 ${
+          isSelected
+            ? 'filter drop-shadow-[0_0_16px_rgba(56,189,248,0.95)]'
+            : isHintSource
+            ? 'filter drop-shadow-[0_0_12px_rgba(251,191,36,0.85)]'
+            : isHintTarget
+            ? 'filter drop-shadow-[0_0_12px_rgba(52,211,153,0.85)]'
+            : 'filter drop-shadow-[0_8px_16px_rgba(0,0,0,0.55)]'
         }`}
+      >
+        <svg
+          viewBox="0 0 60 190"
+          className="w-[52px] sm:w-[56px] h-[172px] sm:h-[184px] overflow-visible select-none"
+        >
+          <defs>
+            {/* Deep Cosmic Sapphire Background Gradient */}
+            <linearGradient id={`tube-bg-${index}`} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#081844" stopOpacity="0.45" />
+              <stop offset="60%" stopColor="#040e2c" stopOpacity="0.65" />
+              <stop offset="100%" stopColor="#020618" stopOpacity="0.85" />
+            </linearGradient>
+
+            {/* Rolled Collar Lip Gradient */}
+            <linearGradient id={`lip-${index}`} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#93c5fd" stopOpacity="0.9" />
+              <stop offset="45%" stopColor="#3b82f6" stopOpacity="0.75" />
+              <stop offset="100%" stopColor="#1e3a8a" stopOpacity="0.9" />
+            </linearGradient>
+
+            {/* 3D Lateral Cylindrical Volume Shading for each Palette Color */}
+            {Object.values(COLOR_PALETTE).map((c: ColorDef) => (
+              <linearGradient
+                key={`grad-${c.id}-${index}`}
+                id={`grad-${c.id}-${index}`}
+                x1="0%"
+                y1="0%"
+                x2="100%"
+                y2="0%"
+              >
+                <stop offset="0%" stopColor={c.shadeHex || c.hex} stopOpacity="1" />
+                <stop offset="18%" stopColor={c.topHex || c.hex} stopOpacity="1" />
+                <stop offset="55%" stopColor={c.hex} stopOpacity="1" />
+                <stop offset="90%" stopColor={c.shadeHex || c.hex} stopOpacity="1" />
+                <stop offset="100%" stopColor={c.shadeHex || c.hex} stopOpacity="0.95" />
+              </linearGradient>
+            ))}
+          </defs>
+
+          {/* 1. Deep Blue Transparent Glass Back Body */}
+          <path
+            d="
+              M 21 14
+              L 21 20
+              C 21 30, 5 36, 5 50
+              L 5 152
+              C 5 168, 14 176, 30 176
+              C 46 176, 55 168, 55 152
+              L 55 50
+              C 55 36, 39 30, 39 20
+              L 39 14
+              Z
+            "
+            fill={`url(#tube-bg-${index})`}
+          />
+
+          {/* 2. Fluid Layers (Pure Code 3D Cylindrical Gel) */}
+          {calculatedLayers.map((layer, lIdx) => {
+            const cDef = getColor(layer.colorId);
+            const { yBottom, yTop, isBottom, isTop } = layer;
+
+            const bodyPath = isBottom
+              ? `
+                M 8 ${yTop}
+                L 8 150
+                C 8 162, 16 166, 30 166
+                C 44 166, 52 162, 52 150
+                L 52 ${yTop}
+                A ${RX} ${RY} 0 0 1 8 ${yTop}
+                Z
+              `
+              : `
+                M 8 ${yTop}
+                L 8 ${yBottom}
+                A ${RX} ${RY} 0 0 0 52 ${yBottom}
+                L 52 ${yTop}
+                A ${RX} ${RY} 0 0 1 8 ${yTop}
+                Z
+              `;
+
+            return (
+              <g key={`liquid-block-${layer.colorId}-${lIdx}`}>
+                {/* 3D Fluid Cylinder Body */}
+                <path
+                  d={bodyPath}
+                  fill={`url(#grad-${cDef.id}-${index})`}
+                />
+
+                {/* Subtle boundary crease between different stacked colors */}
+                {!isBottom && (
+                  <path
+                    d={`M 8 ${yBottom} A ${RX} ${RY} 0 0 0 52 ${yBottom}`}
+                    stroke="rgba(0, 0, 0, 0.28)"
+                    strokeWidth="1.2"
+                    fill="none"
+                  />
+                )}
+
+                {/* Top Meniscus 3D Oval Cap (Only on uppermost surface) */}
+                {isTop && layer.heightPercent > 4 && (
+                  <g>
+                    {/* Elliptical Cap Puck */}
+                    <ellipse
+                      cx="30"
+                      cy={yTop}
+                      rx={RX}
+                      ry={RY}
+                      fill={cDef.topHex || cDef.hex}
+                      stroke="rgba(255, 255, 255, 0.45)"
+                      strokeWidth="0.8"
+                    />
+
+                    {/* Specular Front Crescent Rim Highlight Arc */}
+                    <path
+                      d={`M 11 ${yTop + 1.8} Q 30 ${yTop + 6} 49 ${yTop + 1.8}`}
+                      stroke="#ffffff"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      fill="none"
+                      opacity="0.88"
+                    />
+                  </g>
+                )}
+
+                {/* Accessibility Symbol */}
+                {showSymbols && (
+                  <text
+                    x="30"
+                    y={(yTop + yBottom) / 2}
+                    fill={cDef.textColor}
+                    fontSize="11"
+                    fontWeight="bold"
+                    textAnchor="middle"
+                    dominantBaseline="central"
+                  >
+                    {cDef.symbol}
+                  </text>
+                )}
+              </g>
+            );
+          })}
+
+          {/* 3. Empty Bottle Video Camera Badge (Pure Code Vector) */}
+          {displayTube.length === 0 && !risingColor && (
+            <g>
+              {/* Frosted Frame */}
+              <rect
+                x="15"
+                y="84"
+                width="30"
+                height="21"
+                rx="6"
+                fill="rgba(5, 18, 48, 0.65)"
+                stroke="rgba(56, 189, 248, 0.75)"
+                strokeWidth="1.4"
+              />
+              {/* White Camera Body */}
+              <rect x="19" y="88.5" width="13" height="12" rx="2.5" fill="#ffffff" />
+              {/* Camera Lens Nozzle */}
+              <polygon points="33,91.5 38,88 38,100.5 33,97" fill="#ffffff" />
+              {/* Cyan Play Arrow */}
+              <polygon points="24,91.5 28.5,94.5 24,97.5" fill="#0284c7" />
+
+              {/* Sparkle Star */}
+              <text x="11" y="146" fill="#bae6fd" fontSize="12" className="anim-twinkle">
+                ✦
+              </text>
+            </g>
+          )}
+
+          {/* 4. Crystal Glass Specular Reflections Layer (OVER the liquid) */}
+
+          {/* Outer Shell Stroke with Soft Luminous Blue Edge */}
+          <path
+            d="
+              M 21 14
+              L 21 20
+              C 21 30, 5 36, 5 50
+              L 5 152
+              C 5 168, 14 176, 30 176
+              C 46 176, 55 168, 55 152
+              L 55 50
+              C 55 36, 39 30, 39 20
+              L 39 14
+              Z
+            "
+            fill="none"
+            stroke="#38bdf8"
+            strokeWidth="1.8"
+            strokeLinejoin="round"
+            opacity="0.85"
+          />
+
+          {/* Left Vertical High-Gloss Specular Stripe (Dual Layer: Soft Cyan Halo + Crisp White Core) */}
+          <path
+            d="M 9.5 50 L 9.5 154"
+            stroke="#38bdf8"
+            strokeWidth="3.6"
+            strokeLinecap="round"
+            opacity="0.35"
+          />
+          <path
+            d="M 9.5 50 L 9.5 154"
+            stroke="#ffffff"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            opacity="0.9"
+          />
+
+          {/* Left Shoulder Curved Specular Arc */}
+          <path
+            d="M 10 48 Q 15 28 22 22"
+            stroke="#ffffff"
+            strokeWidth="2"
+            strokeLinecap="round"
+            fill="none"
+            opacity="0.9"
+          />
+
+          {/* Right Shoulder Faceted Glint Polygon */}
+          <polygon
+            points="46,30 50,32 52,40 48,38"
+            fill="#ffffff"
+            opacity="0.85"
+          />
+
+          {/* Thick Solid Glass Base Refraction Smile Arc */}
+          <path
+            d="M 14 170 Q 30 177 46 170"
+            stroke="#93c5fd"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            fill="none"
+            opacity="0.8"
+          />
+
+          {/* 5. Top Lip Bead Collar Ring */}
+          <ellipse
+            cx="30"
+            cy="12"
+            rx="16.5"
+            ry="4.6"
+            fill={`url(#lip-${index})`}
+            stroke="#38bdf8"
+            strokeWidth="1.5"
+          />
+          {/* Inner Mouth Dark Aperture */}
+          <ellipse
+            cx="30"
+            cy="12"
+            rx="11.5"
+            ry="2.6"
+            fill="#03081a"
+            stroke="rgba(56, 189, 248, 0.5)"
+            strokeWidth="0.8"
+          />
+          {/* Top Lip Crescent Specular Glint */}
+          <path
+            d="M 16 10 Q 30 8 44 10"
+            stroke="#ffffff"
+            strokeWidth="1.4"
+            strokeLinecap="round"
+            fill="none"
+            opacity="0.92"
+          />
+        </svg>
+      </div>
+
+      {/* Ground Shadow */}
+      <div
+        className={`w-11 h-2 rounded-[50%] transition-all duration-200 pointer-events-none -mt-0.5 ${
+          isSelected || isPouringSource
+            ? 'scale-75 opacity-15 translate-y-1'
+            : 'scale-100 opacity-55'
+        }`}
+        style={{
+          background: 'radial-gradient(ellipse at center, rgba(0, 0, 0, 0.85) 0%, transparent 75%)',
+        }}
       />
     </div>
   );

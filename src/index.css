@@ -1,137 +1,25 @@
 @import "tailwindcss";
 
 @layer base {
-  body {
-    font-family: 'Plus Jakarta Sans', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+  html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
     touch-action: manipulation;
+    user-select: none;
+    -webkit-user-select: none;
     -webkit-tap-highlight-color: transparent;
-    background-color: #060b18;
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    background-color: #03081a;
+    background: radial-gradient(circle at 50% 25%, #0e2052 0%, #081436 45%, #03081a 100%);
+    color: #ffffff;
   }
 }
 
-@keyframes twinkle {
-  0%, 100% {
-    opacity: 0.15;
-    transform: scale(0.7) rotate(0deg);
-  }
-  50% {
-    opacity: 1;
-    transform: scale(1.2) rotate(45deg);
-  }
-}
-
-@keyframes foamBoil {
-  0% {
-    transform: translateY(0px) scale(0.9);
-    opacity: 0.8;
-  }
-  50% {
-    transform: translateY(-3px) scale(1.1);
-    opacity: 1;
-  }
-  100% {
-    transform: translateY(0px) scale(0.9);
-    opacity: 0.8;
-  }
-}
-
-@keyframes jetFlow {
-  0% {
-    stroke-dashoffset: 0;
-  }
-  100% {
-    stroke-dashoffset: -40;
-  }
-}
-
-@keyframes pulseGlow {
-  0%, 100% {
-    box-shadow: 0 0 15px rgba(56, 189, 248, 0.4), inset 0 0 10px rgba(56, 189, 248, 0.2);
-  }
-  50% {
-    box-shadow: 0 0 25px rgba(56, 189, 248, 0.8), inset 0 0 16px rgba(56, 189, 248, 0.4);
-  }
-}
-
-@keyframes bubbleFloat {
-  0% {
-    transform: translateY(0) scale(0.8);
-    opacity: 0.2;
-  }
-  50% {
-    transform: translateY(-8px) scale(1.1);
-    opacity: 0.7;
-  }
-  100% {
-    transform: translateY(-16px) scale(0.6);
-    opacity: 0;
-  }
-}
-
-@keyframes waterSurfaceRipple {
-  0% {
-    transform: scale(0.2) rotateX(65deg);
-    opacity: 0.95;
-    border-width: 2.5px;
-  }
-  40% {
-    opacity: 0.8;
-  }
-  100% {
-    transform: scale(2.6) rotateX(65deg);
-    opacity: 0;
-    border-width: 0.5px;
-  }
-}
-
-@keyframes rippleWavePulse {
-  0%, 100% {
-    transform: scale(0.95);
-    opacity: 0.7;
-  }
-  50% {
-    transform: scale(1.15);
-    opacity: 1;
-  }
-}
-
-.anim-surface-ripple {
-  animation: waterSurfaceRipple 1.2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
-}
-
-.anim-surface-ripple-1 {
-  animation: waterSurfaceRipple 1.2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
-}
-
-.anim-surface-ripple-2 {
-  animation: waterSurfaceRipple 1.2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite 0.38s;
-}
-
-.anim-surface-ripple-3 {
-  animation: waterSurfaceRipple 1.2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite 0.76s;
-}
-
-.anim-twinkle {
-  animation: twinkle 2.5s infinite ease-in-out;
-}
-
-.anim-foam {
-  animation: foamBoil 0.45s infinite ease-in-out;
-}
-
-.anim-stream {
-  animation: jetFlow 0.8s linear infinite;
-}
-
-.tube-glow-selected {
-  animation: pulseGlow 1.8s infinite ease-in-out;
-}
-
-.bubble-anim {
-  animation: bubbleFloat 2.2s infinite ease-in-out;
-}
-
-/* Invalid Move Shake & Ripple Animation (Rule 10 Physical Feedback) */
+/* Animations */
 @keyframes invalidShake {
   0%, 100% {
     transform: translateX(0);
@@ -151,90 +39,89 @@
 }
 
 .anim-invalid-shake {
-  animation: invalidShake 0.42s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+  animation: invalidShake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
 }
 
-/* Translucent Jelly Liquid Shimmer Animation */
-@keyframes jellyShimmer {
-  0% {
-    opacity: 0.35;
-    transform: translateY(0) scaleY(1);
+@keyframes foamBoil {
+  0%, 100% {
+    transform: translateY(0px) scale(0.95);
+    opacity: 0.9;
   }
   50% {
-    opacity: 0.65;
-    transform: translateY(-1px) scaleY(1.02);
-  }
-  100% {
-    opacity: 0.35;
-    transform: translateY(0) scaleY(1);
+    transform: translateY(-3px) scale(1.15);
+    opacity: 1;
   }
 }
 
-.jelly-shimmer {
-  animation: jellyShimmer 3s ease-in-out infinite;
+.anim-foam {
+  animation: foamBoil 0.4s infinite ease-in-out;
 }
 
-/* 3D Glass bottle refraction sheen */
-.bottle-glass {
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.16) 0%,
-    rgba(147, 197, 253, 0.05) 30%,
-    rgba(255, 255, 255, 0.02) 60%,
-    rgba(96, 165, 250, 0.1) 100%
-  );
+@keyframes twinkle {
+  0%, 100% {
+    opacity: 0.2;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1.1);
+  }
+}
+
+.anim-twinkle {
+  animation: twinkle 2.5s infinite ease-in-out;
+}
+
+/* Glossy Blue Square Game Button (Matching reference screenshot bottom buttons) */
+.game-btn-blue-square {
+  background: linear-gradient(180deg, #60a5fa 0%, #3b82f6 30%, #1d4ed8 75%, #1e40af 100%);
+  border: 1.5px solid #93c5fd;
   box-shadow:
-    inset -3px 0 8px rgba(147, 197, 253, 0.25),
-    inset 3px 0 8px rgba(0, 0, 0, 0.5),
-    0 16px 32px rgba(0, 0, 0, 0.7);
+    0 6px 14px rgba(29, 78, 216, 0.5),
+    inset 0 2px 3px rgba(255, 255, 255, 0.75),
+    inset 0 -2px 3px rgba(30, 58, 138, 0.4);
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.game-btn-blue-square:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    0 8px 18px rgba(29, 78, 216, 0.6),
+    inset 0 2px 3px rgba(255, 255, 255, 0.9);
+}
+
+.game-btn-blue-square:active {
+  transform: translateY(1px) scale(0.95);
+  box-shadow: 0 2px 6px rgba(29, 78, 216, 0.4);
+}
+
+/* Glossy Blue Pill (Matching reference screenshot "第2关" pill) */
+.game-pill-blue {
+  background: linear-gradient(180deg, #60a5fa 0%, #3b82f6 35%, #1d4ed8 100%);
+  border: 1.5px solid #93c5fd;
+  box-shadow:
+    0 4px 10px rgba(29, 78, 216, 0.4),
+    inset 0 1.5px 2px rgba(255, 255, 255, 0.8),
+    inset 0 -1.5px 2px rgba(30, 58, 138, 0.4);
+}
+
+/* Universal Clean Pill */
+.game-pill-dark {
+  background: rgba(15, 23, 42, 0.65);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(8px);
 }
 
-/* 3D Glossy Candy Button */
-.btn-candy-blue {
-  background: linear-gradient(180deg, #38bdf8 0%, #0284c7 60%, #0369a1 100%);
-  box-shadow:
-    inset 0 2px 3px rgba(255, 255, 255, 0.6),
-    inset 0 -3px 3px rgba(0, 0, 0, 0.4),
-    0 4px 12px rgba(2, 132, 199, 0.5);
-}
-
-.btn-candy-purple {
-  background: linear-gradient(180deg, #c084fc 0%, #9333ea 60%, #7e22ce 100%);
-  box-shadow:
-    inset 0 2px 3px rgba(255, 255, 255, 0.6),
-    inset 0 -3px 3px rgba(0, 0, 0, 0.4),
-    0 4px 12px rgba(147, 51, 234, 0.5);
-}
-
-.btn-candy-amber {
-  background: linear-gradient(180deg, #fbbf24 0%, #d97706 60%, #b45309 100%);
-  box-shadow:
-    inset 0 2px 3px rgba(255, 255, 255, 0.6),
-    inset 0 -3px 3px rgba(0, 0, 0, 0.4),
-    0 4px 12px rgba(217, 119, 6, 0.5);
-}
-
-.btn-candy-slate {
-  background: linear-gradient(180deg, #cbd5e1 0%, #94a3b8 60%, #64748b 100%);
-  box-shadow:
-    inset 0 2px 3px rgba(255, 255, 255, 0.7),
-    inset 0 -3px 3px rgba(0, 0, 0, 0.3),
-    0 4px 10px rgba(0, 0, 0, 0.4);
-}
-
-/* Scrollbar styling */
+/* Scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 ::-webkit-scrollbar-track {
-  background: rgba(10, 15, 30, 0.6);
+  background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(59, 130, 246, 0.5);
-  border-radius: 3px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(59, 130, 246, 0.8);
+  background: rgba(56, 189, 248, 0.3);
+  border-radius: 4px;
 }
