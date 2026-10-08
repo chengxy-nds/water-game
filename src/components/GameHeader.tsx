@@ -36,7 +36,7 @@ export const GameHeader: React.FC<GameHeaderProps> = ({
         <div className="absolute top-0.5 left-2 right-2 h-2.5 rounded-full bg-gradient-to-b from-white/60 to-transparent pointer-events-none" />
         <span className="drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">
           {typeof currentLevel.id === 'number'
-            ? `第 ${currentLevel.id} 关`
+            ? `第${currentLevel.id}关`
             : currentLevel.title}
         </span>
       </button>

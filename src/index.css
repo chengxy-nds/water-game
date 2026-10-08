@@ -72,6 +72,87 @@
   animation: twinkle 2.5s infinite ease-in-out;
 }
 
+/* Bottle Completion Cork Drop Animation */
+@keyframes corkDrop {
+  0% {
+    transform: translateY(-55px) scale(0.9);
+    opacity: 0;
+  }
+  60% {
+    transform: translateY(0px) scale(1);
+    opacity: 1;
+  }
+  75% {
+    transform: translateY(-4px) scale(1.02);
+  }
+  90% {
+    transform: translateY(1px) scale(0.99);
+  }
+  100% {
+    transform: translateY(0px) scale(1);
+    opacity: 1;
+  }
+}
+.anim-cork-drop {
+  animation: corkDrop 0.48s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+/* Whirling 3D Magical Particle Cyclone */
+@keyframes particleSpiral {
+  0% {
+    transform: translate(-50%, -50%) rotate(var(--angle, 0deg)) translateX(16px) translateY(45px) scale(0.3);
+    opacity: 0;
+  }
+  25% {
+    opacity: 1;
+  }
+  70% {
+    opacity: 1;
+    transform: translate(-50%, -50%) rotate(calc(var(--angle, 0deg) + 240deg)) translateX(28px) translateY(-30px) scale(1.2);
+  }
+  100% {
+    transform: translate(-50%, -50%) rotate(calc(var(--angle, 0deg) + 360deg)) translateX(20px) translateY(-65px) scale(0.2);
+    opacity: 0;
+  }
+}
+
+@keyframes whirlPulse {
+  0%, 100% {
+    filter: drop-shadow(0 0 16px rgba(251, 191, 36, 0.8));
+    transform: scale(1);
+  }
+  50% {
+    filter: drop-shadow(0 0 28px rgba(251, 191, 36, 1)) drop-shadow(0 0 8px #ffffff);
+    transform: scale(1.04);
+  }
+}
+.anim-whirl-pulse {
+  animation: whirlPulse 0.7s infinite ease-in-out;
+}
+
+/* Shopping Bag Gulp / Catch Reaction */
+@keyframes bagGulp {
+  0% {
+    transform: scale(1);
+  }
+  25% {
+    transform: scale(1.28) translateY(-8px);
+    filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.9));
+  }
+  50% {
+    transform: scale(0.92) translateY(3px);
+  }
+  75% {
+    transform: scale(1.08) translateY(-2px);
+  }
+  100% {
+    transform: scale(1) translateY(0);
+  }
+}
+.anim-bag-gulp {
+  animation: bagGulp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
 /* Glossy Blue Square Game Button (Matching reference screenshot bottom buttons) */
 .game-btn-blue-square {
   background: linear-gradient(180deg, #60a5fa 0%, #3b82f6 30%, #1d4ed8 75%, #1e40af 100%);

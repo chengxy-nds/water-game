@@ -3,7 +3,7 @@ import { Tube } from '../types/game';
 import { TestTube, TestTubeRef } from './TestTube';
 import { WaterStream } from './WaterStream';
 import { getColor, COLOR_PALETTE } from '../utils/colors';
-import { TUBE_CAPACITY } from '../solver/waterSortSolver';
+import { TUBE_CAPACITY, isTubeComplete } from '../solver/waterSortSolver';
 import { soundManager } from '../utils/audio';
 
 
@@ -21,11 +21,21 @@ export interface PourAnimationState {
   riseCount: number;
 }
 
+export interface CompletionAnimationState {
+  tubeIndex: number;
+  colorId: string;
+  phase: 'cork_drop' | 'whirling' | 'flying';
+  flyX: number;
+  flyY: number;
+}
+
 interface GameBoardProps {
   tubes: Tube[];
   selectedIndex: number | null;
   hint: { from: number; to: number } | null;
   pourAnimation: PourAnimationState | null;
+  completionAnimation?: CompletionAnimationState | null;
+  collectedTubeIndices?: number[];
   showSymbols: boolean;
   soundEnabled?: boolean;
   shakingTubeIndex?: number | null;
@@ -38,6 +48,8 @@ export const GameBoard: React.FC<GameBoardProps> = ({
   selectedIndex,
   hint,
   pourAnimation,
+  completionAnimation = null,
+  collectedTubeIndices = [],
   showSymbols,
   soundEnabled = true,
   shakingTubeIndex = null,
@@ -81,86 +93,42 @@ export const GameBoard: React.FC<GameBoardProps> = ({
   const [streamFrom, setStreamFrom] = useState<{ x: number; y: number } | null>(null);
   const [streamTo, setStreamTo] = useState<{ x: number; y: number } | null>(null);
 
-  // Exact DOM-measured translation offsets
-  const exactOffsetRef = useRef<{ exactX: number; exactY: number; tiltAngle: number } | null>(null);
-
-  // Measure exact real-world DOM offsets and stream coordinates
+  // Measure exact real-world stream coordinates
   useEffect(() => {
     if (!pourAnimation || pourAnimation.phase !== 'pouring') {
-      if (!pourAnimation) exactOffsetRef.current = null;
       setStreamFrom(null);
       setStreamTo(null);
       return;
     }
 
-    const sourceRef = tubeRefs.current[pourAnimation.sourceIndex];
-    const targetRef = tubeRefs.current[pourAnimation.targetIndex];
+    const tSlot = document.getElementById(`tube-slot-${pourAnimation.targetIndex}`);
+    if (tSlot) {
+      const tBox = tSlot.getBoundingClientRect();
+      const scaleY = tBox.height / 150;
+      const tMouthX = tBox.left + tBox.width * 0.5;
+      const tMouthY = tBox.top + 9 * scaleY;
 
-    if (sourceRef && targetRef) {
-      const sBox = sourceRef.getBoundingBox();
-      const tBox = targetRef.getBoundingBox();
+      const isTargetRight = pourAnimation.tiltAngle > 0;
+      // Pouring mouth lip hovers touching the target rim opening
+      const spoutX = tMouthX - (isTargetRight ? 3 : -3);
+      const spoutY = tMouthY - 4;
 
-      if (sBox && tBox) {
-        // Target is to the right of source?
-        const isTargetRight = tBox.left >= sBox.left;
-        const tiltAngle = isTargetRight ? 65 : -65;
+      const targetTube = tubes[pourAnimation.targetIndex];
+      const currentLiquidUnits = targetTube
+        ? targetTube.length + (pourAnimation.riseCount || 0)
+        : 0;
+      const surfaceSvgY = 138 - Math.max(0.4, Math.min(4, currentLiquidUnits)) * 27.5;
+      const targetSurfaceY = tBox.top + surfaceSvgY * scaleY;
 
-        // Static mouth centers of source and target
-        const sMouthX = sBox.left + sBox.width * 0.5;
-        const sMouthY = sBox.top + 14;
-        const tMouthX = tBox.left + tBox.width * 0.5;
-        const tMouthY = tBox.top + 14;
-
-        // Lip offset relative to mouth center when rotated by 65deg around (50% 14px):
-        const lipDx = isTargetRight ? 12 : -12;
-        const lipDy = 8;
-
-        // We want the pouring lip to hover directly above target mouth center:
-        const spoutX = tMouthX;
-        const spoutY = tMouthY - 14;
-
-        // Required translation for the source bottle:
-        const exactX = (spoutX - lipDx) - sMouthX;
-        const exactY = (spoutY - lipDy) - sMouthY;
-
-        exactOffsetRef.current = { exactX, exactY, tiltAngle };
-
-        // The water flows downwards from spout directly into target tube!
-        // Start: at the hovering spout (spoutX, spoutY)
-        // Landing: inside target bottle mouth (tMouthX, tMouthY + 20)
-        setStreamFrom({ x: spoutX, y: spoutY + 4 });
-        setStreamTo({ x: tMouthX, y: tMouthY + 22 });
-      }
+      setStreamFrom({ x: spoutX, y: spoutY });
+      setStreamTo({ x: tMouthX, y: targetSurfaceY });
     }
-  }, [pourAnimation]);
+  }, [pourAnimation, tubes]);
 
   // Helper: compute exact physical transform for pouring bottle
   const getPourTransforms = (isPouringSource: boolean) => {
     if (!isPouringSource || !pourAnimation) {
       return { tiltAngle: 0, translateX: 0, translateY: 0 };
-    }
-
-    if (exactOffsetRef.current) {
-      const { exactX, exactY, tiltAngle } = exactOffsetRef.current;
-      if (pourAnimation.phase === 'flying') {
-        return {
-          tiltAngle: tiltAngle * 0.25,
-          translateX: exactX * 0.65,
-          translateY: exactY - 24,
-        };
-      } else if (pourAnimation.phase === 'pouring') {
-        return {
-          tiltAngle,
-          translateX: exactX,
-          translateY: exactY,
-        };
-      } else if (pourAnimation.phase === 'returning') {
-        return {
-          tiltAngle: 0,
-          translateX: 0,
-          translateY: -24,
-        };
-      }
     }
 
     return {
@@ -172,7 +140,12 @@ export const GameBoard: React.FC<GameBoardProps> = ({
 
   const numTubes = tubes.length;
   const isMultiRow = numTubes > 6;
-  const rowSplit = isMultiRow ? Math.ceil(numTubes / 2) : numTubes;
+  // Match reference screenshot: 11 tubes are split into Top Row (5) and Bottom Row (6)
+  const rowSplit = isMultiRow
+    ? numTubes === 11
+      ? 5
+      : Math.ceil(numTubes / 2)
+    : numTubes;
 
   const row1Tubes = tubes.slice(0, rowSplit);
   const row2Tubes = isMultiRow ? tubes.slice(rowSplit) : [];
@@ -239,7 +212,11 @@ export const GameBoard: React.FC<GameBoardProps> = ({
             const pourTransforms = getPourTransforms(isPouringSource);
 
             return (
-              <div key={`tube-wrap-${globalIdx}`} className="relative flex flex-col items-center">
+              <div
+                id={`tube-slot-${globalIdx}`}
+                key={`tube-wrap-${globalIdx}`}
+                className="relative flex flex-col items-center"
+              >
                 <TestTube
                   ref={(el) => { tubeRefs.current[globalIdx] = el; }}
                   index={globalIdx}
@@ -257,8 +234,13 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                   sourceDrainingCount={isPouringSource ? pourAnimation.drainCount : 0}
                   targetRisingCount={isPouringTarget ? pourAnimation.riseCount : 0}
                   activePourColor={pourAnimation?.colorId || null}
+                  completionPhase={completionAnimation?.tubeIndex === globalIdx ? completionAnimation.phase : null}
+                  flyX={completionAnimation?.tubeIndex === globalIdx ? completionAnimation.flyX : 0}
+                  flyY={completionAnimation?.tubeIndex === globalIdx ? completionAnimation.flyY : 0}
+                  hasCork={collectedTubeIndices.includes(globalIdx) || (isTubeComplete(tube, TUBE_CAPACITY) && completionAnimation?.tubeIndex !== globalIdx)}
+                  isCollected={collectedTubeIndices.includes(globalIdx)}
                   onClick={onTubeClick}
-                  disabled={disabled || !!pourAnimation}
+                  disabled={disabled || !!pourAnimation || !!completionAnimation}
                 />
               </div>
             );
@@ -280,7 +262,11 @@ export const GameBoard: React.FC<GameBoardProps> = ({
               const pourTransforms = getPourTransforms(isPouringSource);
 
               return (
-                <div key={`tube-wrap-${globalIdx}`} className="relative flex flex-col items-center">
+                <div
+                  id={`tube-slot-${globalIdx}`}
+                  key={`tube-wrap-${globalIdx}`}
+                  className="relative flex flex-col items-center"
+                >
                   <TestTube
                     ref={(el) => { tubeRefs.current[globalIdx] = el; }}
                     index={globalIdx}
@@ -298,8 +284,13 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                     sourceDrainingCount={isPouringSource ? pourAnimation.drainCount : 0}
                     targetRisingCount={isPouringTarget ? pourAnimation.riseCount : 0}
                     activePourColor={pourAnimation?.colorId || null}
+                    completionPhase={completionAnimation?.tubeIndex === globalIdx ? completionAnimation.phase : null}
+                    flyX={completionAnimation?.tubeIndex === globalIdx ? completionAnimation.flyX : 0}
+                    flyY={completionAnimation?.tubeIndex === globalIdx ? completionAnimation.flyY : 0}
+                    hasCork={collectedTubeIndices.includes(globalIdx) || (isTubeComplete(tube, TUBE_CAPACITY) && completionAnimation?.tubeIndex !== globalIdx)}
+                    isCollected={collectedTubeIndices.includes(globalIdx)}
                     onClick={onTubeClick}
-                    disabled={disabled || !!pourAnimation}
+                    disabled={disabled || !!pourAnimation || !!completionAnimation}
                   />
                 </div>
               );

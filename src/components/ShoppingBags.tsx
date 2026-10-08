@@ -7,19 +7,18 @@ interface ShoppingBagsProps {
   tubes: Tube[];
   onUnlockBonus?: () => void;
   bonusUnlocked?: boolean;
+  activeGulpColor?: string | null;
+  collectedColors?: Set<string>;
 }
 
 export const ShoppingBags: React.FC<ShoppingBagsProps> = ({
   tubes,
   onUnlockBonus,
   bonusUnlocked = false,
+  activeGulpColor = null,
+  collectedColors = new Set(),
 }) => {
-  const completedColors = new Set<string>();
-  tubes.forEach((t) => {
-    if (isTubeComplete(t)) {
-      completedColors.add(t[0]);
-    }
-  });
+  const completedColors = collectedColors;
 
   const puzzleColors: string[] = [];
   tubes.forEach((t) => {
@@ -27,24 +26,37 @@ export const ShoppingBags: React.FC<ShoppingBagsProps> = ({
       if (!puzzleColors.includes(c)) puzzleColors.push(c);
     });
   });
+  collectedColors.forEach((c) => {
+    if (!puzzleColors.includes(c)) puzzleColors.push(c);
+  });
 
-  const bagColors = [
-    puzzleColors[0] || 'yellow',
-    puzzleColors[1] || 'purple',
-    puzzleColors[2] || 'blue',
-  ];
+  // Preferred visual order matching reference screenshot (Yellow -> Purple -> Blue)
+  const preferredColors = ['yellow', 'purple', 'blue'];
+  const bagColors: string[] = preferredColors.filter((c) => puzzleColors.includes(c));
+  puzzleColors.forEach((c) => {
+    if (!bagColors.includes(c) && bagColors.length < 3) bagColors.push(c);
+  });
+  while (bagColors.length < 3) {
+    bagColors.push(preferredColors[bagColors.length] || 'yellow');
+  }
 
   return (
-    <div className="w-full max-w-sm mx-auto flex items-center justify-center gap-2.5 sm:gap-3.5 px-3 py-1 select-none">
+    <div id="shopping-bags-container" className="w-full max-w-sm mx-auto flex items-center justify-center gap-2.5 sm:gap-3.5 px-3 py-1 select-none">
       {bagColors.map((colorId, idx) => {
         const cDef = getColor(colorId);
         const isDone = completedColors.has(colorId);
+        const isGulping = activeGulpColor === colorId;
 
         return (
           <div
             key={`bag-pure-svg-${idx}-${colorId}`}
+            id={`shopping-bag-${colorId}`}
             className={`relative flex flex-col items-center transition-all duration-300 ${
-              isDone ? 'scale-105 filter drop-shadow-[0_0_14px_rgba(255,255,255,0.7)]' : 'filter drop-shadow-[0_6px_10px_rgba(0,0,0,0.4)]'
+              isGulping
+                ? 'anim-bag-gulp z-30'
+                : isDone
+                ? 'scale-105 filter drop-shadow-[0_0_14px_rgba(255,255,255,0.7)]'
+                : 'filter drop-shadow-[0_6px_10px_rgba(0,0,0,0.4)]'
             }`}
           >
             <svg
@@ -124,19 +136,29 @@ export const ShoppingBags: React.FC<ShoppingBagsProps> = ({
                 opacity="0.85"
               />
 
-              {/* Completed Checkmark Indicator */}
+              {/* Completed Mini Bottle inside Bag Window */}
               {isDone && (
-                <text
-                  x="24"
-                  y="47"
-                  fill={cDef.shadeHex || cDef.hex}
-                  fontSize="16"
-                  fontWeight="bold"
-                  textAnchor="middle"
-                  dominantBaseline="central"
-                >
-                  ✓
-                </text>
+                <g>
+                  {/* Miniature Bottle Body */}
+                  <rect
+                    x="19"
+                    y="36"
+                    width="10"
+                    height="20"
+                    rx="3"
+                    fill={cDef.hex}
+                    stroke={cDef.shadeHex || cDef.hex}
+                    strokeWidth="0.8"
+                  />
+                  {/* Miniature Bottle Neck */}
+                  <rect x="22" y="33" width="4" height="4" fill="#93c5fd" opacity="0.8" />
+                  {/* Miniature Wooden Cork */}
+                  <rect x="22.5" y="31.5" width="3" height="2.5" rx="0.5" fill="#d97706" stroke="#b45309" strokeWidth="0.4" />
+                  {/* Mini Gloss line */}
+                  <line x1="20.5" y1="38" x2="20.5" y2="52" stroke="#ffffff" strokeWidth="0.9" strokeLinecap="round" opacity="0.85" />
+                  {/* Golden Sparkle Star */}
+                  <text x="24" y="27" fill="#fde047" fontSize="7" fontWeight="black" textAnchor="middle">✦</text>
+                </g>
               )}
 
               {/* 5. Front Rope Handle */}

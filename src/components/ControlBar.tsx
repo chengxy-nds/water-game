@@ -60,11 +60,15 @@ export const ControlBar: React.FC<ControlBarProps> = ({
           <Undo2 className="w-9 sm:w-10 h-9 sm:h-10 stroke-[3] text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)] group-hover:-rotate-12 transition-transform duration-200" />
         </button>
 
-        {/* Video Camera Badge */}
-        <div className="absolute -top-1.5 -right-1.5 px-1.5 py-0.5 rounded-full bg-slate-900/90 border border-sky-300 text-white flex items-center justify-center shadow-[0_2px_6px_rgba(0,0,0,0.5)] pointer-events-none">
-          <svg viewBox="0 0 24 16" className="w-4 h-3.5 fill-white">
-            <rect x="0" y="2" width="15" height="12" rx="3" />
-            <polygon points="16,6 23,2 23,14 16,10" />
+        {/* Video Camera Badge matching screenshot */}
+        <div className="absolute -top-1.5 -right-1.5 filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)] pointer-events-none">
+          <svg viewBox="0 0 28 20" className="w-6 h-4.5 overflow-visible">
+            {/* White Camera Body */}
+            <rect x="2" y="3" width="16" height="14" rx="3.5" fill="#ffffff" />
+            {/* Camera Lens Cone */}
+            <polygon points="18,6.5 25,3 25,17 18,13.5" fill="#ffffff" />
+            {/* Blue Play Triangle inside camera */}
+            <polygon points="8,7 13,10 8,13" fill="#0284c7" />
           </svg>
         </div>
       </div>

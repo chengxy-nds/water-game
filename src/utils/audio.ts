@@ -72,8 +72,8 @@ class SoundManager {
       const rStart = clampedStart / clampedCap;
       const rEnd = endVolume / clampedCap;
 
-      // Duration matched to game pour animation phase (~400ms - 480ms)
-      const duration = Math.min(0.52, 0.38 + clampedCount * 0.045);
+      // Duration matched to extended pour animation phase (~1.0s - 1.1s)
+      const duration = Math.min(1.1, 0.85 + clampedCount * 0.08);
       const now = this.ctx.currentTime;
 
       // 1. Hydrodynamic Fluid Stream Noise with Upward Sweeping Bandpass Filter
@@ -217,6 +217,62 @@ class SoundManager {
         osc.start(startTime);
         osc.stop(startTime + 0.25);
       });
+    } catch {
+      // ignore
+    }
+  }
+
+  // Wooden cork plug-in pop sound
+  playCorkPop() {
+    if (!this.enabled) return;
+    this.initContext();
+    if (!this.ctx) return;
+
+    try {
+      const now = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(420, now);
+      osc.frequency.exponentialRampToValueAtTime(120, now + 0.09);
+
+      gain.gain.setValueAtTime(0.25, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
+
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+
+      osc.start(now);
+      osc.stop(now + 0.09);
+    } catch {
+      // ignore
+    }
+  }
+
+  // Satisfying shopping bag catch chime & gulp
+  playBagCatch() {
+    if (!this.enabled) return;
+    this.initContext();
+    if (!this.ctx) return;
+
+    try {
+      const now = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(659.25, now); // E5
+      osc.frequency.exponentialRampToValueAtTime(1318.5, now + 0.15); // E6
+
+      gain.gain.setValueAtTime(0.2, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+
+      osc.start(now);
+      osc.stop(now + 0.22);
     } catch {
       // ignore
     }

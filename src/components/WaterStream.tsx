@@ -86,47 +86,67 @@ export const WaterStream: React.FC<WaterStreamProps> = ({
       ctx.lineCap = 'round';
       ctx.stroke();
 
-      // 4. Source Mouth Liquid Node
-      ctx.beginPath();
-      ctx.arc(x1, y1, 5, 0, Math.PI * 2);
-      ctx.fillStyle = colorDef.hex;
-      ctx.fill();
 
-      // 5. Landing Impact Bubbles inside target tube mouth
+      // 5. Landing Impact Splash & Foam Cluster (Exact Match to Reference Image)
       const bubbleColor = colorDef.topHex || colorDef.hex;
+      const foamColor = colorDef.hex;
 
-      // Center Bubble
-      const cR = 5.2 + Math.sin(phase * 3) * 0.5;
+      // Soft glow backing under the landing foam
       ctx.beginPath();
-      ctx.arc(x2, y2, cR, 0, Math.PI * 2);
-      ctx.fillStyle = bubbleColor;
-      ctx.fill();
-      ctx.beginPath();
-      ctx.arc(x2 - 1.2, y2 - 1.5, cR * 0.35, 0, Math.PI * 2);
-      ctx.fillStyle = '#ffffff';
+      ctx.arc(x2, y2 - 2, 16, 0, Math.PI * 2);
+      ctx.fillStyle = `${colorDef.hex}55`;
       ctx.fill();
 
-      // Left Bubble
-      const lR = 3.8 + Math.cos(phase * 3.4) * 0.4;
-      ctx.beginPath();
-      ctx.arc(x2 - 4.5, y2 - 1, lR, 0, Math.PI * 2);
-      ctx.fillStyle = bubbleColor;
-      ctx.fill();
-      ctx.beginPath();
-      ctx.arc(x2 - 5.5, y2 - 2, lR * 0.35, 0, Math.PI * 2);
-      ctx.fillStyle = '#ffffff';
-      ctx.fill();
+      // Cluster of 4 interlocking foamy splash bubbles (Foam Splash)
+      const bubbles = [
+        { dx: -7.5, dy: -2, r: 6.2, pulseOffset: 0 },
+        { dx: 0, dy: -5, r: 8.5, pulseOffset: 1.2 },
+        { dx: 7.5, dy: -2, r: 6.2, pulseOffset: 2.4 },
+        { dx: -0.5, dy: 1, r: 7.8, pulseOffset: 0.6 },
+      ];
 
-      // Right Bubble
-      const rR = 3.8 + Math.sin(phase * 3.2) * 0.4;
-      ctx.beginPath();
-      ctx.arc(x2 + 4.5, y2 - 1, rR, 0, Math.PI * 2);
-      ctx.fillStyle = bubbleColor;
-      ctx.fill();
-      ctx.beginPath();
-      ctx.arc(x2 + 3.5, y2 - 2, rR * 0.35, 0, Math.PI * 2);
-      ctx.fillStyle = '#ffffff';
-      ctx.fill();
+      bubbles.forEach((b) => {
+        const curR = b.r + Math.sin(phase * 4 + b.pulseOffset) * 0.8;
+        const bx = x2 + b.dx;
+        const by = y2 + b.dy;
+
+        // Base sphere in bright fluid color
+        ctx.beginPath();
+        ctx.arc(bx, by, curR, 0, Math.PI * 2);
+        ctx.fillStyle = bubbleColor;
+        ctx.fill();
+        ctx.lineWidth = 1.2;
+        ctx.strokeStyle = colorDef.shadeHex || foamColor;
+        ctx.stroke();
+
+        // 3D Specular highlight glint
+        ctx.beginPath();
+        ctx.arc(bx - curR * 0.28, by - curR * 0.3, curR * 0.36, 0, Math.PI * 2);
+        ctx.fillStyle = '#ffffff';
+        ctx.fill();
+      });
+
+      // Small jumping airborne splash droplets
+      const droplets = [
+        { dx: -10, dy: -12, r: 2.2, phase: 0.5 },
+        { dx: 10, dy: -14, r: 2.0, phase: 1.8 },
+        { dx: -2, dy: -16, r: 1.8, phase: 2.9 },
+      ];
+
+      droplets.forEach((d) => {
+        const bounce = Math.sin(phase * 5 + d.phase);
+        if (bounce > -0.2) {
+          const dy = d.dy + bounce * 3;
+          ctx.beginPath();
+          ctx.arc(x2 + d.dx, y2 + dy, d.r, 0, Math.PI * 2);
+          ctx.fillStyle = bubbleColor;
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(x2 + d.dx - 0.5, y2 + dy - 0.5, d.r * 0.4, 0, Math.PI * 2);
+          ctx.fillStyle = '#ffffff';
+          ctx.fill();
+        }
+      });
 
       ctx.restore();
 

@@ -15,7 +15,7 @@ import { soundManager } from './utils/audio';
 
 import { GameHeader } from './components/GameHeader';
 import { ShoppingBags } from './components/ShoppingBags';
-import { GameBoard } from './components/GameBoard';
+import { GameBoard, CompletionAnimationState } from './components/GameBoard';
 import { ControlBar } from './components/ControlBar';
 import { WinModal } from './components/WinModal';
 import { LevelSelectorModal } from './components/LevelSelectorModal';
@@ -30,10 +30,10 @@ const STATS_STORAGE_KEY = 'water_sort_player_stats_v1';
 const PREFS_STORAGE_KEY = 'water_sort_preferences_v1';
 
 export default function App() {
-  // Current active level
-  const [currentLevel, setCurrentLevel] = useState<Level>(CURATED_LEVELS[0]);
+  // Current active level (Default to Level 2 matching reference screenshot)
+  const [currentLevel, setCurrentLevel] = useState<Level>(CURATED_LEVELS[1]);
   const [tubes, setTubes] = useState<Tube[]>(() =>
-    CURATED_LEVELS[0].tubes.map((t) => [...t])
+    CURATED_LEVELS[1].tubes.map((t) => [...t])
   );
 
   // History for Undo
@@ -58,6 +58,12 @@ export default function App() {
 
   // 3-Tier Hint Modal state
   const [activeHintData, setActiveHintData] = useState<HintData | null>(null);
+
+  // Bottle Completion Celebration (Cork drop -> Whirl -> Fly -> Shopping Bag Gulp)
+  const [completionAnimation, setCompletionAnimation] = useState<CompletionAnimationState | null>(null);
+  const [collectedTubeIndices, setCollectedTubeIndices] = useState<number[]>([]);
+  const [activeGulpColor, setActiveGulpColor] = useState<string | null>(null);
+  const [collectedColors, setCollectedColors] = useState<Set<string>>(new Set());
 
   // Pouring Animation state
   const [pourAnimation, setPourAnimation] = useState<{
@@ -151,26 +157,113 @@ export default function App() {
     setIsDeadlocked(false);
     setResetConfirmOpen(false);
     setActiveHintData(null);
+    setCompletionAnimation(null);
+    setActiveGulpColor(null);
+    setCollectedTubeIndices([]);
+    setCollectedColors(new Set());
   }, []);
+
+  const calculateFlyVector = useCallback((tubeIdx: number, colorId: string) => {
+    const tubeEl = document.getElementById(`tube-slot-${tubeIdx}`);
+    const bagEl = document.getElementById(`shopping-bag-${colorId}`);
+    if (tubeEl && bagEl) {
+      const tubeRect = tubeEl.getBoundingClientRect();
+      const bagRect = bagEl.getBoundingClientRect();
+      const targetX = bagRect.left + bagRect.width * 0.5;
+      const targetY = bagRect.top + bagRect.height * 0.55;
+      const curX = tubeRect.left + tubeRect.width * 0.5;
+      const curY = tubeRect.top + tubeRect.height * 0.5;
+      return {
+        flyX: targetX - curX,
+        flyY: targetY - curY,
+      };
+    }
+    return { flyX: 0, flyY: -320 };
+  }, []);
+
+  const triggerWinCelebration = useCallback(
+    (finalSteps: number) => {
+      setIsWon(true);
+      setIsAutoSolving(false);
+
+      let stars = 3;
+      if (currentLevel.optimalSteps) {
+        if (finalSteps > currentLevel.optimalSteps * 1.5) stars = 1;
+        else if (finalSteps > currentLevel.optimalSteps + 2) stars = 2;
+      }
+
+      const lvlKey = String(currentLevel.id);
+      const prevRecord = stats.completedLevels[lvlKey];
+      const newStars = prevRecord ? Math.max(prevRecord.stars, stars) : stars;
+      const newBest = prevRecord ? Math.min(prevRecord.bestSteps, finalSteps) : finalSteps;
+
+      const updatedStats: PlayerStats = {
+        ...stats,
+        completedLevels: {
+          ...stats.completedLevels,
+          [lvlKey]: {
+            stars: newStars,
+            bestSteps: newBest,
+            completedAt: new Date().toISOString(),
+          },
+        },
+        totalPours: stats.totalPours + 1,
+      };
+
+      if (String(currentLevel.id).startsWith('daily-')) {
+        const todayKey = String(currentLevel.id).replace('daily-', '');
+        updatedStats.dailyChallengeCompleted = {
+          ...updatedStats.dailyChallengeCompleted,
+          [todayKey]: { stars, steps: finalSteps },
+        };
+      }
+
+      saveStats(updatedStats);
+    },
+    [currentLevel, stats]
+  );
 
   const performPour = useCallback(
     (fromIdx: number, toIdx: number) => {
       const check = canPour(tubes[fromIdx], tubes[toIdx], TUBE_CAPACITY);
       if (!check.valid || !check.color) return false;
 
+      // Measure exact DOM positions of both static tube slots
+      const sSlot = document.getElementById(`tube-slot-${fromIdx}`);
+      const tSlot = document.getElementById(`tube-slot-${toIdx}`);
+
       const numTubes = tubes.length;
       const isMultiRow = numTubes > 6;
-      const rowSplit = isMultiRow ? Math.ceil(numTubes / 2) : numTubes;
+      const rowSplit = isMultiRow ? (numTubes === 11 ? 5 : Math.ceil(numTubes / 2)) : numTubes;
 
       const fromRow = Math.floor(fromIdx / rowSplit);
       const fromCol = fromIdx % rowSplit;
       const toRow = Math.floor(toIdx / rowSplit);
       const toCol = toIdx % rowSplit;
 
-      const isTargetRight = toCol >= fromCol;
-      const tiltAngle = isTargetRight ? 68 : -68;
-      const deltaX = (toCol - fromCol) * 80 + (isTargetRight ? 36 : -36);
-      const deltaY = (toRow - fromRow) * 230 - 50;
+      let exactX = (toCol - fromCol) * 65;
+      let exactY = (toRow - fromRow) * 200 - 20;
+      let tiltAngle = toCol >= fromCol ? 72 : -72;
+
+      if (sSlot && tSlot) {
+        const sBox = sSlot.getBoundingClientRect();
+        const tBox = tSlot.getBoundingClientRect();
+
+        const sScaleY = sBox.height / 150;
+        const tScaleY = tBox.height / 150;
+        const sMouthX = sBox.left + sBox.width * 0.5;
+        const sMouthY = sBox.top + 9 * sScaleY;
+        const tMouthX = tBox.left + tBox.width * 0.5;
+        const tMouthY = tBox.top + 9 * tScaleY;
+
+        const isTargetRight = tMouthX >= sMouthX;
+        tiltAngle = isTargetRight ? 72 : -72;
+
+        // When tilted 72deg, the lower mouth lip rotates downwards and outwards.
+        // Align the pouring mouth lip directly touching the target bottle mouth rim!
+        exactX = (tMouthX - sMouthX) - (isTargetRight ? 11 : -11);
+        exactY = (tMouthY - sMouthY) - 15;
+      }
 
       // Phase 1: Fly and align above target tube lip
       setPourAnimation({
@@ -179,16 +272,16 @@ export default function App() {
         colorId: check.color,
         count: check.count,
         phase: 'flying',
-        tiltAngle: tiltAngle * 0.4,
-        translateX: deltaX * 0.7,
-        translateY: deltaY - 20,
+        tiltAngle: tiltAngle * 0.25,
+        translateX: exactX * 0.85,
+        translateY: exactY - 24,
         drainCount: 0,
         riseCount: 0,
       });
 
       if (vibrateEnabled) soundManager.vibrate(20);
 
-      // Phase 2: Tilt, spout water stream
+      // Phase 2: Tilt, spout water stream with mouths touching (Extended to 1100ms for slow observation)
       setTimeout(() => {
         setPourAnimation({
           sourceIndex: fromIdx,
@@ -197,71 +290,90 @@ export default function App() {
           count: check.count,
           phase: 'pouring',
           tiltAngle,
-          translateX: deltaX,
-          translateY: deltaY,
+          translateX: exactX,
+          translateY: exactY,
           drainCount: 0.85,
           riseCount: 0.85,
         });
 
         if (vibrateEnabled) soundManager.vibrate(35);
-      }, 220);
+      }, 450);
 
       // Phase 3: Finish liquid stream, commit state change and return
       setTimeout(() => {
         const result = executePour(tubes, fromIdx, toIdx, TUBE_CAPACITY);
         if (result) {
+          const finalMoves = movesCount + 1;
           setHistory((prev) => [...prev, tubes.map((t) => [...t])]);
           setTubes(result.newTubes);
-          setMovesCount((m) => m + 1);
+          setMovesCount(finalMoves);
 
-          if (isTubeComplete(result.newTubes[toIdx], TUBE_CAPACITY)) {
-            if (soundEnabled) soundManager.playTubeComplete();
-          }
+          const isTargetComplete = isTubeComplete(result.newTubes[toIdx], TUBE_CAPACITY);
+          const isPuzzleComplete = isPuzzleSolved(result.newTubes, TUBE_CAPACITY);
 
-          if (isPuzzleSolved(result.newTubes, TUBE_CAPACITY)) {
-            setIsWon(true);
-            setIsAutoSolving(false);
+          if (isTargetComplete) {
+            const completedColor = result.newTubes[toIdx][0];
 
-            const finalSteps = movesCount + 1;
-            let stars = 3;
-            if (currentLevel.optimalSteps) {
-              if (finalSteps > currentLevel.optimalSteps * 1.5) stars = 1;
-              else if (finalSteps > currentLevel.optimalSteps + 2) stars = 2;
-            }
+            // 1. Cork Drop: Wood cork stopper drops down into bottle mouth
+            setTimeout(() => {
+              if (soundEnabled) soundManager.playCorkPop();
+              setCompletionAnimation({
+                tubeIndex: toIdx,
+                colorId: completedColor,
+                phase: 'cork_drop',
+                flyX: 0,
+                flyY: 0,
+              });
+            }, 300);
 
-            const lvlKey = String(currentLevel.id);
-            const prevRecord = stats.completedLevels[lvlKey];
-            const newStars = prevRecord ? Math.max(prevRecord.stars, stars) : stars;
-            const newBest = prevRecord ? Math.min(prevRecord.bestSteps, finalSteps) : finalSteps;
+            // 2. Whirling: Sparkling particle halo rotates around bottle body
+            setTimeout(() => {
+              if (soundEnabled) soundManager.playTubeComplete();
+              setCompletionAnimation((prev) =>
+                prev ? { ...prev, phase: 'whirling' } : null
+              );
+            }, 750);
 
-            const updatedStats: PlayerStats = {
-              ...stats,
-              completedLevels: {
-                ...stats.completedLevels,
-                [lvlKey]: {
-                  stars: newStars,
-                  bestSteps: newBest,
-                  completedAt: new Date().toISOString(),
-                },
-              },
-              totalPours: stats.totalPours + 1,
-            };
+            // 3. Flying: Bottle takes off and glides smoothly up into matching shopping bag
+            setTimeout(() => {
+              const { flyX, flyY } = calculateFlyVector(toIdx, completedColor);
+              setCompletionAnimation((prev) =>
+                prev ? { ...prev, phase: 'flying', flyX, flyY } : null
+              );
+            }, 1450);
 
-            if (String(currentLevel.id).startsWith('daily-')) {
-              const todayKey = String(currentLevel.id).replace('daily-', '');
-              updatedStats.dailyChallengeCompleted = {
-                ...updatedStats.dailyChallengeCompleted,
-                [todayKey]: { stars, steps: finalSteps },
-              };
-            }
+            // 4. Bag Gulp: Shopping bag gulps with elastic bounce and collects bottle inside
+            setTimeout(() => {
+              if (soundEnabled) soundManager.playBagCatch();
+              setActiveGulpColor(completedColor);
+              setCollectedColors((prev) => new Set(prev).add(completedColor));
+              setCollectedTubeIndices((prev) => [...prev, toIdx]);
+              setCompletionAnimation(null);
+            }, 2100);
 
-            saveStats(updatedStats);
+            // 5. Bag settles & check puzzle win or deadlock
+            setTimeout(() => {
+              setActiveGulpColor(null);
+              if (isPuzzleComplete) {
+                triggerWinCelebration(finalMoves);
+              } else {
+                const hasMove = hasAnyLegalMove(result.newTubes, TUBE_CAPACITY);
+                if (!hasMove) {
+                  setIsDeadlocked(true);
+                }
+              }
+            }, 2700);
           } else {
-            const hasMove = hasAnyLegalMove(result.newTubes, TUBE_CAPACITY);
-            if (!hasMove) {
-              setTimeout(() => {
-                setIsDeadlocked(true);
-              }, 400);
+            // Target tube was not completed by this pour
+            if (isPuzzleComplete) {
+              triggerWinCelebration(finalMoves);
+            } else {
+              const hasMove = hasAnyLegalMove(result.newTubes, TUBE_CAPACITY);
+              if (!hasMove) {
+                setTimeout(() => {
+                  setIsDeadlocked(true);
+                }, 400);
+              }
             }
           }
         }
@@ -277,18 +389,18 @@ export default function App() {
               }
             : null
         );
-      }, 640);
+      }, 1550);
 
       // Phase 4: Settle tube back to rack
       setTimeout(() => {
         setPourAnimation(null);
         setSelectedIndex(null);
         setHint(null);
-      }, 880);
+      }, 2150);
 
       return true;
     },
-    [tubes, soundEnabled, vibrateEnabled, movesCount, currentLevel, stats]
+    [tubes, soundEnabled, vibrateEnabled, movesCount, calculateFlyVector, triggerWinCelebration]
   );
 
   const triggerInvalidFeedback = useCallback(
@@ -358,7 +470,7 @@ export default function App() {
 
   // Undo move
   const handleUndo = () => {
-    if (history.length === 0 || isAutoSolving) return;
+    if (history.length === 0 || isAutoSolving || !!completionAnimation) return;
     const previousState = history[history.length - 1];
     setHistory((h) => h.slice(0, h.length - 1));
     setTubes(previousState);
@@ -366,6 +478,21 @@ export default function App() {
     setSelectedIndex(null);
     setHint(null);
     setIsDeadlocked(false);
+    setCompletionAnimation(null);
+    setActiveGulpColor(null);
+
+    // Sync collected colors & tube indices with restored state
+    const restoredIndices: number[] = [];
+    const restoredColors = new Set<string>();
+    previousState.forEach((t, idx) => {
+      if (isTubeComplete(t, TUBE_CAPACITY)) {
+        restoredIndices.push(idx);
+        restoredColors.add(t[0]);
+      }
+    });
+    setCollectedTubeIndices(restoredIndices);
+    setCollectedColors(restoredColors);
+
     if (soundEnabled) soundManager.playUndo();
     if (vibrateEnabled) soundManager.vibrate(15);
   };
@@ -421,6 +548,10 @@ export default function App() {
     setHint(null);
     setIsWon(false);
     setIsDeadlocked(false);
+    setCompletionAnimation(null);
+    setActiveGulpColor(null);
+    setCollectedTubeIndices([]);
+    setCollectedColors(new Set());
     if (soundEnabled) soundManager.playUndo();
   };
 
@@ -458,7 +589,7 @@ export default function App() {
       } else {
         setIsAutoSolving(false);
       }
-    }, 980);
+    }, 2350);
 
     return () => {
       if (autoSolveTimerRef.current) clearTimeout(autoSolveTimerRef.current);
@@ -523,6 +654,8 @@ export default function App() {
             tubes={tubes}
             onUnlockBonus={handleAddTube}
             bonusUnlocked={extraTubesAdded > 0}
+            activeGulpColor={activeGulpColor}
+            collectedColors={collectedColors}
           />
         </div>
 
@@ -546,11 +679,13 @@ export default function App() {
             selectedIndex={selectedIndex}
             hint={hint}
             pourAnimation={pourAnimation}
+            completionAnimation={completionAnimation}
+            collectedTubeIndices={collectedTubeIndices}
             showSymbols={showSymbols}
             soundEnabled={soundEnabled}
             shakingTubeIndex={shakingTubeIndex}
             onTubeClick={handleTubeClick}
-            disabled={isWon || isDeadlocked}
+            disabled={isWon || isDeadlocked || !!completionAnimation}
           />
         </main>
 
