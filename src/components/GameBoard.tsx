@@ -99,31 +99,26 @@ export const GameBoard: React.FC<GameBoardProps> = ({
       const tBox = targetRef.getBoundingBox();
 
       if (sBox && tBox) {
+        // Target is to the right of source?
         const isTargetRight = tBox.left >= sBox.left;
-        const tiltAngle = isTargetRight ? 75 : -75;
-        const rad = (Math.abs(tiltAngle) * Math.PI) / 180;
+        const tiltAngle = isTargetRight ? 65 : -65;
 
-        // Source and target mouth centers at rest
+        // Mouth centers at rest
         const sMouthX = sBox.left + sBox.width * 0.5;
-        const sMouthY = sBox.top + 6;
+        const sMouthY = sBox.top + 14;
         const tMouthX = tBox.left + tBox.width * 0.5;
-        const tMouthY = tBox.top + 6;
+        const tMouthY = tBox.top + 14;
 
-        // When tilted by 75deg around mouth center (50% 6px),
-        // the lower corner (spout) moves by:
-        const spoutDx = (isTargetRight ? 1 : -1) * (15 * Math.cos(rad));
-        const spoutDy = 15 * Math.sin(rad);
+        // When tilted by 65deg around mouth center (50% 14px),
+        // the lower spout lip is offset relative to mouth center by:
+        const spoutOffsetX = isTargetRight ? 10 : -10;
+        const spoutOffsetY = 8;
 
-        // We want the spout to hover directly 20px above target mouth opening:
-        const desiredSpoutX = tMouthX;
-        const desiredSpoutY = tMouthY - 20;
-
-        // Required translation for the source bottle's mouth center:
-        const requiredMouthX = desiredSpoutX - spoutDx;
-        const requiredMouthY = desiredSpoutY - spoutDy;
-
-        const exactX = requiredMouthX - sMouthX;
-        const exactY = requiredMouthY - sMouthY;
+        // We want the lower spout lip to hover precisely 12px directly above target mouth center:
+        // desiredSpoutX = tMouthX
+        // desiredSpoutY = tMouthY - 12
+        const exactX = (tMouthX - sMouthX) - spoutOffsetX;
+        const exactY = (tMouthY - sMouthY) - 12 - spoutOffsetY;
 
         exactOffsetRef.current = { exactX, exactY, tiltAngle };
       }

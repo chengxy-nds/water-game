@@ -34,7 +34,6 @@ export const WaterStream: React.FC<WaterStreamProps> = ({
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    // Immediately ensure full-screen dimensions
     if (canvas.width !== window.innerWidth || canvas.height !== window.innerHeight) {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
@@ -57,27 +56,24 @@ export const WaterStream: React.FC<WaterStreamProps> = ({
       const x2 = toPos.x;
       const y2 = toPos.y;
 
-      const dx = x2 - x1;
-      const dy = y2 - y1;
-
-      // Arc out of spout lip, then fall vertically into target mouth
-      const cp1x = x1 + dx * 0.7;
-      const cp1y = y1 - 4 + Math.sin(phase * 1.5);
+      // Natural gravity drop: arches slightly at spout mouth, then falls straight down into target bottle mouth
+      const cp1x = x1 + (x2 - x1) * 0.4;
+      const cp1y = y1 + 4;
       const cp2x = x2;
-      const cp2y = y1 + dy * 0.45;
+      const cp2y = y1 + (y2 - y1) * 0.5;
 
       ctx.save();
 
-      // 1. Fluid Jet Outer Glow
+      // 1. Ambient Fluid Jet Glow
       ctx.beginPath();
       ctx.moveTo(x1, y1);
       ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x2, y2);
       ctx.lineWidth = 14;
-      ctx.strokeStyle = `${colorDef.hex}40`;
+      ctx.strokeStyle = `${colorDef.hex}44`;
       ctx.lineCap = 'round';
       ctx.stroke();
 
-      // 2. Main Fluid Jet Body
+      // 2. Solid Fluid Core Body
       ctx.beginPath();
       ctx.moveTo(x1, y1);
       ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x2, y2);
@@ -86,26 +82,26 @@ export const WaterStream: React.FC<WaterStreamProps> = ({
       ctx.lineCap = 'round';
       ctx.stroke();
 
-      // 3. Specular Highlight Stripe
+      // 3. Central Specular Reflection Stripe
       ctx.beginPath();
       ctx.moveTo(x1 - 1, y1);
       ctx.bezierCurveTo(cp1x - 1, cp1y, cp2x - 1, cp2y, x2 - 1, y2);
       ctx.lineWidth = 2.2;
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
       ctx.lineCap = 'round';
       ctx.stroke();
 
-      // 4. Source Mouth Droplet Bulge
+      // 4. Smooth Spout Meniscus Node
       ctx.beginPath();
       ctx.arc(x1, y1, 5.5, 0, Math.PI * 2);
       ctx.fillStyle = colorDef.hex;
       ctx.fill();
 
-      // 5. Target Mouth Splash Foam Bubbles (Dynamic cluster at landing point)
+      // 5. Landing Impact Bubbles (Image 2 Match: 3 bubbly spheres on receiving liquid)
       const bubbleColor = colorDef.topHex || colorDef.hex;
 
-      // Center Bubble
-      const cR = 5.5 + Math.sin(phase * 3) * 0.6;
+      // Center bubble
+      const cR = 5.5 + Math.sin(phase * 3) * 0.5;
       ctx.beginPath();
       ctx.arc(x2, y2 - 2, cR, 0, Math.PI * 2);
       ctx.fillStyle = bubbleColor;
@@ -115,29 +111,29 @@ export const WaterStream: React.FC<WaterStreamProps> = ({
       ctx.fillStyle = '#ffffff';
       ctx.fill();
 
-      // Left Bubble
-      const lR = 4 + Math.cos(phase * 3.5) * 0.5;
+      // Left bubble
+      const lR = 4 + Math.cos(phase * 3.4) * 0.4;
       ctx.beginPath();
       ctx.arc(x2 - 5, y2 - 3.5, lR, 0, Math.PI * 2);
       ctx.fillStyle = bubbleColor;
       ctx.fill();
       ctx.beginPath();
-      ctx.arc(x2 - 6, y2 - 4.8, lR * 0.35, 0, Math.PI * 2);
+      ctx.arc(x2 - 6, y2 - 4.5, lR * 0.35, 0, Math.PI * 2);
       ctx.fillStyle = '#ffffff';
       ctx.fill();
 
-      // Right Bubble
-      const rR = 4 + Math.sin(phase * 3.2) * 0.5;
+      // Right bubble
+      const rR = 4 + Math.sin(phase * 3.2) * 0.4;
       ctx.beginPath();
       ctx.arc(x2 + 5, y2 - 3.5, rR, 0, Math.PI * 2);
       ctx.fillStyle = bubbleColor;
       ctx.fill();
       ctx.beginPath();
-      ctx.arc(x2 + 4, y2 - 4.8, rR * 0.35, 0, Math.PI * 2);
+      ctx.arc(x2 + 4, y2 - 4.5, rR * 0.35, 0, Math.PI * 2);
       ctx.fillStyle = '#ffffff';
       ctx.fill();
 
-      // Bouncing Top Droplet
+      // Bouncing droplet
       const dropY = y2 - 9 + Math.sin(phase * 4) * 1.5;
       ctx.beginPath();
       ctx.arc(x2, dropY, 2.5, 0, Math.PI * 2);

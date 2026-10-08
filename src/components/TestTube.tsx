@@ -51,20 +51,23 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
   disabled = false,
 }, ref) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const lipRef = useRef<HTMLDivElement | null>(null);
 
   useImperativeHandle(ref, () => ({
     getSpoutPos: () => {
-      if (!lipRef.current) return null;
-      const rect = lipRef.current.getBoundingClientRect();
-      const x = tiltAngle >= 0 ? rect.right - 2 : rect.left + 2;
-      const y = rect.top + rect.height * 0.5;
-      return { x, y };
+      if (!containerRef.current) return null;
+      const rect = containerRef.current.getBoundingClientRect();
+      // When tilted, spout is the lower mouth lip
+      // Center of mouth is at rect.left + rect.width*0.5, rect.top + 14
+      const cx = rect.left + rect.width * 0.5;
+      const cy = rect.top + 14;
+      const spoutX = tiltAngle > 0 ? cx + 10 : tiltAngle < 0 ? cx - 10 : cx;
+      const spoutY = cy + 6;
+      return { x: spoutX, y: spoutY };
     },
     getMouthPos: () => {
-      if (!lipRef.current) return null;
-      const rect = lipRef.current.getBoundingClientRect();
-      return { x: rect.left + rect.width * 0.5, y: rect.top + 2 };
+      if (!containerRef.current) return null;
+      const rect = containerRef.current.getBoundingClientRect();
+      return { x: rect.left + rect.width * 0.5, y: rect.top + 14 };
     },
     getBoundingBox: () => {
       if (!containerRef.current) return null;
@@ -74,7 +77,7 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
 
   const isComplete = isTubeComplete(tube, capacity);
 
-  // Compute visual layers
+  // Compute layers to render
   const displayTube = [...tube];
   let drainingTopPercent = 100;
   if (isPouringSource && sourceDrainingCount > 0 && displayTube.length > 0) {
@@ -98,7 +101,7 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
       ? 'transform 0.35s cubic-bezier(0.25, 1, 0.5, 1)'
       : 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
     zIndex: isPouringSource ? 45 : isSelected ? 30 : 10,
-    transformOrigin: isPouringSource ? '50% 12px' : 'center bottom',
+    transformOrigin: isPouringSource ? '50% 14px' : 'center bottom',
   };
 
   interface RenderLayer {
@@ -132,10 +135,7 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
     });
   }
 
-  // Geometry inside SVG viewBox="0 0 60 190"
-  // Inner chamber: X from 8 to 52 (width 44, cx = 30)
-  // Inner bottom at Y = 164
-  // 4 blocks maximum. Block height = 27px. 164 - 4 * 27 = 56px (max height)
+  // Inner chamber coordinates (viewBox 0 0 60 190)
   const CHAMBER_BOTTOM_Y = 164;
   const BLOCK_HEIGHT = 27;
   const RX = 22;
@@ -159,20 +159,14 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
       style={transformStyle}
       onClick={() => !disabled && onClick(index)}
     >
-      {/* Anchor for pour stream tracking */}
-      <div
-        ref={lipRef}
-        className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-3 pointer-events-none z-50"
-      />
-
-      {/* Completion Star Crown */}
+      {/* Level Completion Star Crown */}
       {isComplete && (
         <div className="absolute -top-6 left-1/2 -translate-x-1/2 z-40 bg-amber-400 text-slate-950 rounded-full w-6 h-6 flex items-center justify-center text-xs font-black shadow-lg animate-bounce border border-white">
           ★
         </div>
       )}
 
-      {/* 100% Pure Code SVG 3D Crystal Bottle */}
+      {/* SVG 3D Crystal Bottle */}
       <div
         className={`relative flex flex-col items-center transition-all duration-200 ${
           isSelected
@@ -220,6 +214,11 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
                 <stop offset="100%" stopColor={c.shadeHex || c.hex} stopOpacity="0.95" />
               </linearGradient>
             ))}
+
+            {/* Inner chamber clip to keep fluid bounded */}
+            <clipPath id={`inner-clip-${index}`}>
+              <path d="M 8 20 L 8 150 C 8 162, 16 166, 30 166 C 44 166, 52 162, 52 150 L 52 20 Z" />
+            </clipPath>
           </defs>
 
           {/* 1. Deep Blue Transparent Glass Back Body */}
@@ -239,96 +238,123 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
             fill={`url(#tube-bg-${index})`}
           />
 
-          {/* 2. Fluid Layers (Pure Code 3D Cylindrical Gel) */}
-          {calculatedLayers.map((layer, lIdx) => {
-            const cDef = getColor(layer.colorId);
-            const { yBottom, yTop, isBottom, isTop } = layer;
+          {/* 2. Fluid Layers (Dynamic Pouring Stream Flow vs Stacked Gel Blocks) */}
+          {isPouringSource && tiltAngle !== 0 ? (
+            /* Natural Gravity Stream Flow toward mouth lip when tilted */
+            <g clipPath={`url(#inner-clip-${index})`}>
+              {calculatedLayers.map((layer, lIdx) => {
+                const cDef = getColor(layer.colorId);
+                const isDraining = lIdx === calculatedLayers.length - 1;
+                // If tilting right (>0), liquid flows along right wall (x=52).
+                // If tilting left (<0), liquid flows along left wall (x=8).
+                const isTiltRight = tiltAngle > 0;
 
-            const bodyPath = isBottom
-              ? `
-                M 8 ${yTop}
-                L 8 150
-                C 8 162, 16 166, 30 166
-                C 44 166, 52 162, 52 150
-                L 52 ${yTop}
-                A ${RX} ${RY} 0 0 1 8 ${yTop}
-                Z
-              `
-              : `
-                M 8 ${yTop}
-                L 8 ${yBottom}
-                A ${RX} ${RY} 0 0 0 52 ${yBottom}
-                L 52 ${yTop}
-                A ${RX} ${RY} 0 0 1 8 ${yTop}
-                Z
-              `;
-
-            return (
-              <g key={`liquid-block-${layer.colorId}-${lIdx}`}>
-                {/* 3D Fluid Cylinder Body */}
-                <path
-                  d={bodyPath}
-                  fill={`url(#grad-${cDef.id}-${index})`}
-                />
-
-                {/* Subtle boundary crease between different stacked colors */}
-                {!isBottom && (
+                return (
                   <path
-                    d={`M 8 ${yBottom} A ${RX} ${RY} 0 0 0 52 ${yBottom}`}
-                    stroke="rgba(0, 0, 0, 0.28)"
-                    strokeWidth="1.2"
-                    fill="none"
+                    key={`pour-flow-${lIdx}`}
+                    d={
+                      isTiltRight
+                        ? isDraining
+                          ? `M 14 ${layer.yTop + 20} L 32 18 L 52 18 L 52 ${layer.yBottom} L 14 ${layer.yBottom} Z`
+                          : `M 8 ${layer.yTop} L 52 ${layer.yTop} L 52 ${layer.yBottom} L 8 ${layer.yBottom} Z`
+                        : isDraining
+                          ? `M 8 18 L 28 18 L 46 ${layer.yTop + 20} L 46 ${layer.yBottom} L 8 ${layer.yBottom} Z`
+                          : `M 8 ${layer.yTop} L 52 ${layer.yTop} L 52 ${layer.yBottom} L 8 ${layer.yBottom} Z`
+                    }
+                    fill={`url(#grad-${cDef.id}-${index})`}
                   />
-                )}
+                );
+              })}
+            </g>
+          ) : (
+            /* Standard Rest State: Layered 3D Cylindrical Gel Blocks */
+            <g>
+              {calculatedLayers.map((layer, lIdx) => {
+                const cDef = getColor(layer.colorId);
+                const { yBottom, yTop, isBottom, isTop } = layer;
 
-                {/* Top Meniscus 3D Oval Cap (Only on uppermost surface) */}
-                {isTop && layer.heightPercent > 4 && (
-                  <g>
-                    {/* Elliptical Cap Puck */}
-                    <ellipse
-                      cx="30"
-                      cy={yTop}
-                      rx={RX}
-                      ry={RY}
-                      fill={cDef.topHex || cDef.hex}
-                      stroke="rgba(255, 255, 255, 0.45)"
-                      strokeWidth="0.8"
-                    />
+                const bodyPath = isBottom
+                  ? `
+                    M 8 ${yTop}
+                    L 8 150
+                    C 8 162, 16 166, 30 166
+                    C 44 166, 52 162, 52 150
+                    L 52 ${yTop}
+                    A ${RX} ${RY} 0 0 1 8 ${yTop}
+                    Z
+                  `
+                  : `
+                    M 8 ${yTop}
+                    L 8 ${yBottom}
+                    A ${RX} ${RY} 0 0 0 52 ${yBottom}
+                    L 52 ${yTop}
+                    A ${RX} ${RY} 0 0 1 8 ${yTop}
+                    Z
+                  `;
 
-                    {/* Specular Front Crescent Rim Highlight Arc */}
+                return (
+                  <g key={`liquid-block-${layer.colorId}-${lIdx}`}>
+                    {/* 3D Fluid Cylinder Body */}
                     <path
-                      d={`M 11 ${yTop + 1.8} Q 30 ${yTop + 6} 49 ${yTop + 1.8}`}
-                      stroke="#ffffff"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      fill="none"
-                      opacity="0.88"
+                      d={bodyPath}
+                      fill={`url(#grad-${cDef.id}-${index})`}
                     />
+
+                    {/* Subtle boundary crease between different stacked colors */}
+                    {!isBottom && (
+                      <path
+                        d={`M 8 ${yBottom} A ${RX} ${RY} 0 0 0 52 ${yBottom}`}
+                        stroke="rgba(0, 0, 0, 0.28)"
+                        strokeWidth="1.2"
+                        fill="none"
+                      />
+                    )}
+
+                    {/* Top Meniscus 3D Oval Cap */}
+                    {isTop && layer.heightPercent > 4 && (
+                      <g>
+                        <ellipse
+                          cx="30"
+                          cy={yTop}
+                          rx={RX}
+                          ry={RY}
+                          fill={cDef.topHex || cDef.hex}
+                          stroke="rgba(255, 255, 255, 0.45)"
+                          strokeWidth="0.8"
+                        />
+                        <path
+                          d={`M 11 ${yTop + 1.8} Q 30 ${yTop + 6} 49 ${yTop + 1.8}`}
+                          stroke="#ffffff"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                          fill="none"
+                          opacity="0.88"
+                        />
+                      </g>
+                    )}
+
+                    {showSymbols && (
+                      <text
+                        x="30"
+                        y={(yTop + yBottom) / 2}
+                        fill={cDef.textColor}
+                        fontSize="11"
+                        fontWeight="bold"
+                        textAnchor="middle"
+                        dominantBaseline="central"
+                      >
+                        {cDef.symbol}
+                      </text>
+                    )}
                   </g>
-                )}
+                );
+              })}
+            </g>
+          )}
 
-                {/* Accessibility Symbol */}
-                {showSymbols && (
-                  <text
-                    x="30"
-                    y={(yTop + yBottom) / 2}
-                    fill={cDef.textColor}
-                    fontSize="11"
-                    fontWeight="bold"
-                    textAnchor="middle"
-                    dominantBaseline="central"
-                  >
-                    {cDef.symbol}
-                  </text>
-                )}
-              </g>
-            );
-          })}
-
-          {/* 3. Empty Bottle Video Camera Badge (Pure Code Vector) */}
+          {/* 3. Empty Bottle Video Camera Badge */}
           {displayTube.length === 0 && !risingColor && (
             <g>
-              {/* Frosted Frame */}
               <rect
                 x="15"
                 y="84"
@@ -339,14 +365,10 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
                 stroke="rgba(56, 189, 248, 0.75)"
                 strokeWidth="1.4"
               />
-              {/* White Camera Body */}
               <rect x="19" y="88.5" width="13" height="12" rx="2.5" fill="#ffffff" />
-              {/* Camera Lens Nozzle */}
               <polygon points="33,91.5 38,88 38,100.5 33,97" fill="#ffffff" />
-              {/* Cyan Play Arrow */}
               <polygon points="24,91.5 28.5,94.5 24,97.5" fill="#0284c7" />
 
-              {/* Sparkle Star */}
               <text x="11" y="146" fill="#bae6fd" fontSize="12" className="anim-twinkle">
                 ✦
               </text>
@@ -354,8 +376,6 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
           )}
 
           {/* 4. Crystal Glass Specular Reflections Layer (OVER the liquid) */}
-
-          {/* Outer Shell Stroke with Soft Luminous Blue Edge */}
           <path
             d="
               M 21 14
@@ -376,7 +396,7 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
             opacity="0.85"
           />
 
-          {/* Left Vertical High-Gloss Specular Stripe (Dual Layer: Soft Cyan Halo + Crisp White Core) */}
+          {/* Left Vertical High-Gloss Specular Stripe */}
           <path
             d="M 9.5 50 L 9.5 154"
             stroke="#38bdf8"
@@ -409,7 +429,7 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
             opacity="0.85"
           />
 
-          {/* Thick Solid Glass Base Refraction Smile Arc */}
+          {/* Solid Glass Base Refraction Smile Arc */}
           <path
             d="M 14 170 Q 30 177 46 170"
             stroke="#93c5fd"
@@ -429,7 +449,6 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
             stroke="#38bdf8"
             strokeWidth="1.5"
           />
-          {/* Inner Mouth Dark Aperture */}
           <ellipse
             cx="30"
             cy="12"
@@ -439,7 +458,6 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
             stroke="rgba(56, 189, 248, 0.5)"
             strokeWidth="0.8"
           />
-          {/* Top Lip Crescent Specular Glint */}
           <path
             d="M 16 10 Q 30 8 44 10"
             stroke="#ffffff"
