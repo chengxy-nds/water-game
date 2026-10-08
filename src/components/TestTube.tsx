@@ -103,17 +103,106 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
 
   // Compute layers to render
   const displayTube = [...tube];
-  let drainingTopPercent = 100;
-  if (isPouringSource && sourceDrainingCount > 0 && displayTube.length > 0) {
-    drainingTopPercent = Math.max(0, 100 - sourceDrainingCount * 100);
+
+  interface RenderLayer {
+    colorId: string;
+    heightPercent: number;
+    isTop: boolean;
+    isBottom: boolean;
   }
 
-  let risingColor: string | null = null;
-  let risingPercent = 0;
-  if (isPouringTarget && targetRisingCount > 0 && activePourColor) {
-    risingColor = activePourColor;
-    risingPercent = Math.min(100, targetRisingCount * 100);
+  // 1. Calculate source liquid layers (with multi-unit draining)
+  const rawLayers: RenderLayer[] = [];
+  if (isPouringSource && sourceDrainingCount > 0 && displayTube.length > 0) {
+    let unitsToDrain = sourceDrainingCount;
+    const blocks = displayTube.map((colorId) => ({ colorId, percent: 100 }));
+    // Drain from top layer downwards
+    for (let i = blocks.length - 1; i >= 0 && unitsToDrain > 0; i--) {
+      if (unitsToDrain >= 1) {
+        blocks[i].percent = 0;
+        unitsToDrain -= 1;
+      } else {
+        blocks[i].percent = Math.max(0, 100 - unitsToDrain * 100);
+        unitsToDrain = 0;
+      }
+    }
+    blocks.forEach((b, idx) => {
+      if (b.percent > 0) {
+        rawLayers.push({
+          colorId: b.colorId,
+          heightPercent: b.percent,
+          isTop: false,
+          isBottom: idx === 0,
+        });
+      }
+    });
+  } else {
+    displayTube.forEach((colorId, idx) => {
+      rawLayers.push({
+        colorId,
+        heightPercent: 100,
+        isTop: false,
+        isBottom: idx === 0,
+      });
+    });
   }
+
+  // 2. Calculate target rising liquid layers (with multi-unit rising)
+  if (isPouringTarget && targetRisingCount > 0 && activePourColor) {
+    let unitsToRise = targetRisingCount;
+    while (unitsToRise > 0) {
+      const thisPct = Math.min(100, unitsToRise * 100);
+      rawLayers.push({
+        colorId: activePourColor,
+        heightPercent: thisPct,
+        isTop: false,
+        isBottom: rawLayers.length === 0,
+      });
+      unitsToRise -= thisPct / 100;
+    }
+  }
+
+  // 3. Strict clamping: total fluid can NEVER exceed capacity (4 units)
+  let accumulatedUnits = 0;
+  const clampedLayers: RenderLayer[] = [];
+  for (const layer of rawLayers) {
+    const layerUnits = layer.heightPercent / 100;
+    if (accumulatedUnits + layerUnits <= capacity) {
+      clampedLayers.push({ ...layer });
+      accumulatedUnits += layerUnits;
+    } else if (accumulatedUnits < capacity) {
+      const remainingUnits = capacity - accumulatedUnits;
+      clampedLayers.push({
+        ...layer,
+        heightPercent: remainingUnits * 100,
+      });
+      accumulatedUnits = capacity;
+      break;
+    } else {
+      break;
+    }
+  }
+
+  if (clampedLayers.length > 0) {
+    clampedLayers[clampedLayers.length - 1].isTop = true;
+  }
+
+  // Inner chamber coordinates (viewBox 0 0 60 150, 1:2.5 stout potion bottle)
+  // 4 full blocks reach y = 138 - (4 * 27.5) = 28, completely filling the cylinder!
+  // Leaves 19px (12.7%) for the shoulder & neck, giving a perfectly lush, 100% full look.
+  const CHAMBER_BOTTOM_Y = 138;
+  const BLOCK_HEIGHT = 27.5;
+  const RX = 21.5;
+  const RY = 4.8;
+
+  let currentY = CHAMBER_BOTTOM_Y;
+  const calculatedLayers = clampedLayers.map((layer) => {
+    const layerH = BLOCK_HEIGHT * (layer.heightPercent / 100);
+    const yBottom = currentY;
+    const yTop = yBottom - layerH;
+    currentY = yTop;
+    return { ...layer, yBottom, yTop };
+  });
 
   const transformStyle: React.CSSProperties = {
     transform: isFlying
@@ -132,54 +221,6 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
     zIndex: isFlying ? 90 : isPouringSource ? 45 : isSelected ? 30 : 10,
     transformOrigin: isPouringSource ? '50% 9px' : 'center bottom',
   };
-
-  interface RenderLayer {
-    colorId: string;
-    heightPercent: number;
-    isTop: boolean;
-    isBottom: boolean;
-  }
-
-  const layers: RenderLayer[] = [];
-  displayTube.forEach((colorId, idx) => {
-    const isTop = idx === displayTube.length - 1 && !risingColor;
-    const isBottom = idx === 0;
-    const heightPct = isTop && isPouringSource ? drainingTopPercent : 100;
-    if (heightPct > 0) {
-      layers.push({
-        colorId,
-        heightPercent: heightPct,
-        isTop,
-        isBottom,
-      });
-    }
-  });
-
-  if (risingColor && risingPercent > 0) {
-    layers.push({
-      colorId: risingColor,
-      heightPercent: risingPercent,
-      isTop: true,
-      isBottom: layers.length === 0,
-    });
-  }
-
-  // Inner chamber coordinates (viewBox 0 0 60 150, 1:2.5 stout potion bottle)
-  // 4 full blocks reach y = 138 - (4 * 27.5) = 28, completely filling the cylinder!
-  // Leaves 19px (12.7%) for the shoulder & neck, giving a perfectly lush, 100% full look.
-  const CHAMBER_BOTTOM_Y = 138;
-  const BLOCK_HEIGHT = 27.5;
-  const RX = 21.5;
-  const RY = 4.8;
-
-  let currentY = CHAMBER_BOTTOM_Y;
-  const calculatedLayers = layers.map((layer) => {
-    const layerH = BLOCK_HEIGHT * (layer.heightPercent / 100);
-    const yBottom = currentY;
-    const yTop = yBottom - layerH;
-    currentY = yTop;
-    return { ...layer, yBottom, yTop };
-  });
 
   return (
     <div
@@ -410,7 +451,7 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
             </g>
           ) : (
             /* Standard Rest State: Layered 3D Cylindrical Gel Blocks */
-            <g>
+            <g clipPath={`url(#inner-clip-${index})`}>
               {calculatedLayers.map((layer, lIdx) => {
                 const cDef = getColor(layer.colorId);
                 const { yBottom, yTop, isBottom, isTop } = layer;
@@ -495,7 +536,7 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
           )}
 
           {/* 3. Empty Bottle Video Camera Badge */}
-          {displayTube.length === 0 && !risingColor && (
+          {calculatedLayers.length === 0 && (
             <g>
               <rect
                 x="15"

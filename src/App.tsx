@@ -292,8 +292,8 @@ export default function App() {
           tiltAngle,
           translateX: exactX,
           translateY: exactY,
-          drainCount: 0.85,
-          riseCount: 0.85,
+          drainCount: check.count,
+          riseCount: check.count,
         });
 
         if (vibrateEnabled) soundManager.vibrate(35);
@@ -386,6 +386,8 @@ export default function App() {
                 tiltAngle: 0,
                 translateX: 0,
                 translateY: -20,
+                drainCount: 0,
+                riseCount: 0,
               }
             : null
         );
