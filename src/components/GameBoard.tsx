@@ -84,10 +84,12 @@ export const GameBoard: React.FC<GameBoardProps> = ({
   // Exact DOM-measured translation offsets
   const exactOffsetRef = useRef<{ exactX: number; exactY: number; tiltAngle: number } | null>(null);
 
-  // Measure exact real-world DOM offsets whenever pour animation starts
+  // Measure exact real-world DOM offsets and stream coordinates
   useEffect(() => {
-    if (!pourAnimation) {
-      exactOffsetRef.current = null;
+    if (!pourAnimation || pourAnimation.phase !== 'pouring') {
+      if (!pourAnimation) exactOffsetRef.current = null;
+      setStreamFrom(null);
+      setStreamTo(null);
       return;
     }
 
@@ -103,53 +105,33 @@ export const GameBoard: React.FC<GameBoardProps> = ({
         const isTargetRight = tBox.left >= sBox.left;
         const tiltAngle = isTargetRight ? 65 : -65;
 
-        // Mouth centers at rest
+        // Static mouth centers of source and target
         const sMouthX = sBox.left + sBox.width * 0.5;
         const sMouthY = sBox.top + 14;
         const tMouthX = tBox.left + tBox.width * 0.5;
         const tMouthY = tBox.top + 14;
 
-        // When tilted by 65deg around mouth center (50% 14px),
-        // the lower spout lip is offset relative to mouth center by:
-        const spoutOffsetX = isTargetRight ? 10 : -10;
-        const spoutOffsetY = 8;
+        // Lip offset relative to mouth center when rotated by 65deg around (50% 14px):
+        const lipDx = isTargetRight ? 12 : -12;
+        const lipDy = 8;
 
-        // We want the lower spout lip to hover precisely 12px directly above target mouth center:
-        // desiredSpoutX = tMouthX
-        // desiredSpoutY = tMouthY - 12
-        const exactX = (tMouthX - sMouthX) - spoutOffsetX;
-        const exactY = (tMouthY - sMouthY) - 12 - spoutOffsetY;
+        // We want the pouring lip to hover directly above target mouth center:
+        const spoutX = tMouthX;
+        const spoutY = tMouthY - 14;
+
+        // Required translation for the source bottle:
+        const exactX = (spoutX - lipDx) - sMouthX;
+        const exactY = (spoutY - lipDy) - sMouthY;
 
         exactOffsetRef.current = { exactX, exactY, tiltAngle };
+
+        // The water flows downwards from spout directly into target tube!
+        // Start: at the hovering spout (spoutX, spoutY)
+        // Landing: inside target bottle mouth (tMouthX, tMouthY + 20)
+        setStreamFrom({ x: spoutX, y: spoutY + 4 });
+        setStreamTo({ x: tMouthX, y: tMouthY + 22 });
       }
     }
-  }, [pourAnimation?.sourceIndex, pourAnimation?.targetIndex]);
-
-  // Update stream points in sync with animation frame
-  useEffect(() => {
-    if (!pourAnimation || pourAnimation.phase !== 'pouring') {
-      setStreamFrom(null);
-      setStreamTo(null);
-      return;
-    }
-
-    const updateStreamCoords = () => {
-      const sourceRef = tubeRefs.current[pourAnimation.sourceIndex];
-      const targetRef = tubeRefs.current[pourAnimation.targetIndex];
-
-      if (sourceRef && targetRef) {
-        const spout = sourceRef.getSpoutPos();
-        const mouth = targetRef.getMouthPos();
-        if (spout && mouth) {
-          setStreamFrom(spout);
-          setStreamTo(mouth);
-        }
-      }
-    };
-
-    updateStreamCoords();
-    const interval = setInterval(updateStreamCoords, 16);
-    return () => clearInterval(interval);
   }, [pourAnimation]);
 
   // Helper: compute exact physical transform for pouring bottle
