@@ -1,0 +1,6 @@
+{
+  "name": "极清水序 - 智力倒水益智 (TapTap版)",
+  "description": "极具质感的TapTap风格智力倒水益智手游，搭载专业BFS解题器(Solver)、关卡生成器与关卡工坊，支持最优解推导、智能提示、撤销与无限挑战。",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
