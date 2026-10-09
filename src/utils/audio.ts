@@ -84,38 +84,70 @@ class SoundManager {
       for (let i = 0; i < bufferSize; i++) {
         // Pink-filtered noise for smooth, natural rushing water stream
         const white = Math.random() * 2 - 1;
-        lastVal = lastVal * 0.4 + white * 0.6;
+        lastVal = lastVal * 0.45 + white * 0.55;
         data[i] = lastVal;
       }
 
       const noiseSource = this.ctx.createBufferSource();
       noiseSource.buffer = buffer;
 
-      // Sweeping bandpass filter: frequency increases as the liquid surface gets closer to the mouth
+      // Sweeping bandpass filter: resonant air column acoustics rising with liquid level
       const filter = this.ctx.createBiquadFilter();
       filter.type = 'bandpass';
-      const bpStart = 500 + rStart * 600; // e.g. 500Hz -> 950Hz
-      const bpEnd = 680 + rEnd * 1050;   // e.g. 940Hz -> 1730Hz
+      const bpStart = 420 + rStart * 580; // e.g. 420Hz -> 850Hz
+      const bpEnd = 620 + rEnd * 980;    // e.g. 880Hz -> 1600Hz
       filter.frequency.setValueAtTime(bpStart, now);
-      filter.frequency.exponentialRampToValueAtTime(Math.max(100, bpEnd), now + duration * 0.9);
-      filter.Q.setValueAtTime(3.2 + rStart * 1.2, now);
-      filter.Q.linearRampToValueAtTime(4.8 + rEnd * 1.5, now + duration * 0.9);
+      filter.frequency.exponentialRampToValueAtTime(Math.max(100, bpEnd), now + duration * 0.92);
+      filter.Q.setValueAtTime(3.5 + rStart * 1.5, now);
+      filter.Q.linearRampToValueAtTime(5.2 + rEnd * 1.8, now + duration * 0.92);
 
-      // Volume envelope for water rush
+      // Volume envelope for rushing water
       const noiseGain = this.ctx.createGain();
       const volumeScale = Math.min(1.2, 0.85 + clampedCount * 0.15);
       noiseGain.gain.setValueAtTime(0.001, now);
-      noiseGain.gain.linearRampToValueAtTime(0.075 * volumeScale, now + 0.04);
-      noiseGain.gain.setValueAtTime(0.075 * volumeScale, now + duration * 0.68);
+      noiseGain.gain.linearRampToValueAtTime(0.065 * volumeScale, now + 0.04);
+      noiseGain.gain.setValueAtTime(0.065 * volumeScale, now + duration * 0.72);
       noiseGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
 
       noiseSource.connect(filter);
       filter.connect(noiseGain);
       noiseGain.connect(this.ctx.destination);
 
-      // 2. Cavity Helmholtz Resonant Tone (Fundamental rising pitch)
-      // Pitch increases smoothly with rising water level (shortening air column)
-      const baseFreq = (r: number) => 280 * (1 + 1.7 * r + 0.9 * (r * r));
+      // 2. Cascading Physical Air Bubble "Glug-Glug-Bloop" Pulses
+      // As water enters, air bubbles repeatedly detach & pop underwater.
+      // Crucially, the pitch of each bubble climbs higher as water level in the bottle rises!
+      const numBubbles = Math.max(7, Math.min(14, Math.floor(clampedCount * 4 + 4)));
+      for (let i = 0; i < numBubbles; i++) {
+        const tProgress = i / Math.max(1, numBubbles - 1);
+        const bubbleTime = now + 0.04 + tProgress * (duration * 0.86) + (Math.random() * 0.02 - 0.01);
+
+        // Instantaneous water level fraction (0.0 to 1.0)
+        const rCurrent = rStart + (rEnd - rStart) * tProgress;
+        // Pitch climbs from ~250Hz (deep hollow glug) up to ~950Hz (high clear plink)
+        const bubblePitch = 250 + rCurrent * 680 + (Math.random() * 26 - 13);
+
+        const bOsc = this.ctx.createOscillator();
+        const bGain = this.ctx.createGain();
+        bOsc.type = 'sine';
+
+        // Physics of bubble detachment: rapid upward chirp in ~35ms
+        bOsc.frequency.setValueAtTime(bubblePitch * 0.88, bubbleTime);
+        bOsc.frequency.exponentialRampToValueAtTime(bubblePitch * 1.15, bubbleTime + 0.035);
+
+        // Snappy organic bubble envelope
+        const bubbleVol = (0.05 + Math.random() * 0.025) * volumeScale;
+        bGain.gain.setValueAtTime(0.0001, bubbleTime);
+        bGain.gain.linearRampToValueAtTime(bubbleVol, bubbleTime + 0.005);
+        bGain.gain.exponentialRampToValueAtTime(0.0001, bubbleTime + 0.045);
+
+        bOsc.connect(bGain);
+        bGain.connect(this.ctx.destination);
+        bOsc.start(bubbleTime);
+        bOsc.stop(bubbleTime + 0.05);
+      }
+
+      // 3. Smooth Underlying Cavity Acoustic Resonance
+      const baseFreq = (r: number) => 260 * (1 + 1.5 * r + 0.8 * (r * r));
       const freqStart = baseFreq(rStart);
       const freqEnd = baseFreq(rEnd);
 
@@ -125,37 +157,15 @@ class SoundManager {
       cavityOsc.frequency.setValueAtTime(freqStart, now);
       cavityOsc.frequency.exponentialRampToValueAtTime(freqEnd, now + duration * 0.92);
 
-      // Micro bubbling flutter (LFO vibrato simulating bubble entrapment)
-      const lfo = this.ctx.createOscillator();
-      const lfoGain = this.ctx.createGain();
-      lfo.type = 'sine';
-      lfo.frequency.setValueAtTime(18 + clampedCount * 2.5, now); // ~18-23 Hz bubbling flutter
-      lfoGain.gain.setValueAtTime(14 + rEnd * 12, now);           // vibrato depth
-      lfo.connect(cavityOsc.frequency);
-
       cavityGain.gain.setValueAtTime(0.001, now);
-      cavityGain.gain.linearRampToValueAtTime(0.08 * volumeScale, now + 0.05);
-      cavityGain.gain.linearRampToValueAtTime(0.085 * volumeScale, now + duration * 0.7);
+      cavityGain.gain.linearRampToValueAtTime(0.045 * volumeScale, now + 0.05);
+      cavityGain.gain.linearRampToValueAtTime(0.05 * volumeScale, now + duration * 0.7);
       cavityGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
 
       cavityOsc.connect(cavityGain);
       cavityGain.connect(this.ctx.destination);
 
-      // 3. Bubble harmonics / liquid droplet sparkle (Higher harmonic sparkle)
-      const bubbleOsc = this.ctx.createOscillator();
-      const bubbleGain = this.ctx.createGain();
-      bubbleOsc.type = 'triangle';
-      bubbleOsc.frequency.setValueAtTime(freqStart * 1.5, now);
-      bubbleOsc.frequency.exponentialRampToValueAtTime(freqEnd * 1.6, now + duration * 0.88);
-
-      bubbleGain.gain.setValueAtTime(0.001, now);
-      bubbleGain.gain.linearRampToValueAtTime(0.035 * volumeScale, now + 0.06);
-      bubbleGain.gain.exponentialRampToValueAtTime(0.001, now + duration * 0.85);
-
-      bubbleOsc.connect(bubbleGain);
-      bubbleGain.connect(this.ctx.destination);
-
-      // 4. If filled completely to the brim (endVolume >= clampedCap), add brim droplet ping
+      // 4. If filled completely to the brim (endVolume >= clampedCap), add brim glass ping
       if (endVolume >= clampedCap) {
         const brimTime = now + duration * 0.82;
         const brimOsc = this.ctx.createOscillator();
@@ -165,7 +175,7 @@ class SoundManager {
         brimOsc.frequency.exponentialRampToValueAtTime(1580, brimTime + 0.08);
 
         brimGain.gain.setValueAtTime(0.001, brimTime);
-        brimGain.gain.linearRampToValueAtTime(0.055, brimTime + 0.015);
+        brimGain.gain.linearRampToValueAtTime(0.065, brimTime + 0.015);
         brimGain.gain.exponentialRampToValueAtTime(0.001, brimTime + 0.12);
 
         brimOsc.connect(brimGain);
@@ -175,17 +185,13 @@ class SoundManager {
         brimOsc.stop(brimTime + 0.12);
       }
 
-      // Start all nodes
+      // Start stream and background resonance
       noiseSource.start(now);
       cavityOsc.start(now);
-      lfo.start(now);
-      bubbleOsc.start(now);
 
-      // Stop all nodes
+      // Stop stream and background resonance
       noiseSource.stop(now + duration);
       cavityOsc.stop(now + duration);
-      lfo.stop(now + duration);
-      bubbleOsc.stop(now + duration);
     } catch {
       // Audio context failure safeguard
     }

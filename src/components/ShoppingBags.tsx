@@ -55,43 +55,75 @@ export const ShoppingBags: React.FC<ShoppingBagsProps> = ({
               isGulping
                 ? 'anim-bag-gulp z-30'
                 : isDone
-                ? 'scale-105 filter drop-shadow-[0_0_14px_rgba(255,255,255,0.7)]'
+                ? 'scale-105 filter drop-shadow-[0_0_8px_rgba(186,220,255,0.42)]'
                 : 'filter drop-shadow-[0_6px_10px_rgba(0,0,0,0.4)]'
             }`}
           >
             <svg
               viewBox="0 0 54 84"
-              className="w-[56px] sm:w-[62px] h-[86px] sm:h-[94px] overflow-visible select-none"
+              className="w-[70px] sm:w-[74px] h-[108px] sm:h-[114px] overflow-visible select-none"
             >
               <defs>
-                {/* 3D Gusset Side Shadow Gradient */}
                 <linearGradient id={`gusset-grad-${idx}`} x1="0" y1="0" x2="1" y2="0">
-                  <stop offset="0%" stopColor="#cbd5e1" />
-                  <stop offset="100%" stopColor="#94a3b8" />
+                  <stop offset="0%" stopColor="#f5fafc" />
+                  <stop offset="28%" stopColor="#c9d9e0" />
+                  <stop offset="100%" stopColor="#718697" />
+                </linearGradient>
+                <linearGradient id={`bag-front-grad-${idx}`} x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" stopColor="#ffffff" />
+                  <stop offset="48%" stopColor="#fbfdfe" />
+                  <stop offset="84%" stopColor="#edf3f6" />
+                  <stop offset="100%" stopColor="#d2dfe5" />
+                </linearGradient>
+                <linearGradient id={`bag-window-grad-${idx}`} x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stopColor="#8d9ca7" />
+                  <stop offset="42%" stopColor="#c7d0d6" />
+                  <stop offset="100%" stopColor="#8998a3" />
+                </linearGradient>
+                <linearGradient id={`bag-fold-grad-${idx}`} x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#ffffff" stopOpacity="0.78" />
+                  <stop offset="100%" stopColor="#b9c9d1" stopOpacity="0.18" />
+                </linearGradient>
+                <linearGradient id={`bag-band-grad-${idx}`} x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" stopColor={cDef.shadeHex || cDef.hex} />
+                  <stop offset="48%" stopColor={cDef.hex} />
+                  <stop offset="100%" stopColor={cDef.shadeHex || cDef.hex} />
                 </linearGradient>
               </defs>
 
-              {/* 1. Back Rope Handle */}
+              {/* Rear handles */}
               <path
-                d="M 19 21 C 19 3, 31 3, 31 21"
-                stroke="#94a3b8"
-                strokeWidth="2"
+                d="M 14 22 C 12 2, 24 1, 23 22 M 28 22 C 27 1, 39 2, 37 22"
+                stroke="#778b9a"
+                strokeWidth="2.1"
                 strokeLinecap="round"
                 fill="none"
+              />
+              <path
+                d="M 14 21 C 13 4, 23 3, 22.5 21 M 28.5 21 C 28 3, 37.5 4, 36.5 21"
+                stroke="#f8fcff"
+                strokeWidth="0.9"
+                strokeLinecap="round"
+                fill="none"
+                opacity="0.9"
               />
 
               {/* 2. 3D Side Gusset (Depth Perspective) */}
               <polygon
                 points="40,21 48,16 48,68 40,75"
                 fill={`url(#gusset-grad-${idx})`}
-                stroke="#64748b"
-                strokeWidth="0.5"
+                stroke="#8497a3"
+                strokeWidth="0.6"
               />
+              <path d="M 42 23 L 42 71" stroke="#ffffff" strokeWidth="0.7" opacity="0.42" />
+              <path d="M 46.8 18 L 46.8 68" stroke="#526777" strokeWidth="0.65" opacity="0.32" />
+              <polygon points="40,21 48,16 48,20 40,25" fill="#f5fafc" opacity="0.78" />
               {/* Side Bottom Darker Color Band */}
               <polygon
                 points="40,59 48,53 48,68 40,75"
                 fill={cDef.shadeHex || cDef.hex}
               />
+              <path d="M 40 59 L 48 53" stroke="#ffffff" strokeWidth="0.7" opacity="0.55" />
 
               {/* 3. Front Face Pure White Bag Body */}
               <rect
@@ -100,10 +132,14 @@ export const ShoppingBags: React.FC<ShoppingBagsProps> = ({
                 width="32"
                 height="54"
                 rx="1"
-                fill="#ffffff"
-                stroke="#e2e8f0"
+                fill={`url(#bag-front-grad-${idx})`}
+                stroke="#d6e5ec"
                 strokeWidth="0.8"
               />
+              <path d="M 9 22 H 39" stroke="#ffffff" strokeWidth="0.8" opacity="0.9" />
+              <path d="M 9 23 H 39" stroke="#aebfc8" strokeWidth="0.55" opacity="0.7" />
+              <path d="M 10 25 L 10 57" stroke="#ffffff" strokeWidth="0.65" opacity="0.45" />
+              <path d="M 38.5 24 L 38.5 57" stroke="#a8b8c1" strokeWidth="0.75" opacity="0.55" />
 
               {/* Front Bottom Vibrant Color Band */}
               <rect
@@ -112,29 +148,45 @@ export const ShoppingBags: React.FC<ShoppingBagsProps> = ({
                 width="32"
                 height="16"
                 rx="1"
-                fill={cDef.hex}
+                fill={`url(#bag-band-grad-${idx})`}
               />
+              <path d="M 9 60 H 39" stroke="#fff8" strokeWidth="0.8" />
+              <path d="M 9 73 Q 24 75 39 73" stroke={cDef.shadeHex || cDef.hex} strokeWidth="0.8" opacity="0.72" fill="none" />
+              <polygon points="8,69 13,71 13,75 8,75" fill={cDef.shadeHex || cDef.hex} opacity="0.52" />
 
-              {/* 4. Clear Window Frame (Recessed Look) */}
+              {/* Recessed window bezel and frosted glass */}
+              <rect x="13" y="26" width="22" height="40" rx="5" fill="#d4e0e6" opacity="0.7" />
               <rect
                 x="14"
                 y="27"
                 width="20"
                 height="38"
                 rx="4.5"
-                fill="#f1f5f9"
+                fill="#eaf4f8"
                 stroke={cDef.hex}
-                strokeWidth="2.5"
+                strokeWidth="1.8"
+              />
+              <rect
+                x="15.4"
+                y="28.5"
+                width="17.2"
+                height="35"
+                rx="3.4"
+                fill={`url(#bag-window-grad-${idx})`}
+                stroke="#ffffff"
+                strokeWidth="0.55"
               />
 
-              {/* Window Glass Diagonal Highlight */}
+              {/* Broad glass reflection and fine highlight */}
+              <path d="M 17 30 L 20 30 L 28 59 L 24.5 59 Z" fill="url(#bag-fold-grad-${idx})" opacity="0.42" />
               <path
-                d="M 17 31 L 23 59"
+                d="M 17.5 31 L 24 57"
                 stroke="#ffffff"
-                strokeWidth="1.8"
+                strokeWidth="0.9"
                 strokeLinecap="round"
-                opacity="0.85"
+                opacity="0.62"
               />
+              <path d="M 31 31 L 31 56" stroke="#ffffff" strokeWidth="0.55" opacity="0.55" />
 
               {/* Completed Mini Bottle inside Bag Window */}
               {isDone && (
@@ -161,20 +213,28 @@ export const ShoppingBags: React.FC<ShoppingBagsProps> = ({
                 </g>
               )}
 
-              {/* 5. Front Rope Handle */}
+              {/* Front handle eyelets */}
+              {[14, 23, 28, 37].map((x) => (
+                <g key={`eyelet-${x}`}>
+                  <circle cx={x} cy="21" r="1.65" fill="#8293a0" />
+                  <circle cx={x} cy="20.7" r="0.78" fill="#f8fcff" />
+                </g>
+              ))}
+              {/* Front double rope handles */}
               <path
-                d="M 17 21 C 17 1, 29 1, 29 21"
-                stroke="#ffffff"
-                strokeWidth="2.4"
+                d="M 14 21 C 12 1, 24 0, 23 21 M 28 21 C 27 0, 39 1, 37 21"
+                stroke="#657987"
+                strokeWidth="2.35"
                 strokeLinecap="round"
                 fill="none"
               />
               <path
-                d="M 17 21 C 17 1, 29 1, 29 21"
-                stroke="#94a3b8"
+                d="M 14 20 C 13 3, 23 2, 22.5 20 M 28.5 20 C 28 2, 37.5 3, 36.5 20"
+                stroke="#ffffff"
                 strokeWidth="0.8"
                 strokeLinecap="round"
                 fill="none"
+                opacity="0.96"
               />
             </svg>
           </div>
@@ -189,26 +249,52 @@ export const ShoppingBags: React.FC<ShoppingBagsProps> = ({
       >
         <svg
           viewBox="0 0 54 84"
-          className="w-[56px] sm:w-[62px] h-[86px] sm:h-[94px] overflow-visible select-none"
+              className="w-[70px] sm:w-[74px] h-[108px] sm:h-[114px] overflow-visible select-none"
         >
-          {/* Back Rope Handle */}
+          <defs>
+            <linearGradient id="bonus-gusset-grad" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stopColor="#f5fafc" />
+              <stop offset="28%" stopColor="#c9d9e0" />
+              <stop offset="100%" stopColor="#718697" />
+            </linearGradient>
+            <linearGradient id="bonus-front-grad" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stopColor="#ffffff" />
+              <stop offset="48%" stopColor="#f6fafc" />
+              <stop offset="84%" stopColor="#e8eef2" />
+              <stop offset="100%" stopColor="#cbd8df" />
+            </linearGradient>
+            <linearGradient id="bonus-window-grad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stopColor="#7f8d98" />
+              <stop offset="48%" stopColor="#b8c2c9" />
+              <stop offset="100%" stopColor="#7b8994" />
+            </linearGradient>
+          </defs>
+
+          {/* Rear handles */}
           <path
-            d="M 19 21 C 19 3, 31 3, 31 21"
-            stroke="#94a3b8"
-            strokeWidth="2"
+            d="M 14 22 C 12 2, 24 1, 23 22 M 28 22 C 27 1, 39 2, 37 22"
+            stroke="#778b9a"
+            strokeWidth="2.1"
             strokeLinecap="round"
             fill="none"
           />
+          <path d="M 14 21 C 13 4, 23 3, 22.5 21 M 28.5 21 C 28 3, 37.5 4, 36.5 21" stroke="#f8fcff" strokeWidth="0.9" strokeLinecap="round" fill="none" opacity="0.9" />
 
           {/* 3D Side Gusset */}
           <polygon
             points="40,21 48,16 48,68 40,75"
-            fill="#94a3b8"
+            fill="url(#bonus-gusset-grad)"
+            stroke="#8497a3"
+            strokeWidth="0.6"
           />
+          <path d="M 42 23 L 42 71" stroke="#ffffff" strokeWidth="0.7" opacity="0.42" />
+          <path d="M 46.8 18 L 46.8 68" stroke="#526777" strokeWidth="0.65" opacity="0.32" />
+          <polygon points="40,21 48,16 48,20 40,25" fill="#f5fafc" opacity="0.78" />
           <polygon
             points="40,59 48,53 48,68 40,75"
             fill="#64748b"
           />
+          <path d="M 40 59 L 48 53" stroke="#ffffff" strokeWidth="0.7" opacity="0.55" />
 
           {/* Front Face Light Gray Paper */}
           <rect
@@ -217,10 +303,14 @@ export const ShoppingBags: React.FC<ShoppingBagsProps> = ({
             width="32"
             height="54"
             rx="1"
-            fill="#e2e8f0"
+            fill="url(#bonus-front-grad)"
             stroke="#cbd5e1"
             strokeWidth="0.8"
           />
+          <path d="M 9 22 H 39" stroke="#ffffff" strokeWidth="0.8" opacity="0.9" />
+          <path d="M 9 23 H 39" stroke="#aebfc8" strokeWidth="0.55" opacity="0.7" />
+          <path d="M 10 25 L 10 57" stroke="#ffffff" strokeWidth="0.65" opacity="0.45" />
+          <path d="M 38.5 24 L 38.5 57" stroke="#a8b8c1" strokeWidth="0.75" opacity="0.55" />
 
           {/* Bottom Gray Band */}
           <rect
@@ -231,6 +321,9 @@ export const ShoppingBags: React.FC<ShoppingBagsProps> = ({
             rx="1"
             fill="#94a3b8"
           />
+          <path d="M 9 60 H 39" stroke="#ffffff" strokeWidth="0.8" opacity="0.72" />
+          <path d="M 9 73 Q 24 75 39 73" stroke="#64748b" strokeWidth="0.8" opacity="0.72" fill="none" />
+          <polygon points="8,69 13,71 13,75 8,75" fill="#64748b" opacity="0.5" />
 
           {/* Window Frame */}
           <rect
@@ -243,6 +336,10 @@ export const ShoppingBags: React.FC<ShoppingBagsProps> = ({
             stroke="#64748b"
             strokeWidth="2.2"
           />
+          <rect x="15.4" y="28.5" width="17.2" height="35" rx="3.4" fill="url(#bonus-window-grad)" stroke="#ffffff" strokeWidth="0.55" />
+          <path d="M 17 30 L 20 30 L 28 59 L 24.5 59 Z" fill="#ffffff" opacity="0.18" />
+          <path d="M 17.5 31 L 24 57" stroke="#ffffff" strokeWidth="0.9" strokeLinecap="round" opacity="0.62" />
+          <path d="M 31 31 L 31 56" stroke="#ffffff" strokeWidth="0.55" opacity="0.55" />
 
           {/* 3D Video Camera Icon inside Window */}
           <g>
@@ -254,14 +351,21 @@ export const ShoppingBags: React.FC<ShoppingBagsProps> = ({
             <polygon points="23,43.5 26.5,46 23,48.5" fill="#0284c7" />
           </g>
 
-          {/* Front Rope Handle */}
+          {/* Front handle eyelets and double handles */}
+          {[14, 23, 28, 37].map((x) => (
+            <g key={`bonus-eyelet-${x}`}>
+              <circle cx={x} cy="21" r="1.65" fill="#8293a0" />
+              <circle cx={x} cy="20.7" r="0.78" fill="#f8fcff" />
+            </g>
+          ))}
           <path
-            d="M 17 21 C 17 1, 29 1, 29 21"
-            stroke="#ffffff"
-            strokeWidth="2.4"
+            d="M 14 21 C 12 1, 24 0, 23 21 M 28 21 C 27 0, 39 1, 37 21"
+            stroke="#657987"
+            strokeWidth="2.35"
             strokeLinecap="round"
             fill="none"
           />
+          <path d="M 14 20 C 13 3, 23 2, 22.5 20 M 28.5 20 C 28 2, 37.5 3, 36.5 20" stroke="#ffffff" strokeWidth="0.8" strokeLinecap="round" fill="none" opacity="0.96" />
         </svg>
 
         {bonusUnlocked && (

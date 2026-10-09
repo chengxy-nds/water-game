@@ -101,27 +101,40 @@ export const GameBoard: React.FC<GameBoardProps> = ({
       return;
     }
 
-    const tSlot = document.getElementById(`tube-slot-${pourAnimation.targetIndex}`);
-    if (tSlot) {
-      const tBox = tSlot.getBoundingClientRect();
-      const scaleY = tBox.height / 150;
-      const tMouthX = tBox.left + tBox.width * 0.5;
-      const tMouthY = tBox.top + 9 * scaleY;
+    const sourceSvg = document.querySelector<SVGSVGElement>(`#tube-slot-${pourAnimation.sourceIndex} svg`);
+    const targetSvg = document.querySelector<SVGSVGElement>(`#tube-slot-${pourAnimation.targetIndex} svg`);
+    const sourceMatrix = sourceSvg?.getScreenCTM() ?? null;
+    const targetMatrix = targetSvg?.getScreenCTM() ?? null;
 
-      const isTargetRight = pourAnimation.tiltAngle > 0;
-      // Pouring mouth lip hovers touching the target rim opening
-      const spoutX = tMouthX - (isTargetRight ? 3 : -3);
-      const spoutY = tMouthY - 4;
+    if (sourceMatrix && targetMatrix) {
+      const sourceIsTiltRight = pourAnimation.tiltAngle > 0;
+      const sourceLip = sourceSvg!.createSVGPoint();
+      sourceLip.x = sourceIsTiltRight ? 43 : 17;
+      sourceLip.y = 9;
+      const sourceLipScreen = sourceLip.matrixTransform(sourceMatrix);
 
       const targetTube = tubes[pourAnimation.targetIndex];
       const currentLiquidUnits = targetTube
         ? targetTube.length + (pourAnimation.riseCount || 0)
         : 0;
-      const surfaceSvgY = 138 - Math.max(0.4, Math.min(4, currentLiquidUnits)) * 27.5;
-      const targetSurfaceY = tBox.top + surfaceSvgY * scaleY;
 
-      setStreamFrom({ x: spoutX, y: spoutY });
-      setStreamTo({ x: tMouthX, y: targetSurfaceY });
+      // Exact vertical surface level matching target tube liquid geometry
+      const getTargetSurfaceSvgY = (units: number) => {
+        const boundaries = [138, 105, 79.33, 53.67, 28];
+        const uClamped = Math.max(0, Math.min(4, units));
+        const base = Math.min(3, Math.floor(uClamped));
+        const frac = uClamped - base;
+        return boundaries[base] + frac * (boundaries[base + 1] - boundaries[base]);
+      };
+
+      const surfaceSvgY = getTargetSurfaceSvgY(currentLiquidUnits);
+      const targetSurface = targetSvg!.createSVGPoint();
+      targetSurface.x = 30;
+      targetSurface.y = surfaceSvgY;
+      const targetSurfaceScreen = targetSurface.matrixTransform(targetMatrix);
+
+      setStreamFrom({ x: sourceLipScreen.x, y: sourceLipScreen.y });
+      setStreamTo({ x: targetSurfaceScreen.x, y: targetSurfaceScreen.y });
     }
   }, [pourAnimation, tubes]);
 
@@ -138,22 +151,73 @@ export const GameBoard: React.FC<GameBoardProps> = ({
     };
   };
 
-  const numTubes = tubes.length;
-  const isMultiRow = numTubes > 6;
-  // Match reference screenshot: 11 tubes are split into Top Row (5) and Bottom Row (6)
-  const rowSplit = isMultiRow
-    ? numTubes === 11
-      ? 5
-      : Math.ceil(numTubes / 2)
-    : numTubes;
+  const rowCount = Math.min(3, Math.max(1, Math.ceil(tubes.length / 7)));
+  const baseRowSize = Math.floor(tubes.length / rowCount);
+  const extraTubes = tubes.length % rowCount;
+  const rows: { startIndex: number; tubes: Tube[] }[] = [];
+  let rowStartIndex = 0;
 
-  const row1Tubes = tubes.slice(0, rowSplit);
-  const row2Tubes = isMultiRow ? tubes.slice(rowSplit) : [];
+  for (let rowIndex = 0; rowIndex < rowCount; rowIndex++) {
+    const rowSize = baseRowSize + (rowIndex >= rowCount - extraTubes ? 1 : 0);
+    rows.push({
+      startIndex: rowStartIndex,
+      tubes: tubes.slice(rowStartIndex, rowStartIndex + rowSize),
+    });
+    rowStartIndex += rowSize;
+  }
+
+  const renderTube = (tube: Tube, globalIdx: number) => {
+    const isSelected = selectedIndex === globalIdx;
+    const isHintSource = hint?.from === globalIdx;
+    const isHintTarget = hint?.to === globalIdx;
+    const isPouringSource = pourAnimation?.sourceIndex === globalIdx;
+    const isPouringTarget = pourAnimation?.targetIndex === globalIdx;
+    const pourTransforms = getPourTransforms(isPouringSource);
+
+    return (
+      <div
+        id={`tube-slot-${globalIdx}`}
+        key={`tube-wrap-${globalIdx}`}
+        className={`relative flex flex-col items-center ${
+          isPouringSource ? 'z-50' : isSelected ? 'z-30' : 'z-10'
+        }`}
+      >
+        <TestTube
+          ref={(el) => { tubeRefs.current[globalIdx] = el; }}
+          index={globalIdx}
+          tube={tube}
+          compact={rowCount >= 3}
+          isSelected={isSelected}
+          isHintSource={isHintSource}
+          isHintTarget={isHintTarget}
+          isPouringSource={isPouringSource}
+          isPouringFluid={isPouringSource && pourAnimation?.phase === 'pouring'}
+          isPouringTarget={isPouringTarget}
+          isShaking={shakingTubeIndex === globalIdx}
+          tiltAngle={pourTransforms.tiltAngle}
+          translateX={pourTransforms.translateX}
+          translateY={pourTransforms.translateY}
+          showSymbols={showSymbols}
+          sourceDrainingCount={isPouringSource ? pourAnimation?.drainCount ?? 0 : 0}
+          drainingTotalCount={isPouringSource ? pourAnimation?.count ?? 0 : 0}
+          targetRisingCount={isPouringTarget ? pourAnimation?.riseCount ?? 0 : 0}
+          activePourColor={pourAnimation?.colorId || null}
+          completionPhase={completionAnimation?.tubeIndex === globalIdx ? completionAnimation?.phase ?? null : null}
+          flyX={completionAnimation?.tubeIndex === globalIdx ? completionAnimation?.flyX ?? 0 : 0}
+          flyY={completionAnimation?.tubeIndex === globalIdx ? completionAnimation?.flyY ?? 0 : 0}
+          hasCork={collectedTubeIndices.includes(globalIdx) || (isTubeComplete(tube, TUBE_CAPACITY) && completionAnimation?.tubeIndex !== globalIdx)}
+          isCollected={collectedTubeIndices.includes(globalIdx)}
+          onClick={onTubeClick}
+          disabled={disabled || !!pourAnimation || !!completionAnimation}
+        />
+      </div>
+    );
+  };
 
   return (
     <div
       ref={containerRef}
-      className="relative w-full max-w-xl mx-auto flex flex-col items-center justify-center py-2 sm:py-4 px-1 select-none"
+      className={`relative w-full max-w-xl mx-auto flex flex-col items-center justify-start ${rowCount >= 3 ? 'pt-[3vh]' : 'pt-[6vh]'} pb-2 px-1 select-none`}
     >
       {/* SVG <defs> and <filter> defining 'gooey' filter and jelly liquid layer gradients */}
       <svg className="fixed w-0 h-0 pointer-events-none" aria-hidden="true">
@@ -199,105 +263,26 @@ export const GameBoard: React.FC<GameBoardProps> = ({
         />
       </div>
 
-      {/* Row 1 Bottles */}
-      <div className="relative flex flex-col items-center mb-3 sm:mb-5">
-        <div className="flex flex-nowrap items-end justify-center gap-1.5 sm:gap-2.5 md:gap-3.5 z-10 px-0.5 sm:px-2">
-          {row1Tubes.map((tube, localIdx) => {
-            const globalIdx = localIdx;
-            const isSelected = selectedIndex === globalIdx;
-            const isHintSource = hint?.from === globalIdx;
-            const isHintTarget = hint?.to === globalIdx;
-            const isPouringSource = pourAnimation?.sourceIndex === globalIdx;
-            const isPouringTarget = pourAnimation?.targetIndex === globalIdx;
-            const pourTransforms = getPourTransforms(isPouringSource);
+      <div className={`relative z-10 flex flex-col items-center ${rowCount >= 3 ? 'gap-3 sm:gap-4' : 'gap-8 sm:gap-10'}`}>
+        {rows.map((row, rowIndex) => {
+          const isPouringInRow = pourAnimation
+            ? pourAnimation.sourceIndex >= row.startIndex && pourAnimation.sourceIndex < row.startIndex + row.tubes.length
+            : false;
 
-            return (
-              <div
-                id={`tube-slot-${globalIdx}`}
-                key={`tube-wrap-${globalIdx}`}
-                className="relative flex flex-col items-center"
-              >
-                <TestTube
-                  ref={(el) => { tubeRefs.current[globalIdx] = el; }}
-                  index={globalIdx}
-                  tube={tube}
-                  isSelected={isSelected}
-                  isHintSource={isHintSource}
-                  isHintTarget={isHintTarget}
-                  isPouringSource={isPouringSource}
-                  isPouringTarget={isPouringTarget}
-                  isShaking={shakingTubeIndex === globalIdx}
-                  tiltAngle={pourTransforms.tiltAngle}
-                  translateX={pourTransforms.translateX}
-                  translateY={pourTransforms.translateY}
-                  showSymbols={showSymbols}
-                  sourceDrainingCount={isPouringSource ? pourAnimation.drainCount : 0}
-                  targetRisingCount={isPouringTarget ? pourAnimation.riseCount : 0}
-                  activePourColor={pourAnimation?.colorId || null}
-                  completionPhase={completionAnimation?.tubeIndex === globalIdx ? completionAnimation.phase : null}
-                  flyX={completionAnimation?.tubeIndex === globalIdx ? completionAnimation.flyX : 0}
-                  flyY={completionAnimation?.tubeIndex === globalIdx ? completionAnimation.flyY : 0}
-                  hasCork={collectedTubeIndices.includes(globalIdx) || (isTubeComplete(tube, TUBE_CAPACITY) && completionAnimation?.tubeIndex !== globalIdx)}
-                  isCollected={collectedTubeIndices.includes(globalIdx)}
-                  onClick={onTubeClick}
-                  disabled={disabled || !!pourAnimation || !!completionAnimation}
-                />
+          return (
+            <div
+              key={`tube-row-${rowIndex}`}
+              className={`relative flex items-end justify-center transition-transform duration-300 ${
+                isPouringInRow ? 'z-40' : 'z-10'
+              }`}
+            >
+              <div className="flex flex-nowrap items-end justify-center gap-1 sm:gap-2 md:gap-3">
+                {row.tubes.map((tube, localIdx) => renderTube(tube, row.startIndex + localIdx))}
               </div>
-            );
-          })}
-        </div>
+            </div>
+          );
+        })}
       </div>
-
-      {/* Row 2 Bottles (if more than 6 tubes) */}
-      {row2Tubes.length > 0 && (
-        <div className="relative flex flex-col items-center mt-0.5 sm:mt-1.5">
-          <div className="flex flex-nowrap items-end justify-center gap-1.5 sm:gap-2.5 md:gap-3.5 z-10 px-0.5 sm:px-2">
-            {row2Tubes.map((tube, localIdx) => {
-              const globalIdx = rowSplit + localIdx;
-              const isSelected = selectedIndex === globalIdx;
-              const isHintSource = hint?.from === globalIdx;
-              const isHintTarget = hint?.to === globalIdx;
-              const isPouringSource = pourAnimation?.sourceIndex === globalIdx;
-              const isPouringTarget = pourAnimation?.targetIndex === globalIdx;
-              const pourTransforms = getPourTransforms(isPouringSource);
-
-              return (
-                <div
-                  id={`tube-slot-${globalIdx}`}
-                  key={`tube-wrap-${globalIdx}`}
-                  className="relative flex flex-col items-center"
-                >
-                  <TestTube
-                    ref={(el) => { tubeRefs.current[globalIdx] = el; }}
-                    index={globalIdx}
-                    tube={tube}
-                    isSelected={isSelected}
-                    isHintSource={isHintSource}
-                    isHintTarget={isHintTarget}
-                    isPouringSource={isPouringSource}
-                    isPouringTarget={isPouringTarget}
-                    isShaking={shakingTubeIndex === globalIdx}
-                    tiltAngle={pourTransforms.tiltAngle}
-                    translateX={pourTransforms.translateX}
-                    translateY={pourTransforms.translateY}
-                    showSymbols={showSymbols}
-                    sourceDrainingCount={isPouringSource ? pourAnimation.drainCount : 0}
-                    targetRisingCount={isPouringTarget ? pourAnimation.riseCount : 0}
-                    activePourColor={pourAnimation?.colorId || null}
-                    completionPhase={completionAnimation?.tubeIndex === globalIdx ? completionAnimation.phase : null}
-                    flyX={completionAnimation?.tubeIndex === globalIdx ? completionAnimation.flyX : 0}
-                    flyY={completionAnimation?.tubeIndex === globalIdx ? completionAnimation.flyY : 0}
-                    hasCork={collectedTubeIndices.includes(globalIdx) || (isTubeComplete(tube, TUBE_CAPACITY) && completionAnimation?.tubeIndex !== globalIdx)}
-                    isCollected={collectedTubeIndices.includes(globalIdx)}
-                    onClick={onTubeClick}
-                    disabled={disabled || !!pourAnimation || !!completionAnimation}
-                  />
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
     </div>
   );
 };

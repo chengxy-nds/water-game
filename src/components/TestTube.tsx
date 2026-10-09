@@ -17,6 +17,7 @@ interface TestTubeProps {
   isHintSource?: boolean;
   isHintTarget?: boolean;
   isPouringSource?: boolean;
+  isPouringFluid?: boolean;
   isPouringTarget?: boolean;
   isShaking?: boolean;
   tiltAngle?: number;
@@ -24,6 +25,7 @@ interface TestTubeProps {
   translateY?: number;
   showSymbols?: boolean;
   sourceDrainingCount?: number;
+  drainingTotalCount?: number;
   targetRisingCount?: number;
   activePourColor?: string | null;
   completionPhase?: 'cork_drop' | 'whirling' | 'flying' | null;
@@ -31,6 +33,7 @@ interface TestTubeProps {
   flyY?: number;
   hasCork?: boolean;
   isCollected?: boolean;
+  compact?: boolean;
   onClick: (index: number) => void;
   disabled?: boolean;
 }
@@ -43,6 +46,7 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
   isHintSource = false,
   isHintTarget = false,
   isPouringSource = false,
+  isPouringFluid = false,
   isPouringTarget = false,
   isShaking = false,
   tiltAngle = 0,
@@ -50,6 +54,7 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
   translateY = 0,
   showSymbols = false,
   sourceDrainingCount = 0,
+  drainingTotalCount = 0,
   targetRisingCount = 0,
   activePourColor = null,
   completionPhase = null,
@@ -57,6 +62,7 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
   flyY = 0,
   hasCork = false,
   isCollected = false,
+  compact = false,
   onClick,
   disabled = false,
 }, ref) => {
@@ -92,7 +98,9 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
     return (
       <div
         ref={containerRef}
-        className="flex flex-col items-center group relative select-none opacity-0 pointer-events-none w-[50px] sm:w-[54px] h-[125px] sm:h-[135px]"
+        className={`flex flex-col items-center group relative select-none opacity-0 pointer-events-none ${
+          compact ? 'w-[42px] sm:w-[46px] h-[120px] sm:h-[132px]' : 'w-[54px] sm:w-[60px] h-[154px] sm:h-[171px]'
+        }`}
       />
     );
   }
@@ -188,16 +196,38 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
   }
 
   // Inner chamber coordinates (viewBox 0 0 60 150, 1:2.5 stout potion bottle)
-  // 4 full blocks reach y = 138 - (4 * 27.5) = 28, completely filling the cylinder!
-  // Leaves 19px (12.7%) for the shoulder & neck, giving a perfectly lush, 100% full look.
+  // Chamber cylinder runs y = 28 to 130; bottom curved U-dome runs y = 130 to 138. Total height = 110px.
+  // Visual compensation: base layer has 8px in the curved dome, so giving it 33px nominal height
+  // ensures its visible straight side-wall (130 - 105 = 25.0px) matches upper layers (77 / 3 = 25.67px).
+  // All 4 layers have visually identical side-wall profiles (~25.0px to 25.7px).
   const CHAMBER_BOTTOM_Y = 138;
-  const BLOCK_HEIGHT = 27.5;
+  const CHAMBER_TOP_Y = 28;
+  const CHAMBER_HEIGHT = CHAMBER_BOTTOM_Y - CHAMBER_TOP_Y; // 110px
   const RX = 21.5;
   const RY = 4.8;
 
+  const getBlockNominalHeight = (layerIdx: number, totalCapacity: number = 4): number => {
+    if (totalCapacity === 4) {
+      return layerIdx === 0 ? 33.0 : 25.67;
+    }
+    return CHAMBER_HEIGHT / totalCapacity;
+  };
+
+  const getBoundaryY = (boundaryIdx: number, totalCapacity: number = 4): number => {
+    if (boundaryIdx <= 0) return CHAMBER_BOTTOM_Y;
+    if (boundaryIdx >= totalCapacity) return CHAMBER_TOP_Y;
+    if (totalCapacity === 4) {
+      const boundaries = [138, 105, 79.33, 53.67, 28];
+      if (boundaryIdx < boundaries.length) return boundaries[boundaryIdx];
+      return CHAMBER_TOP_Y;
+    }
+    return CHAMBER_BOTTOM_Y - boundaryIdx * (CHAMBER_HEIGHT / totalCapacity);
+  };
+
   let currentY = CHAMBER_BOTTOM_Y;
-  const calculatedLayers = clampedLayers.map((layer) => {
-    const layerH = BLOCK_HEIGHT * (layer.heightPercent / 100);
+  const calculatedLayers = clampedLayers.map((layer, lIdx) => {
+    const nominalH = getBlockNominalHeight(lIdx, capacity);
+    const layerH = nominalH * (layer.heightPercent / 100);
     const yBottom = currentY;
     const yTop = yBottom - layerH;
     currentY = yTop;
@@ -257,7 +287,7 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
           isWhirling
             ? 'anim-whirl-pulse filter drop-shadow-[0_0_24px_rgba(251,191,36,0.95)]'
             : isSelected
-            ? 'filter drop-shadow-[0_0_16px_rgba(56,189,248,0.95)]'
+              ? 'filter drop-shadow-[0_0_10px_rgba(186,230,253,0.72)]'
             : isHintSource
             ? 'filter drop-shadow-[0_0_12px_rgba(251,191,36,0.85)]'
             : isHintTarget
@@ -267,7 +297,9 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
       >
         <svg
           viewBox="0 0 60 150"
-          className="w-[50px] sm:w-[54px] h-[125px] sm:h-[135px] overflow-visible select-none"
+          className={`overflow-visible select-none ${
+            compact ? 'w-[42px] sm:w-[46px] h-[120px] sm:h-[132px]' : 'w-[54px] sm:w-[60px] h-[154px] sm:h-[171px]'
+          }`}
         >
           <defs>
             {/* 3D Wooden Cork Stopper Gradient */}
@@ -279,17 +311,19 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
             </linearGradient>
 
             {/* Deep Cosmic Sapphire Background Gradient */}
-            <linearGradient id={`tube-bg-${index}`} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#081844" stopOpacity="0.45" />
-              <stop offset="60%" stopColor="#040e2c" stopOpacity="0.65" />
-              <stop offset="100%" stopColor="#020618" stopOpacity="0.85" />
+            <linearGradient id={`tube-bg-${index}`} x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stopColor="#586fe8" stopOpacity="0.58" />
+              <stop offset="12%" stopColor="#172448" stopOpacity="0.78" />
+              <stop offset="50%" stopColor="#0a1430" stopOpacity="0.48" />
+              <stop offset="88%" stopColor="#172448" stopOpacity="0.76" />
+              <stop offset="100%" stopColor="#657cff" stopOpacity="0.52" />
             </linearGradient>
 
             {/* Rolled Collar Lip Gradient */}
             <linearGradient id={`lip-${index}`} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#93c5fd" stopOpacity="0.95" />
-              <stop offset="45%" stopColor="#3b82f6" stopOpacity="0.8" />
-              <stop offset="100%" stopColor="#1e3a8a" stopOpacity="0.95" />
+              <stop offset="0%" stopColor="#b9c7ff" stopOpacity="0.96" />
+              <stop offset="42%" stopColor="#5267d2" stopOpacity="0.94" />
+              <stop offset="100%" stopColor="#18275f" stopOpacity="1" />
             </linearGradient>
 
             {/* Left Gloss Specular Fading Gradient */}
@@ -312,9 +346,29 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
               >
                 <stop offset="0%" stopColor={c.shadeHex || c.hex} stopOpacity="0.95" />
                 <stop offset="7%" stopColor={c.hex} stopOpacity="1" />
-                <stop offset="22%" stopColor={c.topHex || '#ffffff'} stopOpacity="0.92" />
+                <stop offset="22%" stopColor={c.hex} stopOpacity="1" />
                 <stop offset="46%" stopColor={c.hex} stopOpacity="1" />
                 <stop offset="84%" stopColor={c.shadeHex || c.hex} stopOpacity="1" />
+                <stop offset="100%" stopColor={c.shadeHex || '#000000'} stopOpacity="0.95" />
+              </linearGradient>
+            ))}
+
+            {/* 3D Cylindrical Volume Shading for tilted fluid aligned to bottle width */}
+            {Object.values(COLOR_PALETTE).map((c: ColorDef) => (
+              <linearGradient
+                key={`tilted-grad-${c.id}-${index}`}
+                id={`tilted-grad-${c.id}-${index}`}
+                gradientUnits="userSpaceOnUse"
+                x1="6"
+                y1="0"
+                x2="54"
+                y2="0"
+              >
+                <stop offset="0%" stopColor={c.shadeHex || c.hex} stopOpacity="0.95" />
+                <stop offset="12%" stopColor={c.hex} stopOpacity="1" />
+                <stop offset="28%" stopColor={c.hex} stopOpacity="1" />
+                <stop offset="50%" stopColor={c.hex} stopOpacity="1" />
+                <stop offset="86%" stopColor={c.shadeHex || c.hex} stopOpacity="1" />
                 <stop offset="100%" stopColor={c.shadeHex || '#000000'} stopOpacity="0.95" />
               </linearGradient>
             ))}
@@ -372,78 +426,197 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
           />
 
           {/* 2. Fluid Layers (Dynamic Pouring Stream Flow vs Stacked Gel Blocks) */}
-          {isPouringSource && tiltAngle !== 0 ? (
+          {isPouringSource && isPouringFluid && tiltAngle !== 0 ? (
             /* Natural Gravity Stream Flow toward mouth lip when tilted */
             <g clipPath={`url(#inner-clip-${index})`}>
               {(() => {
                 if (displayTube.length === 0) return null;
                 const topColorId = displayTube[displayTube.length - 1];
                 const topColorDef = getColor(topColorId);
+
                 const isTiltRight = tiltAngle > 0;
+                const rad = (tiltAngle * Math.PI) / 180;
+                const tanTheta = Math.tan(rad);
 
-                // Find where the top pouring color run starts (consecutive blocks of same color at top)
-                let runStartIdx = displayTube.length - 1;
-                while (runStartIdx > 0 && displayTube[runStartIdx - 1] === topColorId) {
-                  runStartIdx--;
-                }
+                // Spout lip anchor where horizontal water level meets pouring lip (Y=9)
+                const spoutLipX = isTiltRight ? 43 : 17;
+                const spoutAnchorY = 9 + (spoutLipX - 30) * tanTheta;
 
-                // Y-coordinate of boundary with bottom static liquid
-                const yBase = CHAMBER_BOTTOM_Y - runStartIdx * BLOCK_HEIGHT;
+                // Total units to pour and progress
+                const totalToPour = drainingTotalCount > 0 ? drainingTotalCount : 1;
+                const pourProgress = Math.min(1, Math.max(0, sourceDrainingCount / totalToPour));
 
-                // How much of the top liquid is left (1 = full, 0 = drained)
-                const drainPct = Math.max(0, drainingTopPercent / 100);
+                // Number of full layers below the draining fluid
+                const baseRemainingUnits = Math.max(0, displayTube.length - totalToPour);
 
-                // As it drains, the upper surface recedes down towards the base
-                const fullHeight = (displayTube.length - runStartIdx) * BLOCK_HEIGHT;
-                const curHeight = fullHeight * drainPct;
-                const ySurfaceLeft = Math.max(14, yBase - curHeight);
-                const ySurfaceRight = Math.max(14, yBase - curHeight);
+                // Start surface (at pouring lip) and End surface (at remaining layers' level)
+                const yStart = spoutAnchorY;
+                const yEnd = baseRemainingUnits === 0 ? 145 : getBoundaryY(baseRemainingUnits, capacity);
+                const ySurfaceTop = yStart + pourProgress * (yEnd - yStart);
 
                 return (
                   <>
-                    {/* Non-draining layers below the pouring fluid */}
-                    {displayTube.slice(0, runStartIdx).map((cId, idx) => {
-                      const cDef = getColor(cId);
-                      const yB = CHAMBER_BOTTOM_Y - idx * BLOCK_HEIGHT;
-                      const yT = yB - BLOCK_HEIGHT;
-                      return (
-                        <path
-                          key={`bottom-layer-${idx}`}
-                          d={`M 8.5 ${yT + (isTiltRight ? 3 : -3)} L 51.5 ${yT + (isTiltRight ? -3 : 3)} L 51.5 ${yB} L 8.5 ${yB} Z`}
-                          fill={`url(#grad-${cDef.id}-${index})`}
-                        />
-                      );
-                    })}
+                    <defs>
+                      {/* Dynamic gradients for tilted layers rotated back to bottle frame */}
+                      <linearGradient
+                        id={`tilted-top-grad-${index}`}
+                        gradientUnits="userSpaceOnUse"
+                        x1="8.5"
+                        y1="0"
+                        x2="51.5"
+                        y2="0"
+                        gradientTransform={`rotate(${tiltAngle}, 30, ${ySurfaceTop})`}
+                      >
+                        <stop offset="0%" stopColor={topColorDef.shadeHex || topColorDef.hex} stopOpacity="0.95" />
+                        <stop offset="12%" stopColor={topColorDef.hex} stopOpacity="1" />
+                        <stop offset="30%" stopColor={topColorDef.hex} stopOpacity="1" />
+                        <stop offset="52%" stopColor={topColorDef.hex} stopOpacity="1" />
+                        <stop offset="86%" stopColor={topColorDef.shadeHex || topColorDef.hex} stopOpacity="1" />
+                        <stop offset="100%" stopColor={topColorDef.shadeHex || topColorDef.hex} stopOpacity="0.95" />
+                      </linearGradient>
+                      {Array.from({ length: baseRemainingUnits }).map((_, i) => {
+                        const k = baseRemainingUnits - 1 - i;
+                        const cId = displayTube[k];
+                        const cDef = getColor(cId);
+                        const yAnchorK = getBoundaryY(k + 1, capacity);
+                        return (
+                          <linearGradient
+                            key={`tilted-k-grad-${index}-${k}`}
+                            id={`tilted-k-grad-${index}-${k}`}
+                            gradientUnits="userSpaceOnUse"
+                            x1="8.5"
+                            y1="0"
+                            x2="51.5"
+                            y2="0"
+                            gradientTransform={`rotate(${tiltAngle}, 30, ${yAnchorK})`}
+                          >
+                            <stop offset="0%" stopColor={cDef.shadeHex || cDef.hex} stopOpacity="0.95" />
+                            <stop offset="12%" stopColor={cDef.hex} stopOpacity="1" />
+                            <stop offset="30%" stopColor={cDef.hex} stopOpacity="1" />
+                            <stop offset="52%" stopColor={cDef.hex} stopOpacity="1" />
+                            <stop offset="86%" stopColor={cDef.shadeHex || cDef.hex} stopOpacity="1" />
+                            <stop offset="100%" stopColor={cDef.shadeHex || cDef.hex} stopOpacity="0.95" />
+                          </linearGradient>
+                        );
+                      })}
+                    </defs>
 
-                    {/* Unified, continuous draining fluid slide running smoothly into the neck lip */}
-                    {drainPct > 0.05 && (
-                      <path
-                        key={`draining-wedge-${topColorId}`}
-                        d={
-                          isTiltRight
-                            ? `
-                              M 8.5 ${yBase + 3}
-                              L 8.5 ${ySurfaceLeft}
-                              Q 25 ${Math.max(12, ySurfaceLeft * 0.7)} 30 9
-                              L 43 9
-                              L 43 16
-                              L 51.5 28
-                              L 51.5 ${yBase - 3}
-                              Z
-                            `
-                            : `
-                              M 51.5 ${yBase + 3}
-                              L 51.5 ${ySurfaceRight}
-                              Q 35 ${Math.max(12, ySurfaceRight * 0.7)} 30 9
-                              L 17 9
-                              L 17 16
-                              L 8.5 28
-                              L 8.5 ${yBase - 3}
-                              Z
-                            `
-                        }
-                        fill={`url(#grad-${topColorDef.id}-${index})`}
-                      />
+                    {/* 1. Top Pouring Layer: rendered FIRST from ySurfaceTop downwards */}
+                    {pourProgress < 0.99 && (
+                      <g key="tilted-top-run" transform={`rotate(${-tiltAngle}, 30, ${ySurfaceTop})`}>
+                        {/* 3D Volumetric Fluid Body */}
+                        <rect
+                          x="-150"
+                          y={ySurfaceTop}
+                          width="360"
+                          height="320"
+                          fill={`url(#tilted-top-grad-${index})`}
+                        />
+
+                        {/* Gleaming Meniscus Specular Highlight along level liquid surface */}
+                        <line
+                          x1="-150"
+                          y1={ySurfaceTop}
+                          x2="210"
+                          y2={ySurfaceTop}
+                          stroke="#ffffff"
+                          strokeWidth="1.6"
+                          strokeLinecap="round"
+                          opacity="0.9"
+                        />
+                      </g>
+                    )}
+
+                    {/* 2. Non-draining layers below the pouring fluid:
+                        Rendered in DESCENDING order (from baseRemainingUnits - 1 DOWN to 0)
+                        so lower layers overwrite upper layers below each boundary,
+                        preserving natural gravitational stacking! */}
+                    {Array.from({ length: baseRemainingUnits })
+                      .map((_, i) => baseRemainingUnits - 1 - i)
+                      .map((k) => {
+                        const cId = displayTube[k];
+                        const yAnchorK = getBoundaryY(k + 1, capacity);
+                        const colorAbove = k === baseRemainingUnits - 1 ? topColorId : displayTube[k + 1];
+                        const hasDifferentColorAbove = colorAbove !== cId;
+
+                        return (
+                          <g key={`tilted-layer-${k}`} transform={`rotate(${-tiltAngle}, 30, ${yAnchorK})`}>
+                            {/* Liquid body from this layer's surface downwards */}
+                            <rect
+                              x="-150"
+                              y={yAnchorK}
+                              width="360"
+                              height="320"
+                              fill={`url(#tilted-k-grad-${index}-${k})`}
+                            />
+
+                            {/* Crisp Meniscus Interface between different colors */}
+                            {hasDifferentColorAbove && (
+                              <>
+                                <line
+                                  x1="-150"
+                                  y1={yAnchorK}
+                                  x2="210"
+                                  y2={yAnchorK}
+                                  stroke="rgba(0, 0, 0, 0.28)"
+                                  strokeWidth="1.2"
+                                />
+                                <line
+                                  x1="-150"
+                                  y1={yAnchorK - 0.6}
+                                  x2="210"
+                                  y2={yAnchorK - 0.6}
+                                  stroke="rgba(255, 255, 255, 0.5)"
+                                  strokeWidth="0.8"
+                                />
+                              </>
+                            )}
+
+                            {/* If top pouring fluid is fully drained, this layer becomes the top free surface */}
+                            {k === baseRemainingUnits - 1 && pourProgress >= 0.99 && (
+                              <line
+                                x1="-150"
+                                y1={yAnchorK}
+                                x2="210"
+                                y2={yAnchorK}
+                                stroke="#ffffff"
+                                strokeWidth="1.6"
+                                strokeLinecap="round"
+                                opacity="0.9"
+                              />
+                            )}
+                          </g>
+                        );
+                      })}
+
+                    {/* 3. Liquid stream guide along the lower neck wall into spout */}
+                    {pourProgress < 0.98 && (
+                      <>
+                        <path
+                          d={
+                            isTiltRight
+                              ? 'M 51.5 45 L 51.5 28 C 51.5 22, 43 22, 43 16 L 43 9'
+                              : 'M 8.5 45 L 8.5 28 C 8.5 22, 17 22, 17 16 L 17 9'
+                          }
+                          stroke={`url(#tilted-top-grad-${index})`}
+                          strokeWidth="4"
+                          strokeLinecap="round"
+                          fill="none"
+                          opacity={pourProgress < 0.9 ? 0.9 : 0.9 * (1 - (pourProgress - 0.9) / 0.08)}
+                        />
+                        <path
+                          d={
+                            isTiltRight
+                              ? 'M 50.5 45 L 50.5 28 L 42.5 16 L 42.5 9'
+                              : 'M 9.5 45 L 9.5 28 L 17.5 16 L 17.5 9'
+                          }
+                          stroke="rgba(255, 255, 255, 0.6)"
+                          strokeWidth="1.4"
+                          strokeLinecap="round"
+                          fill="none"
+                          opacity={pourProgress < 0.9 ? 0.8 : 0.8 * (1 - (pourProgress - 0.9) / 0.08)}
+                        />
+                      </>
                     )}
                   </>
                 );
@@ -459,9 +632,8 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
                 const bodyPath = isBottom
                   ? `
                     M 8.5 ${yTop}
-                    L 8.5 130
-                    C 8.5 135, 18 138, 30 138
-                    C 42 138, 51.5 135, 51.5 130
+                    L 8.5 138
+                    L 51.5 138
                     L 51.5 ${yTop}
                     A ${RX} ${RY} 0 0 1 8.5 ${yTop}
                     Z
@@ -483,7 +655,7 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
                       fill={`url(#grad-${cDef.id}-${index})`}
                     />
 
-                    {/* Subtle boundary crease between different stacked colors (only when different colors) */}
+                    {/* Subtle boundary crease between different stacked colors */}
                     {!isBottom && calculatedLayers[lIdx - 1]?.colorId !== layer.colorId && (
                       <path
                         d={`M 8.5 ${yBottom} A ${RX} ${RY} 0 0 0 51.5 ${yBottom}`}
@@ -501,17 +673,17 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
                           cy={yTop}
                           rx={RX}
                           ry={RY}
-                          fill={`url(#meniscus-grad-${cDef.id}-${index})`}
-                          stroke="rgba(255, 255, 255, 0.5)"
-                          strokeWidth="0.8"
+                          fill={cDef.hex}
+                          stroke="rgba(255, 255, 255, 0.3)"
+                          strokeWidth="0.65"
                         />
                         <path
                           d={`M 11.5 ${yTop + 1.4} Q 30 ${yTop + 4.8} 48.5 ${yTop + 1.4}`}
                           stroke="#ffffff"
-                          strokeWidth="1.5"
+                          strokeWidth="0.9"
                           strokeLinecap="round"
                           fill="none"
-                          opacity="0.92"
+                          opacity="0.42"
                         />
                       </g>
                     )}
@@ -519,7 +691,7 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
                     {showSymbols && (
                       <text
                         x="30"
-                        y={(yTop + yBottom) / 2}
+                        y={isBottom ? (yTop + Math.min(132, yBottom)) / 2 : (yTop + yBottom) / 2}
                         fill={cDef.textColor}
                         fontSize="11"
                         fontWeight="bold"
@@ -535,30 +707,7 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
             </g>
           )}
 
-          {/* 3. Empty Bottle Video Camera Badge */}
-          {calculatedLayers.length === 0 && (
-            <g>
-              <rect
-                x="15"
-                y="68"
-                width="30"
-                height="21"
-                rx="6"
-                fill="rgba(5, 18, 48, 0.65)"
-                stroke="rgba(56, 189, 248, 0.75)"
-                strokeWidth="1.4"
-              />
-              <rect x="19" y="72.5" width="13" height="12" rx="2.5" fill="#ffffff" />
-              <polygon points="33,75.5 38,72 38,84.5 33,81" fill="#ffffff" />
-              <polygon points="24,75.5 28.5,78.5 24,81.5" fill="#0284c7" />
-
-              <text x="11" y="118" fill="#bae6fd" fontSize="12" className="anim-twinkle">
-                ✦
-              </text>
-            </g>
-          )}
-
-          {/* 4. Crystal Glass Specular Reflections Layer (OVER the liquid) */}
+          {/* Crystal Glass Specular Reflections Layer (OVER the liquid) */}
           {/* Outer Glass Contour Outline */}
           <path
             d="
@@ -573,13 +722,24 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
               L 43 9
             "
             fill="none"
-            stroke="#38bdf8"
-            strokeWidth="1.7"
+            stroke="#536be9"
+            strokeWidth="3.0"
             strokeLinejoin="round"
-            opacity="0.82"
+            opacity="0.9"
           />
 
           {/* Inner Glass Wall Refraction Line (Visible Glass Thickness) */}
+          <path
+            d="M 40 32 C 43 30, 46 33, 46 38 L 46 50 C 45 53, 42 51, 41 48 Z"
+            fill="rgba(224, 233, 255, 0.28)"
+          />
+          <path
+            d="M 42 34 C 44 34, 45 36, 45 39 L 45 43"
+            fill="none"
+            stroke="rgba(255, 255, 255, 0.68)"
+            strokeWidth="1.1"
+            strokeLinecap="round"
+          />
           <path
             d="
               M 18 11
@@ -593,24 +753,24 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
               L 42 11
             "
             fill="none"
-            stroke="rgba(255, 255, 255, 0.2)"
-            strokeWidth="0.8"
+            stroke="rgba(198, 211, 255, 0.55)"
+            strokeWidth="0.85"
           />
 
           {/* Left Vertical High-Gloss Specular Stripe (Continuous flow from neck through shoulder to base) */}
           <path
             d="M 19 14 C 15 18, 9.5 22, 9.5 28 L 9.5 128 C 9.5 133, 13 137, 18 138"
             fill="none"
-            stroke="#38bdf8"
-            strokeWidth="3.2"
+            stroke="#5b72f2"
+            strokeWidth="2.8"
             strokeLinecap="round"
-            opacity="0.32"
+            opacity="0.38"
           />
           <path
             d="M 19 14 C 15 18, 9.5 22, 9.5 28 L 9.5 128 C 9.5 133, 13 137, 18 138"
             fill="none"
             stroke={`url(#specular-fade-${index})`}
-            strokeWidth="1.6"
+            strokeWidth="1.25"
             strokeLinecap="round"
           />
 
@@ -621,30 +781,30 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
             strokeWidth="1.6"
             strokeLinecap="round"
             fill="none"
-            opacity="0.85"
+            opacity="0.62"
           />
 
           {/* Right Wall Rim Light (Giving 3D bilateral cylindrical curvature) */}
           <path
             d="M 50.5 30 L 50.5 118"
-            stroke="#38bdf8"
+            stroke="#8194ff"
             strokeWidth="1.0"
             strokeLinecap="round"
-            opacity="0.38"
+            opacity="0.46"
           />
           <path
             d="M 50.5 35 L 50.5 55"
             stroke="#ffffff"
             strokeWidth="1.2"
             strokeLinecap="round"
-            opacity="0.7"
+            opacity="0.48"
           />
 
           {/* Solid Crystal Base Refraction Smile Arcs */}
           <path
             d="M 13 139 Q 30 145.5 47 139"
-            stroke="#38bdf8"
-            strokeWidth="2.4"
+            stroke="#5268e5"
+            strokeWidth="2.6"
             strokeLinecap="round"
             fill="none"
             opacity="0.82"
@@ -655,24 +815,34 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
             strokeWidth="1.2"
             strokeLinecap="round"
             fill="none"
-            opacity="0.95"
+            opacity="0.72"
           />
 
           {/* 5. Top Lip Bead Collar Ring (3D Torus Lip) */}
           <ellipse
             cx="30"
+            cy="9.8"
+            rx="16.5"
+            ry="4.8"
+            fill="#172457"
+            stroke="#6e83ff"
+            strokeWidth="1.1"
+            opacity="0.95"
+          />
+          <ellipse
+            cx="30"
             cy="9"
-            rx="15.5"
-            ry="3.5"
+            rx="15.8"
+            ry="4.6"
             fill={`url(#lip-${index})`}
-            stroke="#38bdf8"
-            strokeWidth="1.4"
+            stroke="#91a2ff"
+            strokeWidth="1.8"
           />
           {/* Rolled lip 3D depth shadow under rim */}
           <path
-            d="M 14.5 9.5 C 14.5 12.5, 45.5 12.5, 45.5 9.5"
+            d="M 14.5 9 C 14.5 14, 45.5 14, 45.5 9"
             stroke="#0b1938"
-            strokeWidth="2"
+            strokeWidth="2.4"
             fill="none"
             opacity="0.75"
           />
@@ -680,17 +850,24 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
           <ellipse
             cx="30"
             cy="9"
-            rx="10.5"
-            ry="2.0"
+            rx="10.8"
+            ry="2.8"
             fill="#020817"
-            stroke="rgba(56, 189, 248, 0.4)"
-            strokeWidth="0.8"
+            stroke="rgba(159, 174, 255, 0.82)"
+            strokeWidth="1.15"
+          />
+          <path
+            d="M 20 10.4 Q 30 13.6 40 10.4"
+            stroke="rgba(201, 216, 255, 0.95)"
+            strokeWidth="1.1"
+            strokeLinecap="round"
+            fill="none"
           />
           {/* Front crescent specular arc */}
           <path
-            d="M 16 7.6 Q 30 6.0 44 7.6"
+            d="M 15.5 7.1 Q 30 4.9 44.5 7.1"
             stroke="#ffffff"
-            strokeWidth="1.4"
+            strokeWidth="1.7"
             strokeLinecap="round"
             fill="none"
             opacity="0.95"
@@ -732,13 +909,13 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
 
       {/* Ground Shadow */}
       <div
-        className={`w-11 h-2 rounded-[50%] transition-all duration-200 pointer-events-none -mt-0.5 ${
+        className={`w-14 h-2.5 rounded-[50%] transition-all duration-200 pointer-events-none -mt-1 ${
           isSelected || isPouringSource
             ? 'scale-75 opacity-15 translate-y-1'
             : 'scale-100 opacity-55'
         }`}
         style={{
-          background: 'radial-gradient(ellipse at center, rgba(0, 0, 0, 0.85) 0%, transparent 75%)',
+          background: 'radial-gradient(ellipse at center, rgba(1, 5, 15, 0.55) 0%, rgba(1, 5, 15, 0.34) 38%, rgba(3, 10, 24, 0.12) 64%, transparent 82%)',
         }}
       />
     </div>

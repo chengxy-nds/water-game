@@ -65,6 +65,8 @@ export default function App() {
   const [activeGulpColor, setActiveGulpColor] = useState<string | null>(null);
   const [collectedColors, setCollectedColors] = useState<Set<string>>(new Set());
 
+  const pourRafRef = useRef<number | null>(null);
+
   // Pouring Animation state
   const [pourAnimation, setPourAnimation] = useState<{
     sourceIndex: number;
@@ -157,6 +159,10 @@ export default function App() {
     setIsDeadlocked(false);
     setResetConfirmOpen(false);
     setActiveHintData(null);
+    if (pourRafRef.current) {
+      cancelAnimationFrame(pourRafRef.current);
+      pourRafRef.current = null;
+    }
     setCompletionAnimation(null);
     setActiveGulpColor(null);
     setCollectedTubeIndices([]);
@@ -260,9 +266,9 @@ export default function App() {
         tiltAngle = isTargetRight ? 72 : -72;
 
         // When tilted 72deg, the lower mouth lip rotates downwards and outwards.
-        // Align the pouring mouth lip directly touching the target bottle mouth rim!
-        exactX = (tMouthX - sMouthX) - (isTargetRight ? 11 : -11);
-        exactY = (tMouthY - sMouthY) - 15;
+        // Align the pouring mouth lip directly over target bottle mouth center!
+        exactX = (tMouthX - sMouthX) - (isTargetRight ? 4.0 : -4.0);
+        exactY = (tMouthY - sMouthY) - 18.5;
       }
 
       // Phase 1: Fly and align above target tube lip
@@ -281,8 +287,11 @@ export default function App() {
 
       if (vibrateEnabled) soundManager.vibrate(20);
 
-      // Phase 2: Tilt, spout water stream with mouths touching (Extended to 1100ms for slow observation)
+      // Phase 2: Tilt, spout water stream with mouths touching & gradual liquid transfer
       setTimeout(() => {
+        const streamStartTime = performance.now();
+        const pourDuration = 1000; // ms for continuous fluid transfer
+
         setPourAnimation({
           sourceIndex: fromIdx,
           targetIndex: toIdx,
@@ -292,15 +301,47 @@ export default function App() {
           tiltAngle,
           translateX: exactX,
           translateY: exactY,
-          drainCount: check.count,
-          riseCount: check.count,
+          drainCount: 0,
+          riseCount: 0,
         });
 
         if (vibrateEnabled) soundManager.vibrate(35);
+
+        // Smooth liquid level progression loop (rising in target, draining in source)
+        const animatePourStream = (now: number) => {
+          const elapsed = now - streamStartTime;
+          const progress = Math.min(1, Math.max(0, elapsed / pourDuration));
+          // S-curve ease for natural fluid acceleration and deceleration
+          const easeProgress =
+            progress < 0.5
+              ? 2 * progress * progress
+              : 1 - Math.pow(-2 * progress + 2, 2) / 2;
+
+          const currentAmount = check.count * easeProgress;
+
+          setPourAnimation((prev) => {
+            if (!prev || prev.phase !== 'pouring') return prev;
+            return {
+              ...prev,
+              drainCount: currentAmount,
+              riseCount: currentAmount,
+            };
+          });
+
+          if (progress < 1) {
+            pourRafRef.current = requestAnimationFrame(animatePourStream);
+          }
+        };
+
+        pourRafRef.current = requestAnimationFrame(animatePourStream);
       }, 450);
 
       // Phase 3: Finish liquid stream, commit state change and return
       setTimeout(() => {
+        if (pourRafRef.current) {
+          cancelAnimationFrame(pourRafRef.current);
+          pourRafRef.current = null;
+        }
         const result = executePour(tubes, fromIdx, toIdx, TUBE_CAPACITY);
         if (result) {
           const finalMoves = movesCount + 1;
@@ -480,6 +521,10 @@ export default function App() {
     setSelectedIndex(null);
     setHint(null);
     setIsDeadlocked(false);
+    if (pourRafRef.current) {
+      cancelAnimationFrame(pourRafRef.current);
+      pourRafRef.current = null;
+    }
     setCompletionAnimation(null);
     setActiveGulpColor(null);
 
@@ -559,7 +604,7 @@ export default function App() {
 
   // Add extra empty tube
   const handleAddTube = () => {
-    if (extraTubesAdded >= 2 || tubes.length >= 14 || isAutoSolving) return;
+    if (tubes.length >= 21 || isAutoSolving) return;
     setTubes((prev) => [...prev, []]);
     setExtraTubesAdded((c) => c + 1);
     setSelectedIndex(null);
@@ -629,7 +674,7 @@ export default function App() {
         <div
           className="absolute inset-0"
           style={{
-            background: 'radial-gradient(circle at 50% 30%, #0d2155 0%, #07153b 50%, #020718 100%)',
+            background: 'radial-gradient(ellipse 68% 34% at 50% -2%, rgba(0, 139, 160, 0.4) 0%, rgba(9, 58, 105, 0.2) 48%, transparent 100%), linear-gradient(180deg, #06132e 0%, #081a39 56%, #050e24 100%)',
           }}
         />
         {/* Subtle twinkling stars across cosmic sky */}
@@ -662,7 +707,7 @@ export default function App() {
         </div>
 
         {/* 3. Central Game Board (70% Visual Core) */}
-        <main className="flex-1 flex flex-col items-center justify-center py-1 px-1">
+        <main className="flex-1 min-h-0 flex flex-col items-stretch justify-start py-1 px-1">
           {/* Clean Hint callout banner if active */}
           {hint && (
             <div className="mb-2 px-3 py-1 rounded-full bg-amber-100 border border-amber-300 text-amber-900 text-xs font-bold flex items-center gap-1.5 shadow-sm animate-pulse">
@@ -692,7 +737,7 @@ export default function App() {
         </main>
 
         {/* 4. Bottom Hero Action Buttons: Shuffle & Undo (Exact Image Match) */}
-        <footer className="w-full">
+        <footer className="relative z-20 -top-20 w-full">
           <ControlBar
             canUndo={history.length > 0}
             shuffleCount={1}
@@ -708,7 +753,7 @@ export default function App() {
         <DeadlockModal
           onUndo={handleUndo}
           onReset={handleConfirmReset}
-          canAddTube={extraTubesAdded < 2 && tubes.length < 14}
+          canAddTube={tubes.length < 21}
           onAddTube={handleAddTube}
         />
       )}

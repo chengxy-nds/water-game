@@ -17,11 +17,18 @@ export const WaterStream: React.FC<WaterStreamProps> = ({
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const animFrameRef = useRef<number | null>(null);
   const phaseRef = useRef<number>(0);
+  const fromPosRef = useRef(fromPos);
+  const toPosRef = useRef(toPos);
 
   const colorDef = getColor(colorId);
 
   useEffect(() => {
-    if (!active || !fromPos || !toPos) {
+    fromPosRef.current = fromPos;
+    toPosRef.current = toPos;
+  }, [fromPos, toPos]);
+
+  useEffect(() => {
+    if (!active) {
       if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
       const canvas = canvasRef.current;
       if (canvas) {
@@ -46,107 +53,112 @@ export const WaterStream: React.FC<WaterStreamProps> = ({
 
     const render = () => {
       if (!running) return;
-      phaseRef.current += 0.28;
+      phaseRef.current += 0.16;
       const phase = phaseRef.current;
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      const x1 = fromPos.x;
-      const y1 = fromPos.y;
-      const x2 = toPos.x;
-      const y2 = toPos.y;
+      const currentFrom = fromPosRef.current;
+      const currentTo = toPosRef.current;
+      if (!currentFrom || !currentTo) {
+        animFrameRef.current = requestAnimationFrame(render);
+        return;
+      }
 
-      // Pure vertical liquid jet straight down into mouth
-      ctx.save();
+      const x1 = currentFrom.x;
+      const y1 = currentFrom.y;
+      const x2 = currentTo.x;
+      const y2 = currentTo.y;
 
-      // 1. Fluid Glow Halo
-      ctx.beginPath();
-      ctx.moveTo(x1, y1);
-      ctx.lineTo(x2, y2);
-      ctx.lineWidth = 14;
-      ctx.strokeStyle = `${colorDef.hex}44`;
-      ctx.lineCap = 'round';
-      ctx.stroke();
-
-      // 2. Viscous Solid Fluid Column Body
-      ctx.beginPath();
-      ctx.moveTo(x1, y1);
-      ctx.lineTo(x2, y2);
-      ctx.lineWidth = 8.5;
-      ctx.strokeStyle = colorDef.hex;
-      ctx.lineCap = 'round';
-      ctx.stroke();
-
-      // 3. Central Glossy Specular Light Stripe
-      ctx.beginPath();
-      ctx.moveTo(x1 - 1, y1);
-      ctx.lineTo(x2 - 1, y2);
-      ctx.lineWidth = 2.2;
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
-      ctx.lineCap = 'round';
-      ctx.stroke();
-
-
-      // 5. Landing Impact Splash & Foam Cluster (Exact Match to Reference Image)
       const bubbleColor = colorDef.topHex || colorDef.hex;
       const foamColor = colorDef.hex;
 
-      // Soft glow backing under the landing foam
+      ctx.save();
+
+      // Keep both ends fixed while the middle of the stream breathes with the flow.
+      const streamPath = new Path2D();
+      streamPath.moveTo(x1, y1);
+      const dy = Math.max(20, y2 - y1);
+      const sway = Math.sin(phase * 1.8) * Math.min(4, Math.abs(x2 - x1) * 0.035 + 1.5);
+      const cp1x = x1 + (x2 - x1) * 0.18 + sway;
+      const cp1y = y1 + dy * 0.28;
+      const cp2x = x1 + (x2 - x1) * 0.82 - sway * 0.6;
+      const cp2y = y1 + dy * 0.55;
+      streamPath.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x2, y2);
+
+      // Soft edge and saturated body keep the stream liquid rather than neon.
+      ctx.lineWidth = 9;
+      ctx.strokeStyle = `${colorDef.hex}28`;
+      ctx.lineCap = 'round';
+      ctx.stroke(streamPath);
+
+      ctx.lineWidth = 6.4;
+      ctx.strokeStyle = colorDef.hex;
+      ctx.lineCap = 'round';
+      ctx.stroke(streamPath);
+
+      ctx.lineWidth = 4.1;
+      ctx.strokeStyle = colorDef.topHex || colorDef.hex;
+      ctx.lineCap = 'round';
+      ctx.stroke(streamPath);
+
+      // Traveling caustic streaks provide visible downward motion without breaking the jet.
+      const pointOnCurve = (t: number) => {
+        const inverse = 1 - t;
+        return {
+          x: inverse ** 3 * x1 + 3 * inverse ** 2 * t * cp1x + 3 * inverse * t ** 2 * cp2x + t ** 3 * x2,
+          y: inverse ** 3 * y1 + 3 * inverse ** 2 * t * cp1y + 3 * inverse * t ** 2 * cp2y + t ** 3 * y2,
+        };
+      };
+      for (let i = 0; i < 3; i++) {
+        const t = 0.12 + ((phase * 0.035 + i / 3) % 0.76);
+        const point = pointOnCurve(t);
+        const before = pointOnCurve(Math.max(0, t - 0.01));
+        const after = pointOnCurve(Math.min(1, t + 0.01));
+        const angle = Math.atan2(after.y - before.y, after.x - before.x) + Math.PI / 2;
+        const alpha = 0.24 + 0.18 * Math.sin(phase + i * 2.1);
+        ctx.save();
+        ctx.translate(point.x, point.y);
+        ctx.rotate(angle);
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.ellipse(0, 0, 0.8, 4.5, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      // A small meniscus bulge sits on the actual receiving surface.
+      const moundPulse = Math.sin(phase * 3.2) * 0.55;
+      const moundY = y2;
+
       ctx.beginPath();
-      ctx.arc(x2, y2 - 2, 16, 0, Math.PI * 2);
-      ctx.fillStyle = `${colorDef.hex}55`;
+      ctx.ellipse(x2, moundY - 1, 7.2, 2.8, 0, Math.PI, Math.PI * 2);
+      ctx.fillStyle = colorDef.hex;
       ctx.fill();
 
-      // Cluster of 4 interlocking foamy splash bubbles (Foam Splash)
-      const bubbles = [
-        { dx: -7.5, dy: -2, r: 6.2, pulseOffset: 0 },
-        { dx: 0, dy: -5, r: 8.5, pulseOffset: 1.2 },
-        { dx: 7.5, dy: -2, r: 6.2, pulseOffset: 2.4 },
-        { dx: -0.5, dy: 1, r: 7.8, pulseOffset: 0.6 },
-      ];
+      ctx.beginPath();
+      ctx.ellipse(x2, moundY - 2.2 + moundPulse * 0.35, 3.5, 2.2, 0, Math.PI, Math.PI * 2);
+      ctx.fillStyle = bubbleColor;
+      ctx.fill();
 
-      bubbles.forEach((b) => {
-        const curR = b.r + Math.sin(phase * 4 + b.pulseOffset) * 0.8;
-        const bx = x2 + b.dx;
-        const by = y2 + b.dy;
+      ctx.beginPath();
+      ctx.ellipse(x2 - 0.7, moundY - 2.8 + moundPulse * 0.35, 1.2, 0.55, -0.2, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+      ctx.fill();
 
-        // Base sphere in bright fluid color
+      // Short ripples spread over the receiving liquid surface.
+      for (let i = 0; i < 2; i++) {
+        const tRing = ((phase * 0.2 + i * 0.5) % 1);
+        const rx = 2 + tRing * 8;
+        const ry = 1.2 + tRing * 1.8;
+        const alpha = (1 - tRing) * 0.38;
         ctx.beginPath();
-        ctx.arc(bx, by, curR, 0, Math.PI * 2);
-        ctx.fillStyle = bubbleColor;
-        ctx.fill();
-        ctx.lineWidth = 1.2;
-        ctx.strokeStyle = colorDef.shadeHex || foamColor;
+        ctx.ellipse(x2, y2, rx, ry, 0, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
+        ctx.lineWidth = 0.75;
         ctx.stroke();
-
-        // 3D Specular highlight glint
-        ctx.beginPath();
-        ctx.arc(bx - curR * 0.28, by - curR * 0.3, curR * 0.36, 0, Math.PI * 2);
-        ctx.fillStyle = '#ffffff';
-        ctx.fill();
-      });
-
-      // Small jumping airborne splash droplets
-      const droplets = [
-        { dx: -10, dy: -12, r: 2.2, phase: 0.5 },
-        { dx: 10, dy: -14, r: 2.0, phase: 1.8 },
-        { dx: -2, dy: -16, r: 1.8, phase: 2.9 },
-      ];
-
-      droplets.forEach((d) => {
-        const bounce = Math.sin(phase * 5 + d.phase);
-        if (bounce > -0.2) {
-          const dy = d.dy + bounce * 3;
-          ctx.beginPath();
-          ctx.arc(x2 + d.dx, y2 + dy, d.r, 0, Math.PI * 2);
-          ctx.fillStyle = bubbleColor;
-          ctx.fill();
-          ctx.beginPath();
-          ctx.arc(x2 + d.dx - 0.5, y2 + dy - 0.5, d.r * 0.4, 0, Math.PI * 2);
-          ctx.fillStyle = '#ffffff';
-          ctx.fill();
-        }
-      });
+      }
 
       ctx.restore();
 
@@ -159,7 +171,7 @@ export const WaterStream: React.FC<WaterStreamProps> = ({
       running = false;
       if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
     };
-  }, [active, fromPos, toPos, colorDef.hex, colorDef.topHex]);
+  }, [active, colorDef.hex, colorDef.topHex]);
 
   useEffect(() => {
     const handleResize = () => {
