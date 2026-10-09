@@ -31,6 +31,7 @@ export interface CompletionAnimationState {
 
 interface GameBoardProps {
   tubes: Tube[];
+  levelEntryId?: number;
   selectedIndex: number | null;
   hint: { from: number; to: number } | null;
   pourAnimation: PourAnimationState | null;
@@ -45,6 +46,7 @@ interface GameBoardProps {
 
 export const GameBoard: React.FC<GameBoardProps> = ({
   tubes,
+  levelEntryId = 0,
   selectedIndex,
   hint,
   pourAnimation,
@@ -186,6 +188,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
           ref={(el) => { tubeRefs.current[globalIdx] = el; }}
           index={globalIdx}
           tube={tube}
+          levelEntryId={levelEntryId}
           compact={rowCount >= 3}
           isSelected={isSelected}
           isHintSource={isHintSource}

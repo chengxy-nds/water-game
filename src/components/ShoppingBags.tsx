@@ -93,14 +93,14 @@ export const ShoppingBags: React.FC<ShoppingBagsProps> = ({
 
               {/* Rear handles */}
               <path
-                d="M 14 22 C 12 2, 24 1, 23 22 M 28 22 C 27 1, 39 2, 37 22"
+                d="M 17 22 C 16 1, 26 1, 25 22 M 29 22 C 28 1, 38 1, 37 22"
                 stroke="#778b9a"
-                strokeWidth="2.1"
+                strokeWidth="1.8"
                 strokeLinecap="round"
                 fill="none"
               />
               <path
-                d="M 14 21 C 13 4, 23 3, 22.5 21 M 28.5 21 C 28 3, 37.5 4, 36.5 21"
+                d="M 17 21 C 16.5 4, 25.5 4, 25 21 M 29 21 C 28.5 4, 37.5 4, 37 21"
                 stroke="#f8fcff"
                 strokeWidth="0.9"
                 strokeLinecap="round"
@@ -108,6 +108,7 @@ export const ShoppingBags: React.FC<ShoppingBagsProps> = ({
                 opacity="0.9"
               />
 
+              <g transform="translate(4 0) scale(0.85 1)">
               {/* 2. 3D Side Gusset (Depth Perspective) */}
               <polygon
                 points="40,21 48,16 48,68 40,75"
@@ -212,9 +213,10 @@ export const ShoppingBags: React.FC<ShoppingBagsProps> = ({
                   <text x="24" y="27" fill="#fde047" fontSize="7" fontWeight="black" textAnchor="middle">✦</text>
                 </g>
               )}
+              </g>
 
               {/* Front handle eyelets */}
-              {[14, 23, 28, 37].map((x) => (
+              {[17, 25, 29, 37].map((x) => (
                 <g key={`eyelet-${x}`}>
                   <circle cx={x} cy="21" r="1.65" fill="#8293a0" />
                   <circle cx={x} cy="20.7" r="0.78" fill="#f8fcff" />
@@ -222,14 +224,14 @@ export const ShoppingBags: React.FC<ShoppingBagsProps> = ({
               ))}
               {/* Front double rope handles */}
               <path
-                d="M 14 21 C 12 1, 24 0, 23 21 M 28 21 C 27 0, 39 1, 37 21"
+                d="M 17 21 C 16 0, 26 0, 25 21 M 29 21 C 28 0, 38 0, 37 21"
                 stroke="#657987"
-                strokeWidth="2.35"
+                strokeWidth="2.0"
                 strokeLinecap="round"
                 fill="none"
               />
               <path
-                d="M 14 20 C 13 3, 23 2, 22.5 20 M 28.5 20 C 28 2, 37.5 3, 36.5 20"
+                d="M 17 20 C 16.5 3, 25.5 3, 25 20 M 29 20 C 28.5 3, 37.5 3, 37 20"
                 stroke="#ffffff"
                 strokeWidth="0.8"
                 strokeLinecap="round"
@@ -272,14 +274,15 @@ export const ShoppingBags: React.FC<ShoppingBagsProps> = ({
 
           {/* Rear handles */}
           <path
-            d="M 14 22 C 12 2, 24 1, 23 22 M 28 22 C 27 1, 39 2, 37 22"
+            d="M 17 22 C 16 1, 26 1, 25 22 M 29 22 C 28 1, 38 1, 37 22"
             stroke="#778b9a"
-            strokeWidth="2.1"
+            strokeWidth="1.8"
             strokeLinecap="round"
             fill="none"
           />
-          <path d="M 14 21 C 13 4, 23 3, 22.5 21 M 28.5 21 C 28 3, 37.5 4, 36.5 21" stroke="#f8fcff" strokeWidth="0.9" strokeLinecap="round" fill="none" opacity="0.9" />
+          <path d="M 17 21 C 16.5 4, 25.5 4, 25 21 M 29 21 C 28.5 4, 37.5 4, 37 21" stroke="#f8fcff" strokeWidth="0.9" strokeLinecap="round" fill="none" opacity="0.9" />
 
+          <g transform="translate(4 0) scale(0.85 1)">
           {/* 3D Side Gusset */}
           <polygon
             points="40,21 48,16 48,68 40,75"
@@ -350,22 +353,23 @@ export const ShoppingBags: React.FC<ShoppingBagsProps> = ({
             {/* Cyan Play Triangle */}
             <polygon points="23,43.5 26.5,46 23,48.5" fill="#0284c7" />
           </g>
+          </g>
 
           {/* Front handle eyelets and double handles */}
-          {[14, 23, 28, 37].map((x) => (
+          {[17, 25, 29, 37].map((x) => (
             <g key={`bonus-eyelet-${x}`}>
               <circle cx={x} cy="21" r="1.65" fill="#8293a0" />
               <circle cx={x} cy="20.7" r="0.78" fill="#f8fcff" />
             </g>
           ))}
           <path
-            d="M 14 21 C 12 1, 24 0, 23 21 M 28 21 C 27 0, 39 1, 37 21"
+            d="M 17 21 C 16 0, 26 0, 25 21 M 29 21 C 28 0, 38 0, 37 21"
             stroke="#657987"
-            strokeWidth="2.35"
+            strokeWidth="2.0"
             strokeLinecap="round"
             fill="none"
           />
-          <path d="M 14 20 C 13 3, 23 2, 22.5 20 M 28.5 20 C 28 2, 37.5 3, 36.5 20" stroke="#ffffff" strokeWidth="0.8" strokeLinecap="round" fill="none" opacity="0.96" />
+          <path d="M 17 20 C 16.5 3, 25.5 3, 25 20 M 29 20 C 28.5 3, 37.5 3, 37 20" stroke="#ffffff" strokeWidth="0.8" strokeLinecap="round" fill="none" opacity="0.96" />
         </svg>
 
         {bonusUnlocked && (

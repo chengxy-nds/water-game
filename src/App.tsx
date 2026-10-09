@@ -35,6 +35,7 @@ export default function App() {
   const [tubes, setTubes] = useState<Tube[]>(() =>
     CURATED_LEVELS[1].tubes.map((t) => [...t])
   );
+  const [levelEntryId, setLevelEntryId] = useState(0);
 
   // History for Undo
   const [history, setHistory] = useState<Tube[][]>([]);
@@ -147,6 +148,7 @@ export default function App() {
   };
 
   const startLevel = useCallback((lvl: Level) => {
+    setLevelEntryId((entryId) => entryId + 1);
     setCurrentLevel(lvl);
     setTubes(lvl.tubes.map((t) => [...t]));
     setHistory([]);
@@ -723,6 +725,7 @@ export default function App() {
 
           <GameBoard
             tubes={tubes}
+            levelEntryId={levelEntryId}
             selectedIndex={selectedIndex}
             hint={hint}
             pourAnimation={pourAnimation}

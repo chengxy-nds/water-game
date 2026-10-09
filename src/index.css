@@ -42,6 +42,47 @@
   animation: invalidShake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
 }
 
+@keyframes liquidEntrySway {
+  0%, 100% { transform: rotate(0deg); }
+  24% { transform: rotate(-1.35deg); }
+  48% { transform: rotate(1.1deg); }
+  70% { transform: rotate(-0.48deg); }
+}
+
+@keyframes liquidSelectionSway {
+  0%, 100% { transform: rotate(0deg); }
+  22% { transform: rotate(-2.1deg); }
+  52% { transform: rotate(1.65deg); }
+  76% { transform: rotate(-0.65deg); }
+}
+
+@keyframes liquidImpactSway {
+  0%, 100% { transform: rotate(0deg); }
+  18% { transform: rotate(-2.6deg); }
+  43% { transform: rotate(2.3deg); }
+  68% { transform: rotate(-1.05deg); }
+}
+
+.anim-liquid-entry {
+  animation: liquidEntrySway 900ms cubic-bezier(0.22, 0.72, 0.25, 1) both;
+}
+
+.anim-liquid-select {
+  animation: liquidSelectionSway 620ms cubic-bezier(0.2, 0.68, 0.25, 1) both;
+}
+
+.anim-liquid-shake {
+  animation: liquidImpactSway 420ms cubic-bezier(0.22, 0.72, 0.25, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .anim-liquid-entry,
+  .anim-liquid-select,
+  .anim-liquid-shake {
+    animation-duration: 1ms;
+  }
+}
+
 @keyframes foamBoil {
   0%, 100% {
     transform: translateY(0px) scale(0.95);

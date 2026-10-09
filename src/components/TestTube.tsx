@@ -1,4 +1,4 @@
-import React, { useRef, useImperativeHandle, forwardRef } from 'react';
+import React, { useRef, useState, useEffect, useImperativeHandle, forwardRef } from 'react';
 import { Tube, ColorDef } from '../types/game';
 import { getColor, COLOR_PALETTE } from '../utils/colors';
 import { isTubeComplete, TUBE_CAPACITY } from '../solver/waterSortSolver';
@@ -34,6 +34,7 @@ interface TestTubeProps {
   hasCork?: boolean;
   isCollected?: boolean;
   compact?: boolean;
+  levelEntryId?: number;
   onClick: (index: number) => void;
   disabled?: boolean;
 }
@@ -63,10 +64,16 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
   hasCork = false,
   isCollected = false,
   compact = false,
+  levelEntryId = 0,
   onClick,
   disabled = false,
 }, ref) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const [entrySwayActive, setEntrySwayActive] = useState(true);
+
+  useEffect(() => {
+    if (isPouringSource || isPouringTarget) setEntrySwayActive(false);
+  }, [isPouringSource, isPouringTarget]);
 
   useImperativeHandle(ref, () => ({
     getSpoutPos: () => {
@@ -425,7 +432,8 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
             fill={`url(#tube-bg-${index})`}
           />
 
-          {/* 2. Fluid Layers (Dynamic Pouring Stream Flow vs Stacked Gel Blocks) */}
+          <g key={`fluid-layers-${index}-${levelEntryId}`}>
+          {/* Dynamic Pouring Stream Flow vs Stacked Liquid Layers */}
           {isPouringSource && isPouringFluid && tiltAngle !== 0 ? (
             /* Natural Gravity Stream Flow toward mouth lip when tilted */
             <g clipPath={`url(#inner-clip-${index})`}>
@@ -667,7 +675,28 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
 
                     {/* Top Meniscus 3D Oval Cap */}
                     {isTop && layer.heightPercent > 4 && (
-                      <g>
+                      <g
+                        className={
+                          isShaking
+                            ? 'anim-liquid-shake'
+                            : isSelected && !isPouringSource && !isPouringTarget
+                            ? 'anim-liquid-select'
+                            : entrySwayActive && !isPouringSource && !isPouringTarget
+                            ? 'anim-liquid-entry'
+                            : ''
+                        }
+                        onAnimationStart={(event) => {
+                          if (event.animationName !== 'liquidEntrySway') setEntrySwayActive(false);
+                        }}
+                        onAnimationEnd={(event) => {
+                          if (event.animationName === 'liquidEntrySway') setEntrySwayActive(false);
+                        }}
+                        style={{
+                          transformBox: 'fill-box',
+                          transformOrigin: '50% 50%',
+                          animationDelay: `${(index % 7) * 32}ms`,
+                        }}
+                      >
                         <ellipse
                           cx="30"
                           cy={yTop}
@@ -706,6 +735,7 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
               })}
             </g>
           )}
+          </g>
 
           {/* Crystal Glass Specular Reflections Layer (OVER the liquid) */}
           {/* Outer Glass Contour Outline */}
