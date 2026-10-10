@@ -92,13 +92,22 @@ export function getTopColorInfo(bottle: Bottle): { color: string | null; count: 
 
 /**
  * How many layers can be poured OUT of a source bottle in one move.
- * Hidden bottles cap to 1 layer while any top layer is still hidden
- * (fairness: cannot blindly pour multiple unknown layers at once).
+ * For hidden bottles, only the known (visible) run above the fogged bottom
+ * layers can be poured — the pour never reaches into the hidden region.
  */
 export function getPourOutCount(bottle: Bottle): number {
-  const { color, count } = getTopColorInfo(bottle);
-  if (!color || count === 0) return 0;
-  if (bottle.type === 'hidden' && (bottle.hiddenTopLayers ?? 0) > 0) return 1;
+  const layers = bottle.layers;
+  if (layers.length === 0) return 0;
+  const top = layers[layers.length - 1];
+  const lowestVisible =
+    bottle.type === 'hidden'
+      ? Math.min(layers.length - 1, bottle.hiddenBottomLayers ?? 0)
+      : 0;
+  let count = 0;
+  for (let i = layers.length - 1; i >= lowestVisible; i--) {
+    if (layers[i] === top) count++;
+    else break;
+  }
   return count;
 }
 
@@ -186,9 +195,13 @@ export function executePour(
 
   const source = newBottles[fromIdx];
   if (source.type === 'hidden') {
-    source.hiddenTopLayers = Math.max(0, (source.hiddenTopLayers ?? 0) - check.count);
+    // A hidden layer is revealed only once every known layer above it has been
+    // poured out — i.e. once it becomes the top of the bottle.
+    source.hiddenBottomLayers = Math.max(
+      0,
+      Math.min(source.hiddenBottomLayers ?? 0, source.layers.length - 1)
+    );
   }
-  if (source.layers.length === 0) source.hiddenTopLayers = 0;
 
   applyMaskUnlock(newBottles, capacity);
   return { newBottles, count: check.count, color: check.color };
@@ -224,7 +237,7 @@ function bottleSignature(b: Bottle): string {
   if (b.layers.length === 0) return 'E';
   // Hidden bottles carry their fog depth; all other bottle types are solver-equivalent
   // (masked ≡ normal since the cloth never gates a move), so their signature omits type.
-  const h = b.type === 'hidden' ? `:h${b.hiddenTopLayers ?? 0}` : '';
+  const h = b.type === 'hidden' ? `:h${b.hiddenBottomLayers ?? 0}` : '';
   return `${b.layers.join(',')}${h}`;
 }
 

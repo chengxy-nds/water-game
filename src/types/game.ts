@@ -25,8 +25,9 @@ export interface Bottle {
   maskRevealed?: boolean;
   unlockTargetCompletedBottles?: number;
   countsTowardObjective?: boolean;
-  // hidden (隐藏瓶): number of top contiguous hidden layers
-  hiddenTopLayers?: number;
+  // hidden (隐藏瓶): number of bottom contiguous hidden layers (max 3),
+  // hidden beneath the known top color; each top-layer pour reveals one.
+  hiddenBottomLayers?: number;
   // bottom_leak (底部漏水瓶): fixed target bottle below
   leakTargetBottleId?: string;
   locked?: boolean;

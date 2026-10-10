@@ -19,8 +19,8 @@ function masked(id: string, layers: string[], threshold = 2): Bottle {
     countsTowardObjective: true,
   };
 }
-function hidden(id: string, layers: string[], topLayers: number): Bottle {
-  return { id, type: 'hidden', capacity: CAP, layers, hiddenTopLayers: topLayers };
+function hidden(id: string, layers: string[], bottomLayers: number): Bottle {
+  return { id, type: 'hidden', capacity: CAP, layers, hiddenBottomLayers: bottomLayers };
 }
 function leak(id: string, layers: string[], targetId: string): Bottle {
   return { id, type: 'bottom_leak', capacity: CAP, layers, leakTargetBottleId: targetId };
@@ -497,7 +497,7 @@ export const CURATED_LEVELS: Level[] = [
   // 31 —— 隐藏瓶 (hidden)
   {
     id: 31,
-    title: '隐藏顶部1层',
+    title: '隐藏底部1层',
     optimalSteps: 20,
     difficulty: 'hard',
     bottles: [
@@ -531,7 +531,7 @@ export const CURATED_LEVELS: Level[] = [
   // 33
   {
     id: 33,
-    title: '隐藏顶部2层',
+    title: '隐藏底部2层',
     optimalSteps: 20,
     difficulty: 'hard',
     bottles: [

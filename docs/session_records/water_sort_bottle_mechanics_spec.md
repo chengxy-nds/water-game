@@ -152,38 +152,38 @@ countsTowardObjective === true
 
 ### 3.4 隐藏瓶 `hidden`
 
-**核心机制：** 容量默认 4；最多 3 层颜色隐藏；至少保留一层可见。上层液体被倒出后，下一层按顺序揭示。
+**核心机制：** 容量默认 4；最多 3 层颜色隐藏；至少保留一层可见（顶层为已知颜色）。隐藏层位于已知颜色的下方（瓶底方向）；顶部液体被倒出后，紧邻其下的隐藏层被揭示，依次类推。
 
 #### 3.4.1 状态字段
 
-建议用 `hiddenTopLayers` 表示顶部连续隐藏的液层数量：
+建议用 `hiddenBottomLayers` 表示底部连续隐藏的液层数量（隐藏层位于已知颜色下方）：
 
 - `0`：所有液层可见。
-- `1`：顶部 1 层颜色隐藏。
-- `3`：顶部 3 层颜色隐藏，底部层可见。
+- `1`：底部 1 层颜色隐藏。
+- `3`：底部 3 层颜色隐藏，顶层可见。
 
 必须满足：
 
 ```js
-0 <= hiddenTopLayers
-hiddenTopLayers <= Math.min(3, layers.length - 1)
+0 <= hiddenBottomLayers
+hiddenBottomLayers <= Math.min(3, layers.length - 1)
 ```
 
-空瓶的 `hiddenTopLayers` 必须为 0。
+空瓶的 `hiddenBottomLayers` 必须为 0。
 
 #### 3.4.2 逐层揭示
 
-普通倒水完成后：
+隐藏层只有在**其正上方相邻的已知颜色被完全倒出**后才会被揭示（即该隐藏层成为瓶顶时）。普通倒水提交后：
 
 1. 按真实颜色提交液层变化。
-2. 计算实际移除的液层数 `amount`。
-3. 执行 `hiddenTopLayers = Math.max(0, hiddenTopLayers - amount)`。
-4. 重新渲染可见状态。
-5. 对新显示的层播放雾气散开或颜色渐显动画。
+2. 依据新的剩余液层数重新计算隐藏层数：
+   `hiddenBottomLayers = Math.max(0, Math.min(hiddenBottomLayers, layers.length - 1))`。
+3. 重新渲染可见状态。
+4. 对新显示的层播放雾气散开或颜色渐显动画。
 
-**公平性限制：** 隐藏层的真实颜色参与规则校验，但玩家不能看到它。为避免玩家一次操作意外倒出多个未知颜色层，普通倒水的可见可操作数量应限制为顶部连续、玩家已知的同色层数量，并且不能跨过未知层。若顶部可见层下面就是隐藏层，则本次最多倒出顶部已知连续层。
+**公平性限制：** 隐藏层的真实颜色参与规则校验，但玩家不能看到它。隐藏瓶顶部为已知颜色、底部为隐藏层，玩家只能倒出顶部已知（可见）的连续同色液层，且不可触及隐藏层。
 
-如果设计者希望允许按真实颜色连续倒出隐藏层，需要在关卡规则中明确说明这属于“盲倒”机制，并在 UI 中提前告知玩家。
+**揭示时机：** 倾倒动画进行期间，隐藏层保持磨砂、不得显示其真实颜色；揭示（雾气散开）在倒水完成、液层提交之后才播放。
 
 #### 3.4.3 显示规则
 
@@ -271,8 +271,8 @@ interface BottleState {
   unlockTargetCompletedBottles?: number;
   countsTowardObjective?: boolean;
 
-  // 隐藏瓶：顶部隐藏层数
-  hiddenTopLayers?: number;
+  // 隐藏瓶：底部隐藏层数（隐藏层位于已知颜色下方，最多 3 层）
+  hiddenBottomLayers?: number;
 
   // 底部漏水瓶
   leakTargetBottleId?: string;
@@ -312,7 +312,7 @@ interface GameRuntimeState {
 约束：
 
 - `layers` 是唯一液体真值，不要同时维护互相冲突的液量变量。
-- `maskRevealed`、`hiddenTopLayers`、步数和漏水次数必须进入撤销快照。
+- `maskRevealed`、`hiddenBottomLayers`、步数和漏水次数必须进入撤销快照。
 - UI 不得自行决定操作是否合法。
 - 规则校验应尽量写成纯函数，方便 Solver 与单元测试调用。
 
@@ -442,7 +442,7 @@ leaking --遮罩解锁--> mask_falling --> idle
 - 移除液层后隐藏计数不能小于 0。
 - 颜色匹配与胜利判断使用真实颜色。
 - 玩家提示不得直接泄露未知颜色。
-- 单次操作不能跨过未知层，除非关卡明确采用盲倒规则。
+- 单次倒水只能移出顶部已知（可见）的连续同色液层，不得触及底部隐藏层。
 
 ### 8.4 底部漏水
 
@@ -500,7 +500,7 @@ leaking --遮罩解锁--> mask_falling --> idle
       "type": "hidden",
       "capacity": 4,
       "layers": ["blue", "yellow", "green", "red"],
-      "hiddenTopLayers": 2
+      "hiddenBottomLayers": 2
     },
     {
       "id": "bottle_5",
@@ -551,7 +551,7 @@ interface SolverState {
     capacity: number;
     layers: ColorId[];
     maskRevealed?: boolean;
-    hiddenTopLayers?: number;
+    hiddenBottomLayers?: number;
   }[];
   steps: number;
   bottomLeakUses: number;
@@ -630,7 +630,7 @@ interface SolverState {
 
 ### 隐藏瓶
 
-1. `hiddenTopLayers = 2`，顶部移除 1 格后变为 1，下一层显露。
+1. `hiddenBottomLayers = 2`（4 层瓶，底部 2 层隐藏、顶部 2 层已知）：倒出顶部 2 层已知液层后，最上方的隐藏层成为瓶顶，计数变为 1；再倒出该层后计数变为 0。
 2. 移除层数不得让隐藏计数小于 0。
 3. 隐藏颜色仍参与真实规则，但不能被普通提示泄露。
 4. 空瓶隐藏计数为 0。

@@ -106,7 +106,7 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
   // Special-bottle derived flags
   const isMasked = bottle.type === 'masked';
   const maskHidden = isMasked && !bottle.maskRevealed;
-  const hiddenCount = bottle.type === 'hidden' ? Math.min(tube.length, bottle.hiddenTopLayers ?? 0) : 0;
+  const hiddenCount = bottle.type === 'hidden' ? Math.min(tube.length, bottle.hiddenBottomLayers ?? 0) : 0;
   const isLeaky = bottle.type === 'bottom_leak';
 
   // One-shot cloth drop animation when a masked bottle unlocks
@@ -398,7 +398,7 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
               </linearGradient>
             ))}
 
-            {/* Frosted fog for hidden-bottle top layers */}
+            {/* Frosted fog for hidden-bottle bottom layers */}
             <linearGradient id={`fog-grad-${index}`} x1="0" y1="0" x2="1" y2="0">
               <stop offset="0%" stopColor="#8b9ab8" />
               <stop offset="30%" stopColor="#c7d0e2" />
@@ -518,6 +518,7 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
                       {Array.from({ length: baseRemainingUnits }).map((_, i) => {
                         const k = baseRemainingUnits - 1 - i;
                         const cId = displayTube[k];
+                        const isHiddenK = hiddenCount > 0 && k < hiddenCount;
                         const cDef = getColor(cId);
                         const yAnchorK = getBoundaryY(k + 1, capacity);
                         return (
@@ -531,11 +532,22 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
                             y2="0"
                             gradientTransform={`rotate(${tiltAngle}, 30, ${yAnchorK})`}
                           >
-                            <stop offset="0%" stopColor={cDef.hex} stopOpacity="1" />
-                            <stop offset="14%" stopColor={cDef.topHex || cDef.hex} stopOpacity="1" />
-                            <stop offset="36%" stopColor={cDef.hex} stopOpacity="1" />
-                            <stop offset="70%" stopColor={cDef.hex} stopOpacity="1" />
-                            <stop offset="100%" stopColor={cDef.shadeHex || cDef.hex} stopOpacity="1" />
+                            {isHiddenK ? (
+                              <>
+                                <stop offset="0%" stopColor="#8b9ab8" stopOpacity="1" />
+                                <stop offset="30%" stopColor="#c7d0e2" stopOpacity="1" />
+                                <stop offset="55%" stopColor="#e4e9f4" stopOpacity="1" />
+                                <stop offset="100%" stopColor="#8795b3" stopOpacity="1" />
+                              </>
+                            ) : (
+                              <>
+                                <stop offset="0%" stopColor={cDef.hex} stopOpacity="1" />
+                                <stop offset="14%" stopColor={cDef.topHex || cDef.hex} stopOpacity="1" />
+                                <stop offset="36%" stopColor={cDef.hex} stopOpacity="1" />
+                                <stop offset="70%" stopColor={cDef.hex} stopOpacity="1" />
+                                <stop offset="100%" stopColor={cDef.shadeHex || cDef.hex} stopOpacity="1" />
+                              </>
+                            )}
                           </linearGradient>
                         );
                       })}
@@ -668,7 +680,7 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
               {calculatedLayers.map((layer, lIdx) => {
                 const cDef = getColor(layer.colorId);
                 const { yBottom, yTop, isBottom, isTop } = layer;
-                const isHiddenLayer = hiddenCount > 0 && lIdx >= calculatedLayers.length - hiddenCount;
+                const isHiddenLayer = hiddenCount > 0 && lIdx < hiddenCount;
                 const isDimmed = maskHidden && lIdx === 0;
                 const liquidFill = isHiddenLayer ? `url(#fog-grad-${index})` : `url(#grad-${cDef.id}-${index})`;
 
@@ -698,7 +710,7 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
                       fill={liquidFill}
                     />
 
-                    {/* Frosted fog question mark over hidden top layers */}
+                    {/* Frosted fog question mark over hidden bottom layers */}
                     {isHiddenLayer && (
                       <text
                         x="30"
