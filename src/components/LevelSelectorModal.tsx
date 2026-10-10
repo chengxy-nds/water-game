@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Level, Difficulty, PlayerStats } from '../types/game';
 import { CURATED_LEVELS } from '../data/curatedLevels';
-import { X, Star, Lock, Sparkles, Shuffle } from 'lucide-react';
+import { X, Star, Sparkles, Shuffle } from 'lucide-react';
 
 interface LevelSelectorModalProps {
   currentLevelId: number | string;
@@ -10,6 +10,14 @@ interface LevelSelectorModalProps {
   onGenerateLevel: (difficulty: Difficulty) => void;
   onClose: () => void;
 }
+
+// Glossy blue 3D button — same style as the main game page buttons.
+const GLOSSY_BLUE =
+  'bg-gradient-to-b from-[#60a5fa] via-[#3b82f6] to-[#1e40af] border-2 border-[#93c5fd] shadow-[0_4px_12px_rgba(29,78,216,0.55),inset_0_1.5px_2px_rgba(255,255,255,0.85),inset_0_-2px_3px_rgba(30,58,138,0.5)]';
+
+// Compact glossy-blue active state for tabs & filter chips.
+const GLOSSY_ACTIVE =
+  'bg-gradient-to-b from-[#60a5fa] to-[#1d4ed8] border border-[#93c5fd] shadow-[0_2px_8px_rgba(29,78,216,0.45),inset_0_1.5px_2px_rgba(255,255,255,0.7)] text-white';
 
 export const LevelSelectorModal: React.FC<LevelSelectorModalProps> = ({
   currentLevelId,
@@ -27,30 +35,34 @@ export const LevelSelectorModal: React.FC<LevelSelectorModalProps> = ({
   });
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="relative w-full max-w-xl max-h-[90vh] rounded-3xl bg-slate-900 border border-slate-800 shadow-2xl flex flex-col overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-[#03081a]/85 backdrop-blur-md animate-in fade-in duration-200">
+      <div className="relative w-full max-w-xl max-h-[90vh] rounded-3xl bg-gradient-to-b from-[#0e2052] via-[#081436] to-[#03081a] border border-[#2a3a6e] shadow-2xl flex flex-col overflow-hidden">
+        {/* Top ambient glow */}
+        <div className="absolute -top-16 left-1/2 -translate-x-1/2 w-64 h-64 bg-cyan-500/15 rounded-full blur-3xl pointer-events-none" />
+
         {/* Header */}
-        <div className="px-5 py-4 border-b border-slate-800 flex items-center justify-between">
+        <div className="relative px-5 py-4 border-b border-white/10 flex items-center justify-between">
           <div>
             <h2 className="text-lg font-black text-white">关卡探索</h2>
-            <p className="text-xs text-slate-400">选择关卡或开启无限随机推演</p>
+            <p className="text-xs text-blue-200/60">选择关卡或开启无限随机推演</p>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition-colors"
+            className={`relative p-1.5 rounded-xl text-white active:scale-95 transition-transform cursor-pointer overflow-hidden ${GLOSSY_BLUE}`}
           >
-            <X className="w-5 h-5" />
+            <div className="absolute top-0.5 left-1 right-1 h-2 rounded-t-[10px] bg-gradient-to-b from-white/60 to-transparent pointer-events-none" />
+            <X className="relative w-5 h-5 drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]" />
           </button>
         </div>
 
         {/* Tab switcher */}
-        <div className="px-5 pt-3 pb-2 flex items-center gap-2 border-b border-slate-800/60 bg-slate-900/60">
+        <div className="relative px-5 pt-3 pb-2 flex items-center gap-2 border-b border-white/10 bg-[#081436]/60">
           <button
             onClick={() => setActiveTab('curated')}
             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
               activeTab === 'curated'
-                ? 'bg-cyan-500 text-slate-950 shadow-md shadow-cyan-500/20'
-                : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                ? GLOSSY_ACTIVE
+                : 'bg-white/[0.06] text-blue-200/70 hover:bg-white/[0.12]'
             }`}
           >
             经典关卡 ({CURATED_LEVELS.length})
@@ -59,8 +71,8 @@ export const LevelSelectorModal: React.FC<LevelSelectorModalProps> = ({
             onClick={() => setActiveTab('endless')}
             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1 ${
               activeTab === 'endless'
-                ? 'bg-gradient-to-r from-purple-500 to-indigo-500 text-white shadow-md shadow-purple-500/20'
-                : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                ? GLOSSY_ACTIVE
+                : 'bg-white/[0.06] text-blue-200/70 hover:bg-white/[0.12]'
             }`}
           >
             <Sparkles className="w-3.5 h-3.5" />
@@ -69,12 +81,12 @@ export const LevelSelectorModal: React.FC<LevelSelectorModalProps> = ({
         </div>
 
         {/* Content Body */}
-        <div className="flex-1 overflow-y-auto p-5">
+        <div className="relative flex-1 overflow-y-auto p-5">
           {activeTab === 'curated' && (
             <div>
               {/* Difficulty Filter Chips */}
-              <div className="flex items-center gap-1.5 mb-4 text-xs">
-                <span className="text-slate-400 mr-1 text-[11px]">难度:</span>
+              <div className="flex items-center gap-1.5 mb-4 text-xs flex-wrap">
+                <span className="text-blue-200/60 mr-1 text-[11px]">难度:</span>
                 {[
                   { id: 'all', label: '全部' },
                   { id: 'easy', label: '简单' },
@@ -87,8 +99,8 @@ export const LevelSelectorModal: React.FC<LevelSelectorModalProps> = ({
                     onClick={() => setFilterDiff(item.id)}
                     className={`px-2.5 py-1 rounded-lg font-medium transition-colors ${
                       filterDiff === item.id
-                        ? 'bg-slate-700 text-white font-bold'
-                        : 'bg-slate-800/60 text-slate-400 hover:text-slate-200'
+                        ? `${GLOSSY_ACTIVE} font-bold`
+                        : 'bg-white/[0.06] text-blue-200/60 hover:text-white hover:bg-white/[0.12]'
                     }`}
                   >
                     {item.label}
@@ -114,10 +126,10 @@ export const LevelSelectorModal: React.FC<LevelSelectorModalProps> = ({
                       }}
                       className={`relative p-3 rounded-2xl border text-left transition-all group flex flex-col justify-between h-28 ${
                         isCurrent
-                          ? 'bg-cyan-950/40 border-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.25)] ring-2 ring-cyan-400/50'
+                          ? 'bg-cyan-500/10 border-cyan-400/70 shadow-[0_0_15px_rgba(6,182,212,0.3)] ring-2 ring-cyan-400/50'
                           : isCompleted
-                          ? 'bg-slate-800/70 border-slate-700 hover:border-slate-500'
-                          : 'bg-slate-800/40 border-slate-800 hover:border-slate-600'
+                          ? 'bg-white/[0.07] border-white/20 hover:border-white/40'
+                          : 'bg-white/[0.04] border-white/10 hover:border-white/30'
                       }`}
                     >
                       <div className="flex items-start justify-between w-full">
@@ -128,12 +140,12 @@ export const LevelSelectorModal: React.FC<LevelSelectorModalProps> = ({
                         <span
                           className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${
                             lvl.difficulty === 'easy'
-                              ? 'bg-emerald-950 text-emerald-400 border border-emerald-500/30'
+                              ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-400/40'
                               : lvl.difficulty === 'medium'
-                              ? 'bg-sky-950 text-sky-400 border border-sky-500/30'
+                              ? 'bg-sky-500/15 text-sky-300 border border-sky-400/40'
                               : lvl.difficulty === 'hard'
-                              ? 'bg-amber-950 text-amber-400 border border-amber-500/30'
-                              : 'bg-rose-950 text-rose-400 border border-rose-500/30'
+                              ? 'bg-amber-500/15 text-amber-300 border border-amber-400/40'
+                              : 'bg-rose-500/15 text-rose-300 border border-rose-400/40'
                           }`}
                         >
                           {lvl.difficulty === 'easy'
@@ -147,7 +159,7 @@ export const LevelSelectorModal: React.FC<LevelSelectorModalProps> = ({
                       </div>
 
                       {/* Best Steps info */}
-                      <div className="text-[10px] text-slate-400">
+                      <div className="text-[10px] text-blue-200/60">
                         {record ? (
                           <span className="text-emerald-400 font-medium">
                             最佳: {record.bestSteps}步 (最优{lvl.optimalSteps}步)
@@ -165,7 +177,7 @@ export const LevelSelectorModal: React.FC<LevelSelectorModalProps> = ({
                             className={`w-3.5 h-3.5 ${
                               s <= stars
                                 ? 'text-amber-400 fill-amber-400'
-                                : 'text-slate-700'
+                                : 'text-white/15'
                             }`}
                           />
                         ))}
@@ -179,12 +191,12 @@ export const LevelSelectorModal: React.FC<LevelSelectorModalProps> = ({
 
           {activeTab === 'endless' && (
             <div className="flex flex-col gap-4">
-              <div className="p-4 rounded-2xl bg-gradient-to-r from-purple-950/40 to-indigo-950/40 border border-purple-500/20 text-slate-200">
+              <div className="p-4 rounded-2xl bg-gradient-to-r from-purple-500/15 to-indigo-500/15 border border-purple-400/25 text-blue-200/80">
                 <h3 className="text-sm font-black text-purple-300 mb-1 flex items-center gap-1.5">
                   <Sparkles className="w-4 h-4 text-purple-400" />
                   <span>实时动态关卡生成器 (Solver 驱动)</span>
                 </h3>
-                <p className="text-xs text-slate-400 leading-relaxed">
+                <p className="text-xs text-blue-200/60 leading-relaxed">
                   每个随机关卡由后台 Solver 现场推导计算，确保 100% 绝对有解，并自动计算出精准的理论最少步数与星级门槛！
                 </p>
               </div>
@@ -215,24 +227,27 @@ export const LevelSelectorModal: React.FC<LevelSelectorModalProps> = ({
                 ].map((item) => (
                   <div
                     key={item.diff}
-                    className="p-4 rounded-2xl bg-slate-800/60 border border-slate-700/80 flex flex-col justify-between"
+                    className="p-4 rounded-2xl bg-white/[0.06] border border-white/10 flex flex-col justify-between"
                   >
                     <div>
                       <h4 className="text-sm font-black text-white">{item.title}</h4>
                       <p className="text-[11px] text-cyan-400 font-medium mb-1">
                         {item.colors}
                       </p>
-                      <p className="text-[11px] text-slate-400 mb-4">{item.desc}</p>
+                      <p className="text-[11px] text-blue-200/60 mb-4">{item.desc}</p>
                     </div>
                     <button
                       onClick={() => {
                         onGenerateLevel(item.diff);
                         onClose();
                       }}
-                      className={`w-full py-2.5 px-3 rounded-xl bg-gradient-to-r ${item.btnColor} text-slate-950 font-bold text-xs flex items-center justify-center gap-1.5 shadow-md transition-all active:scale-95`}
+                      className={`relative w-full py-2.5 px-3 rounded-xl bg-gradient-to-r ${item.btnColor} text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-md border border-white/20 transition-all active:scale-95 overflow-hidden`}
                     >
-                      <Shuffle className="w-3.5 h-3.5" />
-                      <span>立即生成并开局</span>
+                      <div className="absolute top-0.5 left-2 right-2 h-2 rounded-full bg-gradient-to-b from-white/50 to-transparent pointer-events-none" />
+                      <Shuffle className="relative w-3.5 h-3.5 drop-shadow-[0_1px_2px_rgba(0,0,0,0.4)]" />
+                      <span className="relative drop-shadow-[0_1px_2px_rgba(0,0,0,0.4)]">
+                        立即生成并开局
+                      </span>
                     </button>
                   </div>
                 ))}

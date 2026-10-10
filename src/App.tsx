@@ -91,7 +91,7 @@ export default function App() {
   // Preferences
   const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
   const [vibrateEnabled, setVibrateEnabled] = useState<boolean>(true);
-  const [showSymbols, setShowSymbols] = useState<boolean>(false);
+  const [bgmEnabled, setBgmEnabled] = useState<boolean>(false);
 
   // Stats
   const [stats, setStats] = useState<PlayerStats>(() => {
@@ -120,18 +120,21 @@ export default function App() {
           soundManager.enabled = parsed.soundEnabled;
         }
         if (parsed.vibrateEnabled !== undefined) setVibrateEnabled(parsed.vibrateEnabled);
-        if (parsed.showSymbols !== undefined) setShowSymbols(parsed.showSymbols);
+        if (parsed.bgmEnabled !== undefined) {
+          setBgmEnabled(parsed.bgmEnabled);
+          soundManager.setMusicEnabled(parsed.bgmEnabled);
+        }
       }
     } catch {
       // ignore
     }
   }, []);
 
-  const savePreferences = (sound: boolean, vib: boolean, sym: boolean) => {
+  const savePreferences = (sound: boolean, vib: boolean, bgm: boolean) => {
     try {
       localStorage.setItem(
         PREFS_STORAGE_KEY,
-        JSON.stringify({ soundEnabled: sound, vibrateEnabled: vib, showSymbols: sym })
+        JSON.stringify({ soundEnabled: sound, vibrateEnabled: vib, bgmEnabled: bgm })
       );
     } catch {
       // ignore
@@ -251,7 +254,17 @@ export default function App() {
 
       let exactX = (toCol - fromCol) * 65;
       let exactY = (toRow - fromRow) * 200 - 20;
-      let tiltAngle = toCol >= fromCol ? 72 : -72;
+      let isTargetRight = toCol >= fromCol;
+
+      // Tilt magnitude follows how much liquid the source tube currently holds:
+      // a full bottle only needs a shallow tip to spill, while a nearly empty
+      // bottle must be raised much higher to pour out the last of its liquid.
+      const sourceUnits = tubes[fromIdx].length;
+      const tiltForUnits = (units: number) => {
+        const fillRatio = Math.max(0, Math.min(1, units / TUBE_CAPACITY));
+        return 38 + (1 - fillRatio) * 44; // 38° (full) → 82° (near empty)
+      };
+      let tiltAngle = (isTargetRight ? 1 : -1) * tiltForUnits(sourceUnits);
 
       if (sSlot && tSlot) {
         const sBox = sSlot.getBoundingClientRect();
@@ -264,11 +277,10 @@ export default function App() {
         const tMouthX = tBox.left + tBox.width * 0.5;
         const tMouthY = tBox.top + 9 * tScaleY;
 
-        const isTargetRight = tMouthX >= sMouthX;
-        tiltAngle = isTargetRight ? 72 : -72;
+        isTargetRight = tMouthX >= sMouthX;
+        tiltAngle = (isTargetRight ? 1 : -1) * tiltForUnits(sourceUnits);
 
-        // When tilted 72deg, the lower mouth lip rotates downwards and outwards.
-        // Align the pouring mouth lip directly over target bottle mouth center!
+        // Align the pouring mouth lip directly over target bottle mouth center.
         exactX = (tMouthX - sMouthX) - (isTargetRight ? 4.0 : -4.0);
         exactY = (tMouthY - sMouthY) - 18.5;
       }
@@ -320,6 +332,9 @@ export default function App() {
               : 1 - Math.pow(-2 * progress + 2, 2) / 2;
 
           const currentAmount = check.count * easeProgress;
+          // Keep tipping the bottle up as it drains (less water → higher tilt).
+          const remainingUnits = sourceUnits - currentAmount;
+          const currentTilt = (isTargetRight ? 1 : -1) * tiltForUnits(remainingUnits);
 
           setPourAnimation((prev) => {
             if (!prev || prev.phase !== 'pouring') return prev;
@@ -327,6 +342,7 @@ export default function App() {
               ...prev,
               drainCount: currentAmount,
               riseCount: currentAmount,
+              tiltAngle: currentTilt,
             };
           });
 
@@ -731,7 +747,6 @@ export default function App() {
             pourAnimation={pourAnimation}
             completionAnimation={completionAnimation}
             collectedTubeIndices={collectedTubeIndices}
-            showSymbols={showSymbols}
             soundEnabled={soundEnabled}
             shakingTubeIndex={shakingTubeIndex}
             onTubeClick={handleTubeClick}
@@ -844,21 +859,22 @@ export default function App() {
         <SettingsModal
           soundEnabled={soundEnabled}
           vibrateEnabled={vibrateEnabled}
-          showSymbols={showSymbols}
+          bgmEnabled={bgmEnabled}
           onToggleSound={() => {
             const next = !soundEnabled;
             setSoundEnabled(next);
             soundManager.enabled = next;
-            savePreferences(next, vibrateEnabled, showSymbols);
+            savePreferences(next, vibrateEnabled, bgmEnabled);
           }}
           onToggleVibrate={() => {
             const next = !vibrateEnabled;
             setVibrateEnabled(next);
-            savePreferences(soundEnabled, next, showSymbols);
+            savePreferences(soundEnabled, next, bgmEnabled);
           }}
-          onToggleSymbols={() => {
-            const next = !showSymbols;
-            setShowSymbols(next);
+          onToggleBgm={() => {
+            const next = !bgmEnabled;
+            setBgmEnabled(next);
+            soundManager.setMusicEnabled(next);
             savePreferences(soundEnabled, vibrateEnabled, next);
           }}
           onClose={() => setSettingsOpen(false)}

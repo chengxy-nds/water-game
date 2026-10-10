@@ -37,7 +37,6 @@ interface GameBoardProps {
   pourAnimation: PourAnimationState | null;
   completionAnimation?: CompletionAnimationState | null;
   collectedTubeIndices?: number[];
-  showSymbols: boolean;
   soundEnabled?: boolean;
   shakingTubeIndex?: number | null;
   onTubeClick: (index: number) => void;
@@ -52,7 +51,6 @@ export const GameBoard: React.FC<GameBoardProps> = ({
   pourAnimation,
   completionAnimation = null,
   collectedTubeIndices = [],
-  showSymbols,
   soundEnabled = true,
   shakingTubeIndex = null,
   onTubeClick,
@@ -200,7 +198,6 @@ export const GameBoard: React.FC<GameBoardProps> = ({
           tiltAngle={pourTransforms.tiltAngle}
           translateX={pourTransforms.translateX}
           translateY={pourTransforms.translateY}
-          showSymbols={showSymbols}
           sourceDrainingCount={isPouringSource ? pourAnimation?.drainCount ?? 0 : 0}
           drainingTotalCount={isPouringSource ? pourAnimation?.count ?? 0 : 0}
           targetRisingCount={isPouringTarget ? pourAnimation?.riseCount ?? 0 : 0}

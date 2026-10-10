@@ -1,139 +1,120 @@
 import React from 'react';
 import { soundManager } from '../utils/audio';
-import { X, Volume2, VolumeX, Eye, Vibrate, Info, ShieldCheck } from 'lucide-react';
+import { X, Volume2, VolumeX, Vibrate, Music } from 'lucide-react';
 
 interface SettingsModalProps {
   soundEnabled: boolean;
   vibrateEnabled: boolean;
-  showSymbols: boolean;
+  bgmEnabled: boolean;
   onToggleSound: () => void;
   onToggleVibrate: () => void;
-  onToggleSymbols: () => void;
+  onToggleBgm: () => void;
   onClose: () => void;
 }
+
+// Glossy blue 3D button — same style as the main game page buttons.
+const GLOSSY_BLUE =
+  'bg-gradient-to-b from-[#60a5fa] via-[#3b82f6] to-[#1e40af] border-2 border-[#93c5fd] shadow-[0_4px_12px_rgba(29,78,216,0.55),inset_0_1.5px_2px_rgba(255,255,255,0.85),inset_0_-2px_3px_rgba(30,58,138,0.5)]';
+
+// Glossy glass toggle switch
+const GlassSwitch: React.FC<{ enabled: boolean; onColor: string; onClick: () => void }> = ({
+  enabled,
+  onColor,
+  onClick,
+}) => (
+  <button
+    onClick={onClick}
+    className={`relative w-12 h-7 rounded-full border transition-colors cursor-pointer ${
+      enabled
+        ? `bg-gradient-to-b ${onColor} border-white/40 shadow-[inset_0_1px_1px_rgba(255,255,255,0.5),0_2px_8px_rgba(0,0,0,0.4)]`
+        : 'bg-white/10 border-white/20 backdrop-blur-sm'
+    }`}
+  >
+    <div
+      className={`absolute top-1 h-5 w-5 rounded-full bg-gradient-to-b from-white to-slate-300 shadow-[0_1px_3px_rgba(0,0,0,0.6)] transition-all ${
+        enabled ? 'left-6' : 'left-1'
+      }`}
+    />
+  </button>
+);
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({
   soundEnabled,
   vibrateEnabled,
-  showSymbols,
+  bgmEnabled,
   onToggleSound,
   onToggleVibrate,
-  onToggleSymbols,
+  onToggleBgm,
   onClose,
 }) => {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="relative w-full max-w-sm rounded-3xl bg-slate-900 border border-slate-800 shadow-2xl p-6 flex flex-col overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#03081a]/70 backdrop-blur-md animate-in fade-in duration-200">
+      <div className="relative w-full max-w-sm rounded-3xl bg-gradient-to-b from-[#1a2a55]/85 via-[#0e1e42]/80 to-[#0a1630]/85 backdrop-blur-2xl border border-white/15 shadow-2xl p-5 flex flex-col overflow-hidden">
+        {/* Top ambient glow + hairline highlight */}
+        <div className="absolute -top-16 left-1/2 -translate-x-1/2 w-48 h-48 bg-cyan-400/25 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent pointer-events-none" />
+
         {/* Header */}
-        <div className="flex items-center justify-between pb-4 border-b border-slate-800">
-          <div>
-            <h3 className="text-lg font-black text-white">游戏设置</h3>
-            <p className="text-xs text-slate-400">个性化触感与体验偏好</p>
-          </div>
+        <div className="relative flex items-center justify-between pb-4 border-b border-white/10">
+          <h3 className="text-lg font-black text-white">游戏设置</h3>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition-colors"
+            className={`relative p-1.5 rounded-xl text-white active:scale-95 transition-transform cursor-pointer overflow-hidden ${GLOSSY_BLUE}`}
           >
-            <X className="w-5 h-5" />
+            <div className="absolute top-0.5 left-1 right-1 h-2 rounded-t-[10px] bg-gradient-to-b from-white/60 to-transparent pointer-events-none" />
+            <X className="relative w-5 h-5 drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]" />
           </button>
         </div>
 
         {/* Toggles */}
-        <div className="py-4 flex flex-col gap-3">
-          {/* Sound Toggle */}
-          <div className="flex items-center justify-between p-3 rounded-2xl bg-slate-800/60 border border-slate-700/60">
+        <div className="relative py-4 flex flex-col gap-3">
+          {/* Water Sound */}
+          <div className="flex items-center justify-between p-3 rounded-2xl bg-white/[0.06] border border-white/15 backdrop-blur-md shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center border border-cyan-500/20">
-                {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+              <div className="w-10 h-10 rounded-xl bg-cyan-500/15 text-cyan-400 flex items-center justify-center border border-cyan-400/30">
+                {soundEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
               </div>
-              <div>
-                <div className="text-xs font-bold text-white">水流音效</div>
-                <div className="text-[11px] text-slate-400">实时玻璃与水流物理合成声</div>
-              </div>
+              <span className="text-sm font-bold text-white">水流音效</span>
             </div>
-            <button
+            <GlassSwitch
+              enabled={soundEnabled}
+              onColor="from-cyan-400 to-blue-500"
               onClick={() => {
                 onToggleSound();
                 soundManager.playSelect();
               }}
-              className={`w-12 h-6 rounded-full transition-colors relative ${
-                soundEnabled ? 'bg-cyan-500' : 'bg-slate-700'
-              }`}
-            >
-              <div
-                className={`w-5 h-5 rounded-full bg-white transition-transform ${
-                  soundEnabled ? 'translate-x-6' : 'translate-x-0.5'
-                }`}
-              />
-            </button>
+            />
           </div>
 
           {/* Haptics */}
-          <div className="flex items-center justify-between p-3 rounded-2xl bg-slate-800/60 border border-slate-700/60">
+          <div className="flex items-center justify-between p-3 rounded-2xl bg-white/[0.06] border border-white/15 backdrop-blur-md shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center border border-emerald-500/20">
-                <Vibrate className="w-4 h-4" />
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center border border-emerald-400/30">
+                <Vibrate className="w-5 h-5" />
               </div>
-              <div>
-                <div className="text-xs font-bold text-white">触感振动</div>
-                <div className="text-[11px] text-slate-400">倾倒与碰撞微触觉反馈</div>
-              </div>
+              <span className="text-sm font-bold text-white">触感震动</span>
             </div>
-            <button
+            <GlassSwitch
+              enabled={vibrateEnabled}
+              onColor="from-emerald-400 to-teal-500"
               onClick={onToggleVibrate}
-              className={`w-12 h-6 rounded-full transition-colors relative ${
-                vibrateEnabled ? 'bg-emerald-500' : 'bg-slate-700'
-              }`}
-            >
-              <div
-                className={`w-5 h-5 rounded-full bg-white transition-transform ${
-                  vibrateEnabled ? 'translate-x-6' : 'translate-x-0.5'
-                }`}
-              />
-            </button>
+            />
           </div>
 
-          {/* Colorblind symbols */}
-          <div className="flex items-center justify-between p-3 rounded-2xl bg-slate-800/60 border border-slate-700/60">
+          {/* Background Music */}
+          <div className="flex items-center justify-between p-3 rounded-2xl bg-white/[0.06] border border-white/15 backdrop-blur-md shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center border border-amber-500/20">
-                <Eye className="w-4 h-4" />
+              <div className="w-10 h-10 rounded-xl bg-violet-500/15 text-violet-400 flex items-center justify-center border border-violet-400/30">
+                <Music className="w-5 h-5" />
               </div>
-              <div>
-                <div className="text-xs font-bold text-white">色盲辅助符号</div>
-                <div className="text-[11px] text-slate-400">在液体层标注清晰几何图案</div>
-              </div>
+              <span className="text-sm font-bold text-white">背景音乐</span>
             </div>
-            <button
-              onClick={onToggleSymbols}
-              className={`w-12 h-6 rounded-full transition-colors relative ${
-                showSymbols ? 'bg-amber-500' : 'bg-slate-700'
-              }`}
-            >
-              <div
-                className={`w-5 h-5 rounded-full bg-white transition-transform ${
-                  showSymbols ? 'translate-x-6' : 'translate-x-0.5'
-                }`}
-              />
-            </button>
+            <GlassSwitch
+              enabled={bgmEnabled}
+              onColor="from-violet-400 to-purple-500"
+              onClick={onToggleBgm}
+            />
           </div>
-        </div>
-
-        {/* Solver explanation */}
-        <div className="p-3.5 rounded-2xl bg-slate-950/60 border border-slate-800 text-[11px] text-slate-400 leading-relaxed flex flex-col gap-1.5 mb-2">
-          <div className="flex items-center gap-1.5 text-cyan-400 font-bold">
-            <Info className="w-3.5 h-3.5" />
-            <span>关于 Solver (智能解题器)</span>
-          </div>
-          <p>
-            游戏内置基于状态对称性剪枝的高性能广度优先搜索 (BFS) 解题引擎。每个关卡均保证存在最优解，星级评价由理论最小步数严格裁定。
-          </p>
-        </div>
-
-        {/* TapTap badge */}
-        <div className="flex items-center justify-center gap-1.5 text-[11px] text-slate-500 mt-2">
-          <ShieldCheck className="w-3.5 h-3.5 text-cyan-400" />
-          <span>TapTap 独立游戏品鉴版 · 极简无打扰</span>
         </div>
       </div>
     </div>

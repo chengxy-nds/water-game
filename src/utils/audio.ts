@@ -3,6 +3,12 @@
 class SoundManager {
   private ctx: AudioContext | null = null;
   public enabled: boolean = true;
+  public musicEnabled: boolean = false;
+
+  // Background music loop state
+  private musicTimer: number | null = null;
+  private musicGain: GainNode | null = null;
+  private musicStep = 0;
 
   private initContext() {
     if (!this.ctx && typeof window !== 'undefined') {
@@ -405,6 +411,93 @@ class SoundManager {
 
       osc.start(now);
       osc.stop(now + 0.15);
+    } catch {
+      // ignore
+    }
+  }
+
+  // --- Background Music: gentle ambient arpeggio loop ---
+
+  setMusicEnabled(enabled: boolean) {
+    this.musicEnabled = enabled;
+    if (enabled) {
+      this.startMusic();
+    } else {
+      this.stopMusic();
+    }
+  }
+
+  private startMusic() {
+    if (this.musicTimer !== null) return;
+    this.initContext();
+    if (!this.ctx) return;
+
+    this.musicGain = this.ctx.createGain();
+    this.musicGain.gain.setValueAtTime(0.001, this.ctx.currentTime);
+    this.musicGain.gain.linearRampToValueAtTime(0.14, this.ctx.currentTime + 1.5);
+    this.musicGain.connect(this.ctx.destination);
+
+    this.musicStep = 0;
+    const stepMs = 640;
+
+    const tick = () => {
+      if (!this.musicEnabled || !this.ctx || !this.musicGain) return;
+      // Soft pentatonic melody (C major pentatonic)
+      const scale = [261.63, 293.66, 329.63, 392.0, 440.0, 523.25, 587.33, 659.25];
+      const pattern = [0, 3, 5, 7, 5, 3, 2, 4, 6, 7, 5, 4, 3, 1, 0, 2];
+      const freq = scale[pattern[this.musicStep % pattern.length]];
+      this.playMusicNote(freq, 1.0, 0.085);
+      // Low warm drone every 4 steps
+      if (this.musicStep % 4 === 0) {
+        this.playMusicNote(scale[0] / 2, 2.2, 0.055);
+      }
+      this.musicStep++;
+    };
+
+    tick();
+    this.musicTimer = window.setInterval(tick, stepMs);
+  }
+
+  private stopMusic() {
+    if (this.musicTimer !== null) {
+      window.clearInterval(this.musicTimer);
+      this.musicTimer = null;
+    }
+    if (this.musicGain && this.ctx) {
+      const gain = this.musicGain;
+      const now = this.ctx.currentTime;
+      gain.gain.cancelScheduledValues(now);
+      gain.gain.setValueAtTime(gain.gain.value, now);
+      gain.gain.linearRampToValueAtTime(0.0001, now + 0.4);
+      window.setTimeout(() => {
+        try {
+          gain.disconnect();
+        } catch {
+          // ignore
+        }
+      }, 500);
+    }
+    this.musicGain = null;
+  }
+
+  private playMusicNote(freq: number, duration: number, volume: number) {
+    if (!this.ctx || !this.musicGain) return;
+    try {
+      const now = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, now);
+
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.linearRampToValueAtTime(volume, now + 0.1);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+      osc.connect(gain);
+      gain.connect(this.musicGain);
+      osc.start(now);
+      osc.stop(now + duration + 0.05);
     } catch {
       // ignore
     }
