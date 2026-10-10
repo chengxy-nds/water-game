@@ -53,7 +53,7 @@ export const WaterStream: React.FC<WaterStreamProps> = ({
 
     const render = () => {
       if (!running) return;
-      phaseRef.current += 0.16;
+      phaseRef.current += 0.11;
       const phase = phaseRef.current;
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -69,40 +69,23 @@ export const WaterStream: React.FC<WaterStreamProps> = ({
       const y1 = currentFrom.y;
       const x2 = currentTo.x;
       const y2 = currentTo.y;
+      const dx = x2 - x1;
+      const dy = Math.max(22, y2 - y1);
+      const sway = Math.sin(phase * 2) * Math.min(12, Math.abs(dx) * 0.05 + 2.8);
 
-      const bubbleColor = colorDef.topHex || colorDef.hex;
-      const foamColor = colorDef.hex;
+      const cp1x = x1 + dx * 0.2 + sway;
+      const cp1y = y1 + dy * 0.26;
+      const cp2x = x1 + dx * 0.82 - sway * 0.7;
+      const cp2y = y1 + dy * 0.58;
 
-      ctx.save();
-
-      // Keep both ends fixed while the middle of the stream breathes with the flow.
       const streamPath = new Path2D();
       streamPath.moveTo(x1, y1);
-      const dy = Math.max(20, y2 - y1);
-      const sway = Math.sin(phase * 1.8) * Math.min(4, Math.abs(x2 - x1) * 0.035 + 1.5);
-      const cp1x = x1 + (x2 - x1) * 0.18 + sway;
-      const cp1y = y1 + dy * 0.28;
-      const cp2x = x1 + (x2 - x1) * 0.82 - sway * 0.6;
-      const cp2y = y1 + dy * 0.55;
       streamPath.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x2, y2);
 
-      // Soft edge and saturated body keep the stream liquid rather than neon.
-      ctx.lineWidth = 9;
-      ctx.strokeStyle = `${colorDef.hex}28`;
-      ctx.lineCap = 'round';
-      ctx.stroke(streamPath);
+      const mainHex = colorDef.hex;
+      const topHex = colorDef.topHex || mainHex;
+      const glowHex = `${mainHex}aa`;
 
-      ctx.lineWidth = 6.4;
-      ctx.strokeStyle = colorDef.hex;
-      ctx.lineCap = 'round';
-      ctx.stroke(streamPath);
-
-      ctx.lineWidth = 4.1;
-      ctx.strokeStyle = colorDef.topHex || colorDef.hex;
-      ctx.lineCap = 'round';
-      ctx.stroke(streamPath);
-
-      // Traveling caustic streaks provide visible downward motion without breaking the jet.
       const pointOnCurve = (t: number) => {
         const inverse = 1 - t;
         return {
@@ -110,58 +93,70 @@ export const WaterStream: React.FC<WaterStreamProps> = ({
           y: inverse ** 3 * y1 + 3 * inverse ** 2 * t * cp1y + 3 * inverse * t ** 2 * cp2y + t ** 3 * y2,
         };
       };
-      for (let i = 0; i < 3; i++) {
-        const t = 0.12 + ((phase * 0.035 + i / 3) % 0.76);
-        const point = pointOnCurve(t);
-        const before = pointOnCurve(Math.max(0, t - 0.01));
-        const after = pointOnCurve(Math.min(1, t + 0.01));
+
+      ctx.save();
+      ctx.globalCompositeOperation = 'screen';
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+
+      ctx.shadowBlur = 28;
+      ctx.shadowColor = mainHex;
+      ctx.lineWidth = 18;
+      ctx.strokeStyle = glowHex;
+      ctx.stroke(streamPath);
+
+      ctx.shadowBlur = 18;
+      ctx.lineWidth = 12;
+      ctx.strokeStyle = mainHex;
+      ctx.stroke(streamPath);
+
+      ctx.shadowBlur = 0;
+      ctx.lineWidth = 5.2;
+      ctx.strokeStyle = topHex;
+      ctx.stroke(streamPath);
+
+      for (let i = 0; i < 4; i += 1) {
+        const t = 0.08 + ((phase * 0.06 + i * 0.24) % 0.8);
+        const p = pointOnCurve(t);
+        const before = pointOnCurve(Math.max(0, t - 0.02));
+        const after = pointOnCurve(Math.min(1, t + 0.02));
         const angle = Math.atan2(after.y - before.y, after.x - before.x) + Math.PI / 2;
-        const alpha = 0.24 + 0.18 * Math.sin(phase + i * 2.1);
         ctx.save();
-        ctx.translate(point.x, point.y);
+        ctx.translate(p.x, p.y);
         ctx.rotate(angle);
-        ctx.globalAlpha = alpha;
-        ctx.fillStyle = '#ffffff';
+        ctx.fillStyle = i % 2 === 0 ? '#ffffff' : topHex;
+        ctx.globalAlpha = 0.34 + 0.2 * Math.sin(phase * 2 + i);
         ctx.beginPath();
-        ctx.ellipse(0, 0, 0.8, 4.5, 0, 0, Math.PI * 2);
+        ctx.ellipse(0, 0, 1.4, 6.5, 0, 0, Math.PI * 2);
         ctx.fill();
         ctx.restore();
       }
 
-      // A small meniscus bulge sits on the actual receiving surface.
-      const moundPulse = Math.sin(phase * 3.2) * 0.55;
       const moundY = y2;
+      const splashPulse = 1 + Math.sin(phase * 4.4) * 0.24;
 
       ctx.beginPath();
-      ctx.ellipse(x2, moundY - 1, 7.2, 2.8, 0, Math.PI, Math.PI * 2);
-      ctx.fillStyle = colorDef.hex;
+      ctx.ellipse(x2, moundY, 12 * splashPulse, 4.2 * splashPulse, 0, 0, Math.PI * 2);
+      ctx.fillStyle = `${mainHex}aa`;
       ctx.fill();
 
       ctx.beginPath();
-      ctx.ellipse(x2, moundY - 2.2 + moundPulse * 0.35, 3.5, 2.2, 0, Math.PI, Math.PI * 2);
-      ctx.fillStyle = bubbleColor;
+      ctx.ellipse(x2 + 3, moundY - 2, 7.5 * splashPulse, 2.8 * splashPulse, 0, 0, Math.PI * 2);
+      ctx.fillStyle = topHex;
       ctx.fill();
 
-      ctx.beginPath();
-      ctx.ellipse(x2 - 0.7, moundY - 2.8 + moundPulse * 0.35, 1.2, 0.55, -0.2, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-      ctx.fill();
-
-      // Short ripples spread over the receiving liquid surface.
-      for (let i = 0; i < 2; i++) {
-        const tRing = ((phase * 0.2 + i * 0.5) % 1);
-        const rx = 2 + tRing * 8;
-        const ry = 1.2 + tRing * 1.8;
-        const alpha = (1 - tRing) * 0.38;
+      for (let i = 0; i < 6; i += 1) {
+        const drift = ((phase * 18 + i * 11) % 30) - 15;
+        const dropletX = x2 + drift * 0.35;
+        const dropletY = moundY - 2 + (i % 2 === 0 ? 0 : 4) + Math.sin(phase * 5 + i) * 3;
         ctx.beginPath();
-        ctx.ellipse(x2, y2, rx, ry, 0, 0, Math.PI * 2);
-        ctx.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
-        ctx.lineWidth = 0.75;
-        ctx.stroke();
+        ctx.ellipse(dropletX, dropletY, 1.8 + (i % 3), 3.2 + (i % 3), 0, 0, Math.PI * 2);
+        ctx.fillStyle = i % 2 === 0 ? '#ffffff' : topHex;
+        ctx.globalAlpha = 0.6;
+        ctx.fill();
       }
 
       ctx.restore();
-
       animFrameRef.current = requestAnimationFrame(render);
     };
 

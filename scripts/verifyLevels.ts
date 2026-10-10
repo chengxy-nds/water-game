@@ -14,18 +14,48 @@ const results: {
   balanceErrors: string[];
 }[] = [];
 
+const difficultyRank: Record<string, number> = { easy: 0, medium: 1, hard: 2 };
+
+let previousDifficultyRank = -1;
+let previousMechanicCount = -1;
 for (const level of CURATED_LEVELS) {
   const bottles = level.bottles;
   const balanceErrors: string[] = [];
 
-  // 1. capacity check
+  const mechanicCount = bottles.filter((b) => b.type === 'masked' || b.type === 'hidden' || b.type === 'bottom_leak').length;
+  const currentDifficultyRank = difficultyRank[level.difficulty] ?? -1;
+  if (currentDifficultyRank < previousDifficultyRank || mechanicCount < previousMechanicCount) {
+    throw new Error(
+      `Level progression violation: #${level.id} (${level.title}) has difficulty ${level.difficulty} and ${mechanicCount} special bottles, but previous level was already harder.`
+    );
+  }
+  previousDifficultyRank = currentDifficultyRank;
+  previousMechanicCount = mechanicCount;
+
+  // 1. bottom_leak target integrity check
+  for (const b of bottles) {
+    if (b.type === 'bottom_leak') {
+      if (!b.leakTargetBottleId) {
+        balanceErrors.push(`${b.id} is a bottom_leak bottle but has no leakTargetBottleId`);
+        continue;
+      }
+      const target = bottles.find((other) => other.id === b.leakTargetBottleId);
+      if (!target) {
+        balanceErrors.push(`${b.id} points to missing target bottle ${b.leakTargetBottleId}`);
+      } else if (target.id === b.id) {
+        balanceErrors.push(`${b.id} cannot leak into itself`);
+      }
+    }
+  }
+
+  // 2. capacity check
   for (const b of bottles) {
     if (b.layers.length > b.capacity) {
       balanceErrors.push(`${b.id} has ${b.layers.length} layers > capacity ${b.capacity}`);
     }
   }
 
-  // 2. color balance (each color exactly TUBE_CAPACITY)
+  // 3. color balance (each color exactly TUBE_CAPACITY)
   const colorCounts: Record<string, number> = {};
   for (const b of bottles) {
     for (const c of b.layers) colorCounts[c] = (colorCounts[c] || 0) + 1;

@@ -143,8 +143,39 @@ export function canPour(
  * Empty targets are allowed and simply receive the leaked bottom layer;
  * non-empty targets must match the topmost color of the receiving bottle.
  */
-export function canLeak(source: Bottle, target: Bottle, capacity: number = TUBE_CAPACITY): boolean {
+export function isDirectlyBelow(
+  sourceIndex: number,
+  targetIndex: number,
+  bottles: Bottle[] = []
+): boolean {
+  if (sourceIndex < 0 || targetIndex < 0 || sourceIndex === targetIndex) return false;
+  if (bottles.length === 0) return false;
+
+  const rowCount = Math.min(3, Math.max(1, Math.ceil(bottles.length / 7)));
+  const rowSize = Math.ceil(bottles.length / rowCount);
+
+  const sourceRow = Math.floor(sourceIndex / rowSize);
+  const targetRow = Math.floor(targetIndex / rowSize);
+  const sourceCol = sourceIndex % rowSize;
+  const targetCol = targetIndex % rowSize;
+
+  return sourceRow + 1 === targetRow && sourceCol === targetCol && targetIndex > sourceIndex;
+}
+
+export function canLeak(
+  source: Bottle,
+  target: Bottle,
+  capacity: number = TUBE_CAPACITY,
+  sourceIndex?: number,
+  targetIndex?: number,
+  bottles: Bottle[] = []
+): boolean {
   if (source.type !== 'bottom_leak') return false;
+  if (!source.leakTargetBottleId) return false;
+  if (source.leakTargetBottleId !== target.id) return false;
+  if (sourceIndex !== undefined && targetIndex !== undefined && !isDirectlyBelow(sourceIndex, targetIndex, bottles)) {
+    return false;
+  }
   if (source.layers.length === 0) return false;
   if (source.id === target.id) return false;
   if (target.layers.length >= capacity) return false;
@@ -410,7 +441,7 @@ export function solveWaterSort(
       if (src.type !== 'bottom_leak' || !src.leakTargetBottleId) continue;
       const tIdx = bottles.findIndex((b) => b.id === src.leakTargetBottleId);
       if (tIdx < 0 || tIdx === i) continue;
-      if (!canLeak(src, bottles[tIdx], capacity)) continue;
+      if (!canLeak(src, bottles[tIdx], capacity, i, tIdx, bottles)) continue;
 
       const leakColor = src.layers[0];
       const nextResult = executeLeak(bottles, i, tIdx, capacity);

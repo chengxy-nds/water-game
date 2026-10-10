@@ -166,10 +166,13 @@ export const GameBoard: React.FC<GameBoardProps> = ({
       sourceBottom.y = 140;
       const sourceBottomScreen = sourceBottom.matrixTransform(sourceMatrix);
 
-      const targetY = bottles[leakAnimation.targetIndex].layers.length === 0 ? 72 : 9;
+      // The leak should visually enter the target bottle itself, not stop at the mouth.
+      // Place the impact point in the lower interior of the target bottle so the stream
+      // appears to drain into the liquid and splash against the base.
+      const targetBottomY = bottles[leakAnimation.targetIndex].layers.length === 0 ? 115 : 100;
       const targetImpact = targetSvg!.createSVGPoint();
       targetImpact.x = 30;
-      targetImpact.y = targetY;
+      targetImpact.y = targetBottomY;
       const targetImpactScreen = targetImpact.matrixTransform(targetMatrix);
 
       setLeakFrom({ x: sourceBottomScreen.x, y: sourceBottomScreen.y });

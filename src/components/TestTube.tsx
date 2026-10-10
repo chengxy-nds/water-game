@@ -332,6 +332,20 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
           }`}
         >
           <defs>
+            <filter id={`liquid-glow-${index}`} x="-30%" y="-30%" width="160%" height="180%">
+              <feGaussianBlur stdDeviation="1.7" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <radialGradient id={`liquid-bloom-${index}`} cx="50%" cy="18%" r="58%">
+              <stop offset="0%" stopColor="#ffffff" stopOpacity="0.52" />
+              <stop offset="18%" stopColor="#dfe9ff" stopOpacity="0.24" />
+              <stop offset="100%" stopColor="#dfe9ff" stopOpacity="0" />
+            </radialGradient>
+
             {/* 3D Wooden Cork Stopper Gradient */}
             <linearGradient id={`cork-grad-${index}`} x1="0" y1="0" x2="1" y2="0">
               <stop offset="0%" stopColor="#92400e" />
@@ -610,15 +624,7 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
                                   y1={yAnchorK}
                                   x2="210"
                                   y2={yAnchorK}
-                                  stroke="rgba(0, 0, 0, 0.28)"
-                                  strokeWidth="1.2"
-                                />
-                                <line
-                                  x1="-150"
-                                  y1={yAnchorK - 0.6}
-                                  x2="210"
-                                  y2={yAnchorK - 0.6}
-                                  stroke="rgba(255, 255, 255, 0.5)"
+                                  stroke="rgba(255, 255, 255, 0.22)"
                                   strokeWidth="0.8"
                                 />
                               </>
@@ -704,10 +710,27 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
 
                 return (
                   <g key={`liquid-block-${layer.colorId}-${lIdx}`} opacity={isDimmed ? 0.4 : 1}>
+                    <ellipse
+                      cx="30"
+                      cy={Math.min(yBottom + 4, 138)}
+                      rx={18.8}
+                      ry={Math.max(6, (yBottom - yTop) * 0.26)}
+                      fill={`url(#liquid-bloom-${index})`}
+                      opacity={0.7}
+                      filter={`url(#liquid-glow-${index})`}
+                    />
+
                     {/* 3D Fluid Cylinder Body */}
                     <path
                       d={bodyPath}
                       fill={liquidFill}
+                    />
+
+                    <path
+                      d={bodyPath}
+                      fill="none"
+                      stroke="rgba(255,255,255,0.18)"
+                      strokeWidth="0.9"
                     />
 
                     {/* Frosted fog question mark over hidden bottom layers */}
@@ -724,12 +747,12 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
                       </text>
                     )}
 
-                    {/* Subtle boundary crease between different stacked colors */}
+                    {/* Subtle boundary glare between different stacked colors; no harsh black seam */}
                     {!isBottom && calculatedLayers[lIdx - 1]?.colorId !== layer.colorId && (
                       <path
                         d={`M 8.5 ${yBottom} A ${RX} ${RY} 0 0 0 51.5 ${yBottom}`}
-                        stroke="rgba(0, 0, 0, 0.3)"
-                        strokeWidth="1.2"
+                        stroke="rgba(255, 255, 255, 0.16)"
+                        strokeWidth="0.8"
                         fill="none"
                       />
                     )}
@@ -990,15 +1013,52 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
           {/* 8. Bottom-leak bottle: cracked glass base + leak hole */}
           {isLeaky && (
             <g pointerEvents="none">
-              <circle cx="30" cy="138.5" r="2.6" fill="rgba(255,255,255,0.3)" stroke="#9db4ff" strokeWidth="0.9" />
-              <circle cx="30" cy="138.5" r="0.9" fill="#cfd8ff" />
-              <path d="M 30 138 C 26 136, 24 131, 22 127" stroke="#cfe0ff" strokeWidth="1.1" strokeLinecap="round" fill="none" opacity="0.9" />
-              <path d="M 30 138 C 34 136, 36 132, 38 128" stroke="#cfe0ff" strokeWidth="1.1" strokeLinecap="round" fill="none" opacity="0.9" />
-              <path d="M 30 138 C 27 139, 22 140, 18 139" stroke="#cfe0ff" strokeWidth="1" strokeLinecap="round" fill="none" opacity="0.8" />
-              <path d="M 30 138 C 33 139, 38 140, 42 139" stroke="#cfe0ff" strokeWidth="1" strokeLinecap="round" fill="none" opacity="0.8" />
-              <path d="M 30 138 L 30 142" stroke="#e8f0ff" strokeWidth="1.2" strokeLinecap="round" fill="none" opacity="0.95" />
-              <path d="M 25 140 L 27 137 L 26 135 L 29 132" stroke="#dbe7ff" strokeWidth="0.9" strokeLinecap="round" strokeLinejoin="round" fill="none" opacity="0.85" />
-              <path d="M 35 140 L 33 137 L 34 135 L 31 132" stroke="#dbe7ff" strokeWidth="0.9" strokeLinecap="round" strokeLinejoin="round" fill="none" opacity="0.85" />
+              <path
+                d="M 21 136.5 Q 30 127 39 136.5"
+                stroke="rgba(223, 233, 255, 0.88)"
+                strokeWidth="1.25"
+                strokeLinecap="round"
+                fill="none"
+              />
+              <path
+                d="M 23.5 138.5 C 26.5 135.2, 27.8 134.2, 30 133.6 C 32.2 134.2, 33.5 135.2, 36.5 138.5"
+                stroke="rgba(210, 228, 255, 0.9)"
+                strokeWidth="1.1"
+                strokeLinecap="round"
+                fill="none"
+              />
+              <path
+                d="M 30 133.3 L 30 144.4"
+                stroke="#edf5ff"
+                strokeWidth="1.6"
+                strokeLinecap="round"
+                fill="none"
+                opacity="1"
+              />
+              <path
+                d="M 18.5 141.8 Q 30 144.8 41.5 141.8"
+                stroke="rgba(233, 242, 255, 0.92)"
+                strokeWidth="1.15"
+                strokeLinecap="round"
+                fill="none"
+              />
+              <path
+                d="M 23.5 141.7 L 26.4 138.1 L 28.6 135.9 L 30 134.3 L 31.4 135.9 L 33.6 138.1 L 36.5 141.7"
+                stroke="rgba(215, 230, 255, 0.9)"
+                strokeWidth="0.9"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                fill="none"
+              />
+              <path
+                d="M 17 139.2 L 24 136.6 L 20.4 134.8 L 27.2 132.5 L 25 130.1 L 30 128.8 L 35 130.1 L 32.8 132.5 L 39.6 134.8 L 36 136.6 L 43 139.2"
+                stroke="rgba(170, 198, 255, 0.7)"
+                strokeWidth="0.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                fill="none"
+              />
+              <circle cx="30" cy="138.7" r="1.4" fill="#f1f7ff" />
             </g>
           )}
         </svg>

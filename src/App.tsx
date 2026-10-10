@@ -29,6 +29,7 @@ import { ResetConfirmModal } from './components/ResetConfirmModal';
 import { HintModal, HintData } from './components/HintModal';
 import { RulesModal } from './components/RulesModal';
 import { MechanicIntroModal, MechanicIntroData } from './components/MechanicIntroModal';
+import { QuickDemo } from './components/QuickDemo';
 
 const STATS_STORAGE_KEY = 'water_sort_player_stats_v1';
 const PREFS_STORAGE_KEY = 'water_sort_preferences_v1';
@@ -103,6 +104,12 @@ const detectLevelMechanics = (lvl: Level): Array<keyof typeof MECHANIC_INTRO> =>
 };
 
 export default function App() {
+  const [demoMode, setDemoMode] = useState(true);
+
+  if (demoMode) {
+    return <QuickDemo onEnterGame={() => setDemoMode(false)} />;
+  }
+
   // Current active level (Default to Level 2 matching reference screenshot)
   const [currentLevel, setCurrentLevel] = useState<Level>(CURATED_LEVELS[1]);
   const [bottles, setBottles] = useState<Bottle[]>(() =>
@@ -665,7 +672,7 @@ export default function App() {
         if (sourceBottle.type === 'bottom_leak') {
           const leakTargetIdx = bottles.findIndex((b) => b.id === sourceBottle.leakTargetBottleId);
           if (clickedIdx === leakTargetIdx) {
-            if (canLeak(sourceBottle, targetBottle, TUBE_CAPACITY)) {
+            if (canLeak(sourceBottle, targetBottle, TUBE_CAPACITY, selectedIndex, clickedIdx, bottles)) {
               performLeak(selectedIndex, clickedIdx);
             } else {
               triggerInvalidFeedback(clickedIdx);
