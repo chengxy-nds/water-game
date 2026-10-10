@@ -51,28 +51,27 @@ export function applyMaskUnlock(bottles: Bottle[], capacity: number = TUBE_CAPAC
 }
 
 /**
- * Checks if the whole puzzle is solved (real colors):
- * 1. Every non-empty bottle is monochromatic.
- * 2. Each color is unified into a single bottle.
+ * Checks if the whole puzzle is solved.
+ * A board is solved only when every non-empty bottle is full and monochromatic,
+ * and each color appears in exactly one bottle. This prevents a state with
+ * multiple identical complete bottles from being accepted as a win.
  */
 export function isPuzzleSolved(bottles: Bottle[], capacity: number = TUBE_CAPACITY): boolean {
-  const allFullSolved = bottles.every((b) => b.layers.length === 0 || isBottleComplete(b, capacity));
-  if (allFullSolved) return true;
+  const nonEmptyBottles = bottles.filter((b) => b.layers.length > 0);
+  if (nonEmptyBottles.length === 0) return true;
 
-  for (const b of bottles) {
-    if (b.layers.length > 0 && !isBottleMonochromatic(b)) return false;
+  for (const b of nonEmptyBottles) {
+    if (!isBottleComplete(b, capacity)) return false;
   }
 
   const seenColors = new Set<string>();
-  for (const b of bottles) {
-    if (b.layers.length > 0) {
-      const color = b.layers[0];
-      if (seenColors.has(color)) return false;
-      seenColors.add(color);
-    }
+  for (const b of nonEmptyBottles) {
+    const color = b.layers[0];
+    if (seenColors.has(color)) return false;
+    seenColors.add(color);
   }
 
-  return seenColors.size > 0;
+  return true;
 }
 
 /**
@@ -119,6 +118,7 @@ export function canPour(
   to: Bottle,
   capacity: number = TUBE_CAPACITY
 ): { valid: boolean; count: number; color: string | null } {
+  if (from.type === 'bottom_leak') return { valid: false, count: 0, color: null };
   if (from.layers.length === 0) return { valid: false, count: 0, color: null };
   if (to.layers.length >= capacity) return { valid: false, count: 0, color: null };
 
@@ -140,13 +140,15 @@ export function canPour(
 
 /**
  * Checks whether a bottom-leak from `source` into `target` is legal.
- * Default: target must be non-empty; source bottom color === target top color.
+ * Empty targets are allowed and simply receive the leaked bottom layer;
+ * non-empty targets must match the topmost color of the receiving bottle.
  */
 export function canLeak(source: Bottle, target: Bottle, capacity: number = TUBE_CAPACITY): boolean {
   if (source.type !== 'bottom_leak') return false;
   if (source.layers.length === 0) return false;
+  if (source.id === target.id) return false;
   if (target.layers.length >= capacity) return false;
-  if (target.layers.length === 0) return false;
+  if (target.layers.length === 0) return true;
   return source.layers[0] === target.layers[target.layers.length - 1];
 }
 
@@ -157,6 +159,7 @@ export function hasAnyLegalMove(bottles: Bottle[], capacity: number = TUBE_CAPAC
   const n = bottles.length;
   for (let from = 0; from < n; from++) {
     const fromBottle = bottles[from];
+    if (fromBottle.type === 'bottom_leak') continue;
     if (fromBottle.layers.length === 0) continue;
     if (isBottleComplete(fromBottle, capacity)) continue;
 
@@ -186,6 +189,7 @@ export function executePour(
   toIdx: number,
   capacity: number = TUBE_CAPACITY
 ): { newBottles: Bottle[]; count: number; color: string } | null {
+  if (bottles[fromIdx].type === 'bottom_leak') return null;
   const check = canPour(bottles[fromIdx], bottles[toIdx], capacity);
   if (!check.valid || !check.color) return null;
 

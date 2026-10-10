@@ -27,9 +27,80 @@ import { SettingsModal } from './components/SettingsModal';
 import { DeadlockModal } from './components/DeadlockModal';
 import { ResetConfirmModal } from './components/ResetConfirmModal';
 import { HintModal, HintData } from './components/HintModal';
+import { RulesModal } from './components/RulesModal';
+import { MechanicIntroModal, MechanicIntroData } from './components/MechanicIntroModal';
 
 const STATS_STORAGE_KEY = 'water_sort_player_stats_v1';
 const PREFS_STORAGE_KEY = 'water_sort_preferences_v1';
+const MECHANIC_TUTORIAL_KEY = 'water_sort_mechanics_seen_v1';
+
+const MECHANIC_INTRO: Record<'normal' | 'masked' | 'hidden' | 'bottom_leak', MechanicIntroData> = {
+  normal: {
+    key: 'normal',
+    title: '普通瓶',
+    subtitle: '这是基础玩法：把同色液体按顶部连续段倒到空瓶或同色瓶中。',
+    bullets: [
+      '每个瓶子最多装 4 层。',
+      '只能倒出瓶顶连续同色的一段。',
+      '目标瓶必须为空或顶层颜色相同。',
+    ],
+  },
+  masked: {
+    key: 'masked',
+    title: '遮罩瓶',
+    subtitle: '遮罩瓶最初会被布盖住，直到你完成足够多的目标瓶才会揭开。',
+    bullets: [
+      '它刚开始看不见内部液体。',
+      '完成指定数量的目标瓶后，遮罩会自动掉落。',
+      '揭开后，它和普通瓶完全一样，继续按正常规则倒水。',
+    ],
+  },
+  hidden: {
+    key: 'hidden',
+    title: '隐藏瓶',
+    subtitle: '隐藏瓶底部有一层或多层颜色被遮住，玩家不能直接利用未知底层信息。',
+    bullets: [
+      '你只能看到顶部已知颜色。',
+      '底层隐藏颜色不会一次性全部暴露。',
+      '只有顶层被倒出后，下一层才会逐步显现。',
+    ],
+  },
+  bottom_leak: {
+    key: 'bottom_leak',
+    title: '底部漏水瓶',
+    subtitle: '这类瓶子不能像普通瓶一样口口倒水，必须走底部漏水机制。',
+    bullets: [
+      '它只能从底部漏出一层液体。',
+      '目标瓶必须是指定的固定目标瓶。',
+      '源瓶底部颜色必须和目标瓶顶部颜色一致。',
+    ],
+  },
+};
+
+const getSeenMechanics = (): Record<string, boolean> => {
+  try {
+    const stored = localStorage.getItem(MECHANIC_TUTORIAL_KEY);
+    return stored ? JSON.parse(stored) : {};
+  } catch {
+    return {};
+  }
+};
+
+const saveSeenMechanics = (seen: Record<string, boolean>) => {
+  try {
+    localStorage.setItem(MECHANIC_TUTORIAL_KEY, JSON.stringify(seen));
+  } catch {
+    // ignore
+  }
+};
+
+const detectLevelMechanics = (lvl: Level): Array<keyof typeof MECHANIC_INTRO> => {
+  const found: Array<keyof typeof MECHANIC_INTRO> = [];
+  if (lvl.bottles.some((b) => b.type === 'masked')) found.push('masked');
+  if (lvl.bottles.some((b) => b.type === 'hidden')) found.push('hidden');
+  if (lvl.bottles.some((b) => b.type === 'bottom_leak')) found.push('bottom_leak');
+  return found;
+};
 
 export default function App() {
   // Current active level (Default to Level 2 matching reference screenshot)
@@ -92,6 +163,8 @@ export default function App() {
   const [workshopOpen, setWorkshopOpen] = useState<boolean>(false);
   const [dailyOpen, setDailyOpen] = useState<boolean>(false);
   const [settingsOpen, setSettingsOpen] = useState<boolean>(false);
+  const [rulesOpen, setRulesOpen] = useState<boolean>(false);
+  const [mechanicIntro, setMechanicIntro] = useState<MechanicIntroData | null>(null);
 
   // Preferences
   const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
@@ -178,6 +251,24 @@ export default function App() {
     setCollectedTubeIndices([]);
     setCollectedColors(new Set());
   }, []);
+
+  useEffect(() => {
+    const seen = getSeenMechanics();
+    const introKey = (() => {
+      if (!seen.normal) return 'normal';
+      const mechs = detectLevelMechanics(currentLevel);
+      for (const key of ['masked', 'hidden', 'bottom_leak'] as const) {
+        if (mechs.includes(key) && !seen[key]) return key;
+      }
+      return null;
+    })();
+
+    if (!introKey) return;
+
+    setMechanicIntro(MECHANIC_INTRO[introKey]);
+    const nextSeen = { ...seen, [introKey]: true };
+    saveSeenMechanics(nextSeen);
+  }, [currentLevel]);
 
   const calculateFlyVector = useCallback((tubeIdx: number, colorId: string) => {
     const tubeEl = document.getElementById(`tube-slot-${tubeIdx}`);
@@ -808,6 +899,7 @@ export default function App() {
           currentLevel={currentLevel}
           onOpenLevelSelector={() => setLevelSelectorOpen(true)}
           onOpenSettings={() => setSettingsOpen(true)}
+          onOpenRules={() => setRulesOpen(true)}
           onOpenMoreMenu={() => setLevelSelectorOpen(true)}
         />
 
@@ -977,6 +1069,14 @@ export default function App() {
             savePreferences(soundEnabled, vibrateEnabled, next);
           }}
           onClose={() => setSettingsOpen(false)}
+        />
+      )}
+
+      {rulesOpen && <RulesModal onClose={() => setRulesOpen(false)} />}
+      {mechanicIntro && (
+        <MechanicIntroModal
+          data={mechanicIntro}
+          onClose={() => setMechanicIntro(null)}
         />
       )}
     </div>

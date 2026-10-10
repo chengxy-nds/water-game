@@ -166,13 +166,14 @@ export const GameBoard: React.FC<GameBoardProps> = ({
       sourceBottom.y = 140;
       const sourceBottomScreen = sourceBottom.matrixTransform(sourceMatrix);
 
-      const targetTop = targetSvg!.createSVGPoint();
-      targetTop.x = 30;
-      targetTop.y = 9;
-      const targetTopScreen = targetTop.matrixTransform(targetMatrix);
+      const targetY = bottles[leakAnimation.targetIndex].layers.length === 0 ? 72 : 9;
+      const targetImpact = targetSvg!.createSVGPoint();
+      targetImpact.x = 30;
+      targetImpact.y = targetY;
+      const targetImpactScreen = targetImpact.matrixTransform(targetMatrix);
 
       setLeakFrom({ x: sourceBottomScreen.x, y: sourceBottomScreen.y });
-      setLeakTo({ x: targetTopScreen.x, y: targetTopScreen.y });
+      setLeakTo({ x: targetImpactScreen.x, y: targetImpactScreen.y });
     }
   }, [leakAnimation]);
 
