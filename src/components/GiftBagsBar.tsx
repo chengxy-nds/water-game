@@ -1,24 +1,24 @@
 import React from 'react';
-import { Tube } from '../types/game';
+import { Bottle } from '../types/game';
 import { getColor } from '../utils/colors';
-import { isTubeComplete, TUBE_CAPACITY } from '../solver/waterSortSolver';
+import { isBottleComplete, TUBE_CAPACITY } from '../solver/waterSortSolver';
 import { Check } from 'lucide-react';
 
 interface GiftBagsBarProps {
-  tubes: Tube[];
+  bottles: Bottle[];
 }
 
-export const GiftBagsBar: React.FC<GiftBagsBarProps> = ({ tubes }) => {
+export const GiftBagsBar: React.FC<GiftBagsBarProps> = ({ bottles }) => {
   // Extract all unique colors present in the puzzle
   const uniqueColors = Array.from(
-    new Set(tubes.flatMap((t) => t))
+    new Set(bottles.flatMap((b) => b.layers))
   ).filter(Boolean);
 
-  // Find which colors are fully completed in any tube
+  // Find which colors are fully completed in any bottle
   const completedColors = new Set<string>();
-  for (const t of tubes) {
-    if (isTubeComplete(t, TUBE_CAPACITY)) {
-      completedColors.add(t[0]);
+  for (const b of bottles) {
+    if (isBottleComplete(b, TUBE_CAPACITY)) {
+      completedColors.add(b.layers[0]);
     }
   }
 

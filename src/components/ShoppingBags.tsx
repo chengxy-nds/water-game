@@ -1,10 +1,9 @@
 import React from 'react';
-import { Tube } from '../types/game';
+import { Bottle } from '../types/game';
 import { getColor } from '../utils/colors';
-import { isTubeComplete } from '../solver/waterSortSolver';
 
 interface ShoppingBagsProps {
-  tubes: Tube[];
+  bottles: Bottle[];
   onUnlockBonus?: () => void;
   bonusUnlocked?: boolean;
   activeGulpColor?: string | null;
@@ -12,7 +11,7 @@ interface ShoppingBagsProps {
 }
 
 export const ShoppingBags: React.FC<ShoppingBagsProps> = ({
-  tubes,
+  bottles,
   onUnlockBonus,
   bonusUnlocked = false,
   activeGulpColor = null,
@@ -21,8 +20,8 @@ export const ShoppingBags: React.FC<ShoppingBagsProps> = ({
   const completedColors = collectedColors;
 
   const puzzleColors: string[] = [];
-  tubes.forEach((t) => {
-    t.forEach((c) => {
+  bottles.forEach((b) => {
+    b.layers.forEach((c) => {
       if (!puzzleColors.includes(c)) puzzleColors.push(c);
     });
   });

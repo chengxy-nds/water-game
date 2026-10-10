@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Tube, Level, SolverResult } from '../types/game';
+import { Bottle, Level, SolverResult } from '../types/game';
 import { solveWaterSort, TUBE_CAPACITY, evaluateDifficulty } from '../solver/waterSortSolver';
 import { COLOR_PALETTE, COLOR_KEYS, getColor } from '../utils/colors';
 import { X, Play, Plus, Trash2, Cpu, CheckCircle2, AlertTriangle, Copy, ArrowRight } from 'lucide-react';
@@ -10,13 +10,13 @@ interface LevelWorkshopProps {
 }
 
 export const LevelWorkshop: React.FC<LevelWorkshopProps> = ({ onLoadCustomLevel, onClose }) => {
-  // Current editor tubes state
-  const [tubes, setTubes] = useState<Tube[]>([
-    ['red', 'blue', 'emerald', 'amber'],
-    ['amber', 'emerald', 'blue', 'red'],
-    ['blue', 'red', 'amber', 'emerald'],
-    [],
-    [],
+  // Current editor bottles state
+  const [bottles, setBottles] = useState<Bottle[]>([
+    { id: 'w1', type: 'normal', capacity: 4, layers: ['red', 'blue', 'emerald', 'amber'] },
+    { id: 'w2', type: 'normal', capacity: 4, layers: ['amber', 'emerald', 'blue', 'red'] },
+    { id: 'w3', type: 'normal', capacity: 4, layers: ['blue', 'red', 'amber', 'emerald'] },
+    { id: 'w4', type: 'empty', capacity: 4, layers: [] },
+    { id: 'w5', type: 'empty', capacity: 4, layers: [] },
   ]);
 
   const [selectedColor, setSelectedColor] = useState<string>('red');
@@ -24,45 +24,47 @@ export const LevelWorkshop: React.FC<LevelWorkshopProps> = ({ onLoadCustomLevel,
   const [isSolving, setIsSolving] = useState<boolean>(false);
   const [copiedNotification, setCopiedNotification] = useState<boolean>(false);
 
-  // Add tube
+  // Add bottle
   const handleAddTube = () => {
-    if (tubes.length >= 12) return;
-    setTubes([...tubes, []]);
+    if (bottles.length >= 12) return;
+    setBottles([...bottles, { id: `w${bottles.length + 1}`, type: 'empty', capacity: 4, layers: [] }]);
     setSolverResult(null);
   };
 
-  // Remove tube
+  // Remove bottle
   const handleRemoveTube = (index: number) => {
-    if (tubes.length <= 3) return;
-    setTubes(tubes.filter((_, i) => i !== index));
+    if (bottles.length <= 3) return;
+    setBottles(bottles.filter((_, i) => i !== index));
     setSolverResult(null);
   };
 
-  // Click tube in editor: if not full, add selected color; or if right click or special mode, remove
+  // Click bottle in editor: if not full, add selected color; or if right click or special mode, remove
   const handleTubeCellClick = (tubeIndex: number) => {
-    const tube = tubes[tubeIndex];
-    if (tube.length < TUBE_CAPACITY) {
-      const nextTubes = tubes.map((t, i) => (i === tubeIndex ? [...t, selectedColor] : t));
-      setTubes(nextTubes);
+    const bottle = bottles[tubeIndex];
+    if (bottle.layers.length < TUBE_CAPACITY) {
+      const nextBottles = bottles.map((b, i) =>
+        i === tubeIndex ? { ...b, layers: [...b.layers, selectedColor] } : b
+      );
+      setBottles(nextBottles);
       setSolverResult(null);
     }
   };
 
   const handlePopTop = (tubeIndex: number, e: React.MouseEvent) => {
     e.stopPropagation();
-    const tube = tubes[tubeIndex];
-    if (tube.length > 0) {
-      const nextTubes = tubes.map((t, i) =>
-        i === tubeIndex ? t.slice(0, t.length - 1) : t
+    const bottle = bottles[tubeIndex];
+    if (bottle.layers.length > 0) {
+      const nextBottles = bottles.map((b, i) =>
+        i === tubeIndex ? { ...b, layers: b.layers.slice(0, b.layers.length - 1) } : b
       );
-      setTubes(nextTubes);
+      setBottles(nextBottles);
       setSolverResult(null);
     }
   };
 
-  // Clear all tubes
+  // Clear all bottles
   const handleClearAll = () => {
-    setTubes(tubes.map(() => []));
+    setBottles(bottles.map((b) => ({ ...b, layers: [] })));
     setSolverResult(null);
   };
 
@@ -73,7 +75,7 @@ export const LevelWorkshop: React.FC<LevelWorkshopProps> = ({ onLoadCustomLevel,
 
     // Run solver in next tick to not block UI rendering
     setTimeout(() => {
-      const result = solveWaterSort(tubes, TUBE_CAPACITY, 50000);
+      const result = solveWaterSort(bottles, TUBE_CAPACITY, 50000);
       setSolverResult(result);
       setIsSolving(false);
     }, 50);
@@ -85,7 +87,11 @@ export const LevelWorkshop: React.FC<LevelWorkshopProps> = ({ onLoadCustomLevel,
       id: `custom-${Date.now()}`,
       title: '工坊自制关卡',
       difficulty: solverResult ? (solverResult.optimalSteps > 20 ? 'hard' : 'medium') : 'medium',
-      tubes: tubes.map((t) => [...t]),
+      bottles: bottles.map((b) => ({
+        ...b,
+        type: b.layers.length === 0 ? 'empty' : 'normal',
+        layers: [...b.layers],
+      })),
       optimalSteps: solverResult?.optimalSteps,
       description: solverResult?.solvable
         ? `工坊验证 · 最优解 ${solverResult.optimalSteps} 步`
@@ -98,7 +104,7 @@ export const LevelWorkshop: React.FC<LevelWorkshopProps> = ({ onLoadCustomLevel,
 
   // Copy JSON
   const handleCopyJSON = () => {
-    const jsonStr = JSON.stringify(tubes, null, 2);
+    const jsonStr = JSON.stringify(bottles.map((b) => b.layers), null, 2);
     navigator.clipboard.writeText(jsonStr);
     setCopiedNotification(true);
     setTimeout(() => setCopiedNotification(false), 2000);
@@ -186,10 +192,10 @@ export const LevelWorkshop: React.FC<LevelWorkshopProps> = ({ onLoadCustomLevel,
           {/* Test Tubes Editor Canvas */}
           <div className="p-4 rounded-3xl bg-slate-950/60 border border-slate-800 flex flex-col items-center justify-center min-h-[220px]">
             <div className="flex flex-wrap items-end justify-center gap-4 sm:gap-6 mb-4">
-              {tubes.map((tube, tIdx) => (
+              {bottles.map((bottle, tIdx) => (
                 <div key={tIdx} className="flex flex-col items-center gap-1.5">
                   {/* Top pop button */}
-                  {tube.length > 0 ? (
+                  {bottle.layers.length > 0 ? (
                     <button
                       onClick={(e) => handlePopTop(tIdx, e)}
                       title="撤出顶层"
@@ -201,12 +207,12 @@ export const LevelWorkshop: React.FC<LevelWorkshopProps> = ({ onLoadCustomLevel,
                     <div className="w-5 h-5" />
                   )}
 
-                  {/* Tube Body */}
+                  {/* Bottle Body */}
                   <div
                     onClick={() => handleTubeCellClick(tIdx)}
                     className="relative w-12 sm:w-14 h-40 sm:h-44 rounded-b-[1.75rem] rounded-t-lg border-2 border-slate-700/80 hover:border-cyan-400/80 bg-slate-900/60 cursor-pointer p-1 flex flex-col-reverse justify-start overflow-hidden transition-all shadow-inner group"
                   >
-                    {tube.map((colorId, layerIdx) => {
+                    {bottle.layers.map((colorId, layerIdx) => {
                       const color = getColor(colorId);
                       return (
                         <div
@@ -219,17 +225,17 @@ export const LevelWorkshop: React.FC<LevelWorkshopProps> = ({ onLoadCustomLevel,
                       );
                     })}
 
-                    {tube.length === 0 && (
+                    {bottle.layers.length === 0 && (
                       <div className="h-full flex items-center justify-center text-slate-600 text-xs font-bold pointer-events-none">
                         空管
                       </div>
                     )}
                   </div>
 
-                  {/* Tube Bottom Index & Delete */}
+                  {/* Bottle Bottom Index & Delete */}
                   <div className="flex items-center gap-1 text-[11px] text-slate-400">
                     <span className="font-semibold">#{tIdx + 1}</span>
-                    {tubes.length > 3 && (
+                    {bottles.length > 3 && (
                       <button
                         onClick={() => handleRemoveTube(tIdx)}
                         title="删除此管"
@@ -247,7 +253,7 @@ export const LevelWorkshop: React.FC<LevelWorkshopProps> = ({ onLoadCustomLevel,
             <div className="flex items-center gap-2 mt-2">
               <button
                 onClick={handleAddTube}
-                disabled={tubes.length >= 12}
+                disabled={bottles.length >= 12}
                 className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center gap-1.5 transition-all disabled:opacity-40"
               >
                 <Plus className="w-3.5 h-3.5 text-emerald-400" />

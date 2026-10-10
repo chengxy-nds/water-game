@@ -138,6 +138,25 @@
   animation: corkDrop 0.48s cubic-bezier(0.25, 1, 0.5, 1) forwards;
 }
 
+/* Masked Bottle Cloth Reveal (cloth falls away once unlocked) */
+@keyframes maskFall {
+  0% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  30% {
+    transform: translateY(6px);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(46px);
+    opacity: 0;
+  }
+}
+.anim-mask-fall {
+  animation: maskFall 0.65s cubic-bezier(0.5, 0, 0.75, 0.4) forwards;
+}
+
 /* Whirling 3D Magical Particle Cyclone */
 @keyframes particleSpiral {
   0% {

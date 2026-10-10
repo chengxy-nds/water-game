@@ -1,53 +1,73 @@
-import { Tube, Move, SolverResult } from '../types/game';
+import { Bottle, Move, SolverResult } from '../types/game';
 
 export const TUBE_CAPACITY = 4;
 
 /**
- * Checks if a tube is completely solved (full and monochromatic)
+ * Deep-clone a bottle array so rule functions never mutate their input.
  */
-export function isTubeComplete(tube: Tube, capacity: number = TUBE_CAPACITY): boolean {
-  if (tube.length !== capacity) return false;
-  const first = tube[0];
-  return tube.every((c) => c === first);
+export function cloneBottles(bottles: Bottle[]): Bottle[] {
+  return bottles.map((b) => ({ ...b, layers: [...b.layers] }));
 }
 
 /**
- * Checks if a tube is monochromatic (all elements present have the same color)
+ * Checks if a bottle is completely solved (full and monochromatic).
  */
-export function isTubeMonochromatic(tube: Tube): boolean {
-  if (tube.length === 0) return true;
-  const first = tube[0];
-  return tube.every((c) => c === first);
+export function isBottleComplete(bottle: Bottle, capacity: number = TUBE_CAPACITY): boolean {
+  if (bottle.layers.length !== capacity) return false;
+  const first = bottle.layers[0];
+  return bottle.layers.every((c) => c === first);
 }
 
 /**
- * Checks if the whole puzzle is currently solved according to Game Design Document (Section 13 & 14):
- * 1. Every non-empty tube contains only ONE color (monochromatic, no mixed colors).
- * 2. All units of each distinct color are unified (not split across different tubes).
- * 3. (Section 14: Special case where single color is not completely full is allowed if all colors are separated).
+ * Checks if a bottle is monochromatic (all present layers share one color).
  */
-export function isPuzzleSolved(tubes: Tube[], capacity: number = TUBE_CAPACITY): boolean {
-  // If every non-empty tube is completely full and monochromatic, it's definitely solved
-  const allFullSolved = tubes.every((tube) => tube.length === 0 || isTubeComplete(tube, capacity));
-  if (allFullSolved) return true;
+export function isBottleMonochromatic(bottle: Bottle): boolean {
+  if (bottle.layers.length === 0) return true;
+  const first = bottle.layers[0];
+  return bottle.layers.every((c) => c === first);
+}
 
-  // General rule (Section 13 & 14):
-  // 1. No tube can have mixed colors
-  for (const tube of tubes) {
-    if (tube.length > 0 && !isTubeMonochromatic(tube)) {
-      return false;
+/**
+ * Number of bottles that count as "completed" toward the masked-bottle unlock.
+ */
+export function countCompletedBottles(bottles: Bottle[], capacity: number = TUBE_CAPACITY): number {
+  let count = 0;
+  for (const b of bottles) {
+    if (b.countsTowardObjective !== false && isBottleComplete(b, capacity)) count++;
+  }
+  return count;
+}
+
+/**
+ * Re-evaluates masked bottles and unlocks (drops cloth) any whose threshold is met.
+ */
+export function applyMaskUnlock(bottles: Bottle[], capacity: number = TUBE_CAPACITY): void {
+  const completed = countCompletedBottles(bottles, capacity);
+  for (const b of bottles) {
+    if (b.type === 'masked' && !b.maskRevealed && (b.unlockTargetCompletedBottles ?? 0) <= completed) {
+      b.maskRevealed = true;
     }
   }
+}
 
-  // 2. No color can be scattered across more than one tube (all units of color X are in a single tube)
+/**
+ * Checks if the whole puzzle is solved (real colors):
+ * 1. Every non-empty bottle is monochromatic.
+ * 2. Each color is unified into a single bottle.
+ */
+export function isPuzzleSolved(bottles: Bottle[], capacity: number = TUBE_CAPACITY): boolean {
+  const allFullSolved = bottles.every((b) => b.layers.length === 0 || isBottleComplete(b, capacity));
+  if (allFullSolved) return true;
+
+  for (const b of bottles) {
+    if (b.layers.length > 0 && !isBottleMonochromatic(b)) return false;
+  }
+
   const seenColors = new Set<string>();
-  for (const tube of tubes) {
-    if (tube.length > 0) {
-      const color = tube[0];
-      if (seenColors.has(color)) {
-        // Color is scattered across multiple tubes, not solved yet
-        return false;
-      }
+  for (const b of bottles) {
+    if (b.layers.length > 0) {
+      const color = b.layers[0];
+      if (seenColors.has(color)) return false;
       seenColors.add(color);
     }
   }
@@ -56,121 +76,192 @@ export function isPuzzleSolved(tubes: Tube[], capacity: number = TUBE_CAPACITY):
 }
 
 /**
- * Calculates top contiguous color and its count in a tube
+ * Top contiguous same-color run (real colors, top = last element).
  */
-export function getTopColorInfo(tube: Tube): { color: string | null; count: number } {
-  if (tube.length === 0) return { color: null, count: 0 };
-  const color = tube[tube.length - 1];
+export function getTopColorInfo(bottle: Bottle): { color: string | null; count: number } {
+  const layers = bottle.layers;
+  if (layers.length === 0) return { color: null, count: 0 };
+  const color = layers[layers.length - 1];
   let count = 0;
-  for (let i = tube.length - 1; i >= 0; i--) {
-    if (tube[i] === color) {
-      count++;
-    } else {
-      break;
-    }
+  for (let i = layers.length - 1; i >= 0; i--) {
+    if (layers[i] === color) count++;
+    else break;
   }
   return { color, count };
 }
 
 /**
- * Checks if a move from tube `fromIdx` to `toIdx` is valid
+ * How many layers can be poured OUT of a source bottle in one move.
+ * Hidden bottles cap to 1 layer while any top layer is still hidden
+ * (fairness: cannot blindly pour multiple unknown layers at once).
+ */
+export function getPourOutCount(bottle: Bottle): number {
+  const { color, count } = getTopColorInfo(bottle);
+  if (!color || count === 0) return 0;
+  if (bottle.type === 'hidden' && (bottle.hiddenTopLayers ?? 0) > 0) return 1;
+  return count;
+}
+
+/**
+ * Checks if a pour from `from` to `to` is valid.
  */
 export function canPour(
-  fromTube: Tube,
-  toTube: Tube,
+  from: Bottle,
+  to: Bottle,
   capacity: number = TUBE_CAPACITY
 ): { valid: boolean; count: number; color: string | null } {
-  if (fromTube.length === 0) return { valid: false, count: 0, color: null };
-  if (toTube.length >= capacity) return { valid: false, count: 0, color: null };
+  if (from.layers.length === 0) return { valid: false, count: 0, color: null };
+  if (to.layers.length >= capacity) return { valid: false, count: 0, color: null };
 
-  const { color: fromColor, count: fromCount } = getTopColorInfo(fromTube);
-  if (!fromColor) return { valid: false, count: 0, color: null };
+  const fromCount = getPourOutCount(from);
+  if (fromCount === 0) return { valid: false, count: 0, color: null };
+  const fromColor = from.layers[from.layers.length - 1];
 
-  // If destination is not empty, top colors must match
-  if (toTube.length > 0) {
-    const toTopColor = toTube[toTube.length - 1];
-    if (toTopColor !== fromColor) {
+  if (to.layers.length > 0) {
+    if (to.layers[to.layers.length - 1] !== fromColor) {
       return { valid: false, count: 0, color: null };
     }
   }
 
-  const spaceAvailable = capacity - toTube.length;
+  const spaceAvailable = capacity - to.layers.length;
   const countToPour = Math.min(fromCount, spaceAvailable);
 
   return { valid: countToPour > 0, count: countToPour, color: fromColor };
 }
 
 /**
- * Checks if there exists ANY legal pour move in the current puzzle state.
- * Returns true if at least one valid A -> B move exists.
- * Used for Section 15 & 16: Deadlock (死局) detection.
+ * Checks whether a bottom-leak from `source` into `target` is legal.
+ * Default: target must be non-empty; source bottom color === target top color.
  */
-export function hasAnyLegalMove(tubes: Tube[], capacity: number = TUBE_CAPACITY): boolean {
-  const numTubes = tubes.length;
-  for (let from = 0; from < numTubes; from++) {
-    const fromTube = tubes[from];
-    if (fromTube.length === 0) continue;
-    // If fromTube is already complete and full, we skip it
-    if (isTubeComplete(fromTube, capacity)) continue;
+export function canLeak(source: Bottle, target: Bottle, capacity: number = TUBE_CAPACITY): boolean {
+  if (source.type !== 'bottom_leak') return false;
+  if (source.layers.length === 0) return false;
+  if (target.layers.length >= capacity) return false;
+  if (target.layers.length === 0) return false;
+  return source.layers[0] === target.layers[target.layers.length - 1];
+}
 
-    for (let to = 0; to < numTubes; to++) {
+/**
+ * Checks if there exists ANY legal move (pour or leak) in the current state.
+ */
+export function hasAnyLegalMove(bottles: Bottle[], capacity: number = TUBE_CAPACITY): boolean {
+  const n = bottles.length;
+  for (let from = 0; from < n; from++) {
+    const fromBottle = bottles[from];
+    if (fromBottle.layers.length === 0) continue;
+    if (isBottleComplete(fromBottle, capacity)) continue;
+
+    for (let to = 0; to < n; to++) {
       if (from === to) continue;
-      const check = canPour(fromTube, tubes[to], capacity);
-      if (check.valid) {
-        return true;
-      }
+      if (canPour(fromBottle, bottles[to], capacity).valid) return true;
     }
   }
+
+  for (let i = 0; i < n; i++) {
+    const src = bottles[i];
+    if (src.type !== 'bottom_leak' || !src.leakTargetBottleId) continue;
+    const tIdx = bottles.findIndex((b) => b.id === src.leakTargetBottleId);
+    if (tIdx < 0 || tIdx === i) continue;
+    if (canLeak(src, bottles[tIdx], capacity)) return true;
+  }
+
   return false;
 }
 
 /**
- * Executes a pour move, returning new tubes array
+ * Executes a pour move, returning the new bottle array.
  */
 export function executePour(
-  tubes: Tube[],
+  bottles: Bottle[],
   fromIdx: number,
   toIdx: number,
   capacity: number = TUBE_CAPACITY
-): { newTubes: Tube[]; count: number; color: string } | null {
-  const check = canPour(tubes[fromIdx], tubes[toIdx], capacity);
+): { newBottles: Bottle[]; count: number; color: string } | null {
+  const check = canPour(bottles[fromIdx], bottles[toIdx], capacity);
   if (!check.valid || !check.color) return null;
 
-  const newTubes = tubes.map((t) => [...t]);
-  const pouredUnits: string[] = [];
-  for (let i = 0; i < check.count; i++) {
-    pouredUnits.push(newTubes[fromIdx].pop()!);
-  }
-  for (let i = 0; i < check.count; i++) {
-    newTubes[toIdx].push(check.color);
-  }
+  const newBottles = cloneBottles(bottles);
+  for (let i = 0; i < check.count; i++) newBottles[fromIdx].layers.pop();
+  for (let i = 0; i < check.count; i++) newBottles[toIdx].layers.push(check.color);
 
-  return { newTubes, count: check.count, color: check.color };
+  const source = newBottles[fromIdx];
+  if (source.type === 'hidden') {
+    source.hiddenTopLayers = Math.max(0, (source.hiddenTopLayers ?? 0) - check.count);
+  }
+  if (source.layers.length === 0) source.hiddenTopLayers = 0;
+
+  applyMaskUnlock(newBottles, capacity);
+  return { newBottles, count: check.count, color: check.color };
 }
 
 /**
- * Canonical state representation to prune equivalent permutations.
- * Tubes are sorted so order of tubes doesn't create duplicate states.
+ * Executes a single-layer bottom leak, returning the new bottle array.
  */
-function getCanonicalKey(tubes: Tube[]): string {
-  const signatures = tubes.map((t) => t.join(','));
-  signatures.sort();
-  return signatures.join('|');
+export function executeLeak(
+  bottles: Bottle[],
+  sourceIdx: number,
+  targetIdx: number,
+  capacity: number = TUBE_CAPACITY
+): { newBottles: Bottle[]; color: string } | null {
+  const source = bottles[sourceIdx];
+  const target = bottles[targetIdx];
+  if (!canLeak(source, target, capacity)) return null;
+
+  const color = source.layers[0];
+  const newBottles = cloneBottles(bottles);
+  newBottles[sourceIdx].layers.shift();
+  newBottles[targetIdx].layers.push(color);
+
+  applyMaskUnlock(newBottles, capacity);
+  return { newBottles, color };
 }
 
 /**
- * BFS Solver for Water Sort Puzzle.
- * Guarantees finding the minimal step solution if one exists.
+ * Canonical state key. Normal/empty bottles are sorted (interchangeable);
+ * special bottles (masked/hidden/bottom_leak) stay in their fixed positions.
+ */
+function bottleSignature(b: Bottle): string {
+  if (b.layers.length === 0) return 'E';
+  // Hidden bottles carry their fog depth; all other bottle types are solver-equivalent
+  // (masked ≡ normal since the cloth never gates a move), so their signature omits type.
+  const h = b.type === 'hidden' ? `:h${b.hiddenTopLayers ?? 0}` : '';
+  return `${b.layers.join(',')}${h}`;
+}
+
+const NORMAL_PLACEHOLDER = ''; // printable sentinel marking a sortable normal/empty/masked slot
+
+function getCanonicalKey(bottles: Bottle[]): string {
+  const sortableSigs: string[] = [];
+  const parts: string[] = [];
+  for (const b of bottles) {
+    if (b.type === 'normal' || b.type === 'empty' || b.type === 'masked') {
+      sortableSigs.push(bottleSignature(b));
+      parts.push(NORMAL_PLACEHOLDER);
+    } else {
+      parts.push(bottleSignature(b));
+    }
+  }
+  sortableSigs.sort();
+  let ni = 0;
+  for (let i = 0; i < parts.length; i++) {
+    if (parts[i] === NORMAL_PLACEHOLDER) parts[i] = sortableSigs[ni++];
+  }
+  return parts.join('|');
+}
+
+/**
+ * BFS Solver. Guarantees the minimal-step solution if one exists within budget.
  */
 export function solveWaterSort(
-  initialTubes: Tube[],
+  initialBottles: Bottle[],
   capacity: number = TUBE_CAPACITY,
   maxIterations: number = 60000
 ): SolverResult {
   const startTime = performance.now();
 
-  // Validate basic state
-  if (isPuzzleSolved(initialTubes, capacity)) {
+  const initialState = cloneBottles(initialBottles);
+
+  if (isPuzzleSolved(initialState, capacity)) {
     return {
       solvable: true,
       optimalSteps: 0,
@@ -180,14 +271,13 @@ export function solveWaterSort(
     };
   }
 
-  // Pre-check color balance: each color count must typically be equal to capacity
+  // Pre-check color balance
   const colorCounts: Record<string, number> = {};
-  for (const tube of initialTubes) {
-    for (const color of tube) {
+  for (const b of initialState) {
+    for (const color of b.layers) {
       colorCounts[color] = (colorCounts[color] || 0) + 1;
     }
   }
-
   for (const [c, count] of Object.entries(colorCounts)) {
     if (count % capacity !== 0) {
       return {
@@ -202,17 +292,18 @@ export function solveWaterSort(
   }
 
   interface QueueNode {
-    tubes: Tube[];
+    bottles: Bottle[];
     moves: Move[];
   }
 
-  const queue: QueueNode[] = [{ tubes: initialTubes, moves: [] }];
+  const queue: QueueNode[] = [{ bottles: initialState, moves: [] }];
+  let head = 0;
   const visited = new Set<string>();
-  visited.add(getCanonicalKey(initialTubes));
+  visited.add(getCanonicalKey(initialState));
 
   let iterations = 0;
 
-  while (queue.length > 0) {
+  while (head < queue.length) {
     iterations++;
     if (iterations > maxIterations) {
       return {
@@ -225,10 +316,9 @@ export function solveWaterSort(
       };
     }
 
-    const { tubes, moves } = queue.shift()!;
+    const { bottles, moves } = queue[head++];
 
-    // Check if goal reached
-    if (isPuzzleSolved(tubes, capacity)) {
+    if (isPuzzleSolved(bottles, capacity)) {
       return {
         solvable: true,
         optimalSteps: moves.length,
@@ -238,75 +328,83 @@ export function solveWaterSort(
       };
     }
 
-    const numTubes = tubes.length;
+    const n = bottles.length;
     let firstEmptyIdx = -1;
-    for (let i = 0; i < numTubes; i++) {
-      if (tubes[i].length === 0) {
+    for (let i = 0; i < n; i++) {
+      if (bottles[i].layers.length === 0) {
         firstEmptyIdx = i;
         break;
       }
     }
 
-    // Generate valid moves
-    for (let from = 0; from < numTubes; from++) {
-      const fromTube = tubes[from];
-      if (fromTube.length === 0) continue;
+    // Pour moves
+    for (let from = 0; from < n; from++) {
+      const fromBottle = bottles[from];
+      if (fromBottle.layers.length === 0) continue;
+      if (isBottleComplete(fromBottle, capacity)) continue;
 
-      // Don't pour from an already complete tube
-      if (isTubeComplete(fromTube, capacity)) continue;
-
-      const { color: fromColor, count: fromCount } = getTopColorInfo(fromTube);
-      if (!fromColor) continue;
-
-      // Check if fromTube is monochromatic
-      const fromIsMono = isTubeMonochromatic(fromTube);
+      const fromColor = fromBottle.layers[fromBottle.layers.length - 1];
+      const fromCount = getPourOutCount(fromBottle);
+      if (fromCount === 0) continue;
+      const fromIsMono = isBottleMonochromatic(fromBottle);
 
       let pouredToEmpty = false;
 
-      for (let to = 0; to < numTubes; to++) {
+      for (let to = 0; to < n; to++) {
         if (from === to) continue;
-        const toTube = tubes[to];
+        const toBottle = bottles[to];
 
-        if (toTube.length >= capacity) continue;
+        if (toBottle.layers.length >= capacity) continue;
 
-        // Symmetry prune for empty destination tubes:
-        // Pouring into any empty tube is functionally equivalent.
-        // Also: NEVER pour from a monochromatic tube into an empty tube (useless move).
-        if (toTube.length === 0) {
-          if (fromIsMono) continue; // Pouring monochromatic partial tube to empty is redundant
-          if (pouredToEmpty) continue; // Only try the first available empty tube
+        if (toBottle.layers.length === 0) {
+          if (fromIsMono) continue;
+          if (pouredToEmpty) continue;
           if (to !== firstEmptyIdx && firstEmptyIdx !== -1) continue;
           pouredToEmpty = true;
         } else {
-          // Dest is not empty: top colors must match
-          if (toTube[toTube.length - 1] !== fromColor) continue;
+          if (toBottle.layers[toBottle.layers.length - 1] !== fromColor) continue;
         }
 
-        // Avoid immediately undoing last move
         if (moves.length > 0) {
           const lastMove = moves[moves.length - 1];
-          if (lastMove.from === to && lastMove.to === from) continue;
+          if (lastMove.kind === 'pour' && lastMove.from === to && lastMove.to === from) continue;
         }
 
-        const space = capacity - toTube.length;
+        const space = capacity - toBottle.layers.length;
         const count = Math.min(fromCount, space);
         if (count === 0) continue;
 
-        // Perform move
-        const nextTubes = tubes.map((t) => [...t]);
-        for (let k = 0; k < count; k++) {
-          nextTubes[from].pop();
-        }
-        for (let k = 0; k < count; k++) {
-          nextTubes[to].push(fromColor);
-        }
-
-        const key = getCanonicalKey(nextTubes);
+        const nextResult = executePour(bottles, from, to, capacity);
+        if (!nextResult) continue;
+        const key = getCanonicalKey(nextResult.newBottles);
         if (!visited.has(key)) {
           visited.add(key);
-          const nextMoves = [...moves, { from, to, colorId: fromColor, count }];
-          queue.push({ tubes: nextTubes, moves: nextMoves });
+          queue.push({
+            bottles: nextResult.newBottles,
+            moves: [...moves, { kind: 'pour', from, to, colorId: fromColor, count }],
+          });
         }
+      }
+    }
+
+    // Leak moves
+    for (let i = 0; i < n; i++) {
+      const src = bottles[i];
+      if (src.type !== 'bottom_leak' || !src.leakTargetBottleId) continue;
+      const tIdx = bottles.findIndex((b) => b.id === src.leakTargetBottleId);
+      if (tIdx < 0 || tIdx === i) continue;
+      if (!canLeak(src, bottles[tIdx], capacity)) continue;
+
+      const leakColor = src.layers[0];
+      const nextResult = executeLeak(bottles, i, tIdx, capacity);
+      if (!nextResult) continue;
+      const key = getCanonicalKey(nextResult.newBottles);
+      if (!visited.has(key)) {
+        visited.add(key);
+        queue.push({
+          bottles: nextResult.newBottles,
+          moves: [...moves, { kind: 'leak', from: i, to: tIdx, colorId: leakColor, count: 1 }],
+        });
       }
     }
   }
@@ -322,7 +420,7 @@ export function solveWaterSort(
 }
 
 /**
- * Evaluates level difficulty from step count and search complexity
+ * Evaluates level difficulty from step count.
  */
 export function evaluateDifficulty(optimalSteps: number, visitedNodes: number): {
   stars: number;

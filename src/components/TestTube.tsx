@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect, useImperativeHandle, forwardRef } from 'react';
-import { Tube, ColorDef } from '../types/game';
+import { Bottle, ColorDef } from '../types/game';
 import { getColor, COLOR_PALETTE } from '../utils/colors';
-import { isTubeComplete, TUBE_CAPACITY } from '../solver/waterSortSolver';
+import { isBottleComplete, TUBE_CAPACITY } from '../solver/waterSortSolver';
 
 export interface TestTubeRef {
   getSpoutPos: () => { x: number; y: number } | null;
@@ -11,11 +11,12 @@ export interface TestTubeRef {
 
 interface TestTubeProps {
   index: number;
-  tube: Tube;
+  bottle: Bottle;
   capacity?: number;
   isSelected?: boolean;
   isHintSource?: boolean;
   isHintTarget?: boolean;
+  isLeakTarget?: boolean;
   isPouringSource?: boolean;
   isPouringFluid?: boolean;
   isPouringTarget?: boolean;
@@ -40,11 +41,12 @@ interface TestTubeProps {
 
 export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
   index,
-  tube,
+  bottle,
   capacity = TUBE_CAPACITY,
   isSelected = false,
   isHintSource = false,
   isHintTarget = false,
+  isLeakTarget = false,
   isPouringSource = false,
   isPouringFluid = false,
   isPouringTarget = false,
@@ -98,7 +100,28 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
     },
   }));
 
-  const isComplete = isTubeComplete(tube, capacity);
+  const tube = bottle.layers;
+  const isComplete = isBottleComplete(bottle, capacity);
+
+  // Special-bottle derived flags
+  const isMasked = bottle.type === 'masked';
+  const maskHidden = isMasked && !bottle.maskRevealed;
+  const hiddenCount = bottle.type === 'hidden' ? Math.min(tube.length, bottle.hiddenTopLayers ?? 0) : 0;
+  const isLeaky = bottle.type === 'bottom_leak';
+
+  // One-shot cloth drop animation when a masked bottle unlocks
+  const [maskFalling, setMaskFalling] = useState(false);
+  const prevRevealedRef = useRef<boolean>(!!bottle.maskRevealed);
+  useEffect(() => {
+    const revealed = !!bottle.maskRevealed;
+    const wasRevealed = prevRevealedRef.current;
+    prevRevealedRef.current = revealed;
+    if (revealed && !wasRevealed) {
+      setMaskFalling(true);
+      const t = setTimeout(() => setMaskFalling(false), 650);
+      return () => clearTimeout(t);
+    }
+  }, [bottle.maskRevealed]);
 
   // If already collected into shopping bag, render invisible placeholder to preserve grid alignment
   if (isCollected) {
@@ -375,6 +398,19 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
               </linearGradient>
             ))}
 
+            {/* Frosted fog for hidden-bottle top layers */}
+            <linearGradient id={`fog-grad-${index}`} x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stopColor="#8b9ab8" />
+              <stop offset="30%" stopColor="#c7d0e2" />
+              <stop offset="55%" stopColor="#e4e9f4" />
+              <stop offset="100%" stopColor="#8795b3" />
+            </linearGradient>
+
+            {/* Outer bottle silhouette clip so the cloth cover never overflows the glass */}
+            <clipPath id={`outer-clip-${index}`}>
+              <path d="M 17 9 L 17 16 C 17 22, 6 22, 6 28 L 6 130 C 6 136, 16 141, 30 141 C 44 141, 54 136, 54 130 L 54 28 C 54 22, 43 22, 43 16 L 43 9 Z" />
+            </clipPath>
+
             {/* Inner chamber clip conforming exactly to inner bottle cavity */}
             <clipPath id={`inner-clip-${index}`}>
               <path
@@ -632,6 +668,9 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
               {calculatedLayers.map((layer, lIdx) => {
                 const cDef = getColor(layer.colorId);
                 const { yBottom, yTop, isBottom, isTop } = layer;
+                const isHiddenLayer = hiddenCount > 0 && lIdx >= calculatedLayers.length - hiddenCount;
+                const isDimmed = maskHidden && lIdx === 0;
+                const liquidFill = isHiddenLayer ? `url(#fog-grad-${index})` : `url(#grad-${cDef.id}-${index})`;
 
                 const bodyPath = isBottom
                   ? `
@@ -652,12 +691,26 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
                   `;
 
                 return (
-                  <g key={`liquid-block-${layer.colorId}-${lIdx}`}>
+                  <g key={`liquid-block-${layer.colorId}-${lIdx}`} opacity={isDimmed ? 0.4 : 1}>
                     {/* 3D Fluid Cylinder Body */}
                     <path
                       d={bodyPath}
-                      fill={`url(#grad-${cDef.id}-${index})`}
+                      fill={liquidFill}
                     />
+
+                    {/* Frosted fog question mark over hidden top layers */}
+                    {isHiddenLayer && (
+                      <text
+                        x="30"
+                        y={(yTop + yBottom) / 2 + 3}
+                        textAnchor="middle"
+                        fontSize="11"
+                        fontWeight="bold"
+                        fill="rgba(25, 35, 65, 0.6)"
+                      >
+                        ?
+                      </text>
+                    )}
 
                     {/* Subtle boundary crease between different stacked colors */}
                     {!isBottom && calculatedLayers[lIdx - 1]?.colorId !== layer.colorId && (
@@ -698,7 +751,7 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
                           cy={yTop}
                           rx={RX}
                           ry={RY}
-                          fill={`url(#meniscus-grad-${cDef.id}-${index})`}
+                          fill={isHiddenLayer ? `url(#fog-grad-${index})` : `url(#meniscus-grad-${cDef.id}-${index})`}
                           stroke="rgba(255, 255, 255, 0.3)"
                           strokeWidth="0.65"
                         />
@@ -889,6 +942,51 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
                 fill="#fef3c7"
                 opacity="0.65"
               />
+            </g>
+          )}
+
+          {/* 7. Masked-bottle cloth cover (hides layers; bottom layer peeks dimly) */}
+          {(maskHidden || maskFalling) && (
+            <g clipPath={`url(#outer-clip-${index})`} className={maskFalling ? 'anim-mask-fall' : ''}>
+              <defs>
+                <linearGradient id={`cloth-grad-${index}`} x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" stopColor="#b58a60" />
+                  <stop offset="20%" stopColor="#dcab76" />
+                  <stop offset="50%" stopColor="#c89662" />
+                  <stop offset="80%" stopColor="#dcab76" />
+                  <stop offset="100%" stopColor="#a87a50" />
+                </linearGradient>
+              </defs>
+              {/* Burlap cloth body from shoulder down to just above the bottom layer */}
+              <path
+                d="M 6 28 L 6 96 C 6 101, 10 103, 13 100 L 17 103 C 20 106, 25 106, 28 103 L 31 105 C 34 107, 38 106, 40 103 L 44 104 C 47 105, 51 102, 54 97 L 54 28 C 54 22, 43 22, 43 16 L 17 16 C 17 22, 6 22, 6 28 Z"
+                fill={`url(#cloth-grad-${index})`}
+                stroke="#7a5230"
+                strokeWidth="1.1"
+              />
+              {/* Fabric fold creases */}
+              <path d="M 30 24 L 29 100" stroke="#7a5230" strokeWidth="1.4" opacity="0.45" fill="none" />
+              <path d="M 18 27 L 20 98" stroke="#7a5230" strokeWidth="1" opacity="0.3" fill="none" />
+              <path d="M 42 27 L 40 98" stroke="#7a5230" strokeWidth="1" opacity="0.3" fill="none" />
+              {/* Sewn question mark */}
+              <text x="30" y="67" textAnchor="middle" fontSize="20" fontWeight="bold" fill="#5f3d1e" opacity="0.85">
+                ?
+              </text>
+            </g>
+          )}
+
+          {/* 8. Bottom-leak bottle: cracked glass base + leak hole */}
+          {isLeaky && (
+            <g pointerEvents="none">
+              <circle cx="30" cy="138.5" r="2.6" fill="rgba(255,255,255,0.3)" stroke="#9db4ff" strokeWidth="0.9" />
+              <circle cx="30" cy="138.5" r="0.9" fill="#cfd8ff" />
+              <path d="M 30 138 C 26 136, 24 131, 22 127" stroke="#cfe0ff" strokeWidth="1.1" strokeLinecap="round" fill="none" opacity="0.9" />
+              <path d="M 30 138 C 34 136, 36 132, 38 128" stroke="#cfe0ff" strokeWidth="1.1" strokeLinecap="round" fill="none" opacity="0.9" />
+              <path d="M 30 138 C 27 139, 22 140, 18 139" stroke="#cfe0ff" strokeWidth="1" strokeLinecap="round" fill="none" opacity="0.8" />
+              <path d="M 30 138 C 33 139, 38 140, 42 139" stroke="#cfe0ff" strokeWidth="1" strokeLinecap="round" fill="none" opacity="0.8" />
+              <path d="M 30 138 L 30 142" stroke="#e8f0ff" strokeWidth="1.2" strokeLinecap="round" fill="none" opacity="0.95" />
+              <path d="M 25 140 L 27 137 L 26 135 L 29 132" stroke="#dbe7ff" strokeWidth="0.9" strokeLinecap="round" strokeLinejoin="round" fill="none" opacity="0.85" />
+              <path d="M 35 140 L 33 137 L 34 135 L 31 132" stroke="#dbe7ff" strokeWidth="0.9" strokeLinecap="round" strokeLinejoin="round" fill="none" opacity="0.85" />
             </g>
           )}
         </svg>

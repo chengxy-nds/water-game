@@ -61,7 +61,7 @@ export const DailyChallengeModal: React.FC<DailyChallengeModalProps> = ({
           <div className="flex items-center justify-between">
             <span className="text-xs text-slate-400">试管与颜色</span>
             <span className="text-xs font-bold text-slate-200">
-              {dailyLevel.tubes.length - 2} 色 · {dailyLevel.tubes.length} 瓶
+              {dailyLevel.bottles.length - 2} 色 · {dailyLevel.bottles.length} 瓶
             </span>
           </div>
 

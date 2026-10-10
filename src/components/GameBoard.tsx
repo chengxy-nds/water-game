@@ -1,9 +1,9 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { Tube } from '../types/game';
+import { Bottle } from '../types/game';
 import { TestTube, TestTubeRef } from './TestTube';
 import { WaterStream } from './WaterStream';
 import { getColor, COLOR_PALETTE } from '../utils/colors';
-import { TUBE_CAPACITY, isTubeComplete } from '../solver/waterSortSolver';
+import { TUBE_CAPACITY, isBottleComplete } from '../solver/waterSortSolver';
 import { soundManager } from '../utils/audio';
 
 
@@ -29,12 +29,19 @@ export interface CompletionAnimationState {
   flyY: number;
 }
 
+export interface LeakAnimationState {
+  sourceIndex: number;
+  targetIndex: number;
+  colorId: string;
+}
+
 interface GameBoardProps {
-  tubes: Tube[];
+  bottles: Bottle[];
   levelEntryId?: number;
   selectedIndex: number | null;
   hint: { from: number; to: number } | null;
   pourAnimation: PourAnimationState | null;
+  leakAnimation?: LeakAnimationState | null;
   completionAnimation?: CompletionAnimationState | null;
   collectedTubeIndices?: number[];
   soundEnabled?: boolean;
@@ -44,11 +51,12 @@ interface GameBoardProps {
 }
 
 export const GameBoard: React.FC<GameBoardProps> = ({
-  tubes,
+  bottles,
   levelEntryId = 0,
   selectedIndex,
   hint,
   pourAnimation,
+  leakAnimation = null,
   completionAnimation = null,
   collectedTubeIndices = [],
   soundEnabled = true,
@@ -61,8 +69,8 @@ export const GameBoard: React.FC<GameBoardProps> = ({
 
   // Keep tube refs array matched with tubes length
   useEffect(() => {
-    tubeRefs.current = tubeRefs.current.slice(0, tubes.length);
-  }, [tubes.length]);
+    tubeRefs.current = tubeRefs.current.slice(0, bottles.length);
+  }, [bottles.length]);
 
   // Dynamic acoustic physical feedback: Liquid stream pouring sound with rising pitch
   // As liquid is injected into the tube, the air column resonance & impact pitch rise with liquid level
@@ -78,8 +86,8 @@ export const GameBoard: React.FC<GameBoardProps> = ({
       if (!pouredPhaseTriggeredRef.current) {
         pouredPhaseTriggeredRef.current = true;
         if (soundEnabled) {
-          const targetTube = tubes[pourAnimation.targetIndex];
-          const startVolume = targetTube ? targetTube.length : 0;
+          const targetTube = bottles[pourAnimation.targetIndex];
+          const startVolume = targetTube ? targetTube.layers.length : 0;
           const count = pourAnimation.count;
           soundManager.playDynamicPour(startVolume, count, TUBE_CAPACITY);
         }
@@ -87,7 +95,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
     } else {
       pouredPhaseTriggeredRef.current = false;
     }
-  }, [pourAnimation?.phase, pourAnimation?.targetIndex, pourAnimation?.count, tubes, soundEnabled]);
+  }, [pourAnimation?.phase, pourAnimation?.targetIndex, pourAnimation?.count, bottles, soundEnabled]);
 
   // Live coordinates of water stream
   const [streamFrom, setStreamFrom] = useState<{ x: number; y: number } | null>(null);
@@ -113,9 +121,9 @@ export const GameBoard: React.FC<GameBoardProps> = ({
       sourceLip.y = 9;
       const sourceLipScreen = sourceLip.matrixTransform(sourceMatrix);
 
-      const targetTube = tubes[pourAnimation.targetIndex];
+      const targetTube = bottles[pourAnimation.targetIndex];
       const currentLiquidUnits = targetTube
-        ? targetTube.length + (pourAnimation.riseCount || 0)
+        ? targetTube.layers.length + (pourAnimation.riseCount || 0)
         : 0;
 
       // Exact vertical surface level matching target tube liquid geometry
@@ -136,7 +144,37 @@ export const GameBoard: React.FC<GameBoardProps> = ({
       setStreamFrom({ x: sourceLipScreen.x, y: sourceLipScreen.y });
       setStreamTo({ x: targetSurfaceScreen.x, y: targetSurfaceScreen.y });
     }
-  }, [pourAnimation, tubes]);
+  }, [pourAnimation, bottles]);
+
+  // Leak stream coordinates: source bottle bottom → target bottle top (screen space)
+  const [leakFrom, setLeakFrom] = useState<{ x: number; y: number } | null>(null);
+  const [leakTo, setLeakTo] = useState<{ x: number; y: number } | null>(null);
+
+  useEffect(() => {
+    if (!leakAnimation) {
+      setLeakFrom(null);
+      setLeakTo(null);
+      return;
+    }
+    const sourceSvg = document.querySelector<SVGSVGElement>(`#tube-slot-${leakAnimation.sourceIndex} svg`);
+    const targetSvg = document.querySelector<SVGSVGElement>(`#tube-slot-${leakAnimation.targetIndex} svg`);
+    const sourceMatrix = sourceSvg?.getScreenCTM() ?? null;
+    const targetMatrix = targetSvg?.getScreenCTM() ?? null;
+    if (sourceMatrix && targetMatrix) {
+      const sourceBottom = sourceSvg!.createSVGPoint();
+      sourceBottom.x = 30;
+      sourceBottom.y = 140;
+      const sourceBottomScreen = sourceBottom.matrixTransform(sourceMatrix);
+
+      const targetTop = targetSvg!.createSVGPoint();
+      targetTop.x = 30;
+      targetTop.y = 9;
+      const targetTopScreen = targetTop.matrixTransform(targetMatrix);
+
+      setLeakFrom({ x: sourceBottomScreen.x, y: sourceBottomScreen.y });
+      setLeakTo({ x: targetTopScreen.x, y: targetTopScreen.y });
+    }
+  }, [leakAnimation]);
 
   // Helper: compute exact physical transform for pouring bottle
   const getPourTransforms = (isPouringSource: boolean) => {
@@ -151,25 +189,32 @@ export const GameBoard: React.FC<GameBoardProps> = ({
     };
   };
 
-  const rowCount = Math.min(3, Math.max(1, Math.ceil(tubes.length / 7)));
-  const baseRowSize = Math.floor(tubes.length / rowCount);
-  const extraTubes = tubes.length % rowCount;
-  const rows: { startIndex: number; tubes: Tube[] }[] = [];
+  const rowCount = Math.min(3, Math.max(1, Math.ceil(bottles.length / 7)));
+  const baseRowSize = Math.floor(bottles.length / rowCount);
+  const extraTubes = bottles.length % rowCount;
+  const rows: { startIndex: number; bottles: Bottle[] }[] = [];
   let rowStartIndex = 0;
 
   for (let rowIndex = 0; rowIndex < rowCount; rowIndex++) {
     const rowSize = baseRowSize + (rowIndex >= rowCount - extraTubes ? 1 : 0);
     rows.push({
       startIndex: rowStartIndex,
-      tubes: tubes.slice(rowStartIndex, rowStartIndex + rowSize),
+      bottles: bottles.slice(rowStartIndex, rowStartIndex + rowSize),
     });
     rowStartIndex += rowSize;
   }
 
-  const renderTube = (tube: Tube, globalIdx: number) => {
+  // When a bottom_leak bottle is selected, resolve and highlight its fixed target
+  const leakTargetIdx =
+    selectedIndex !== null && bottles[selectedIndex]?.type === 'bottom_leak'
+      ? bottles.findIndex((b) => b.id === bottles[selectedIndex].leakTargetBottleId)
+      : -1;
+
+  const renderTube = (bottle: Bottle, globalIdx: number) => {
     const isSelected = selectedIndex === globalIdx;
     const isHintSource = hint?.from === globalIdx;
     const isHintTarget = hint?.to === globalIdx;
+    const isLeakTarget = leakTargetIdx !== -1 && leakTargetIdx === globalIdx;
     const isPouringSource = pourAnimation?.sourceIndex === globalIdx;
     const isPouringTarget = pourAnimation?.targetIndex === globalIdx;
     const pourTransforms = getPourTransforms(isPouringSource);
@@ -185,12 +230,13 @@ export const GameBoard: React.FC<GameBoardProps> = ({
         <TestTube
           ref={(el) => { tubeRefs.current[globalIdx] = el; }}
           index={globalIdx}
-          tube={tube}
+          bottle={bottle}
           levelEntryId={levelEntryId}
           compact={rowCount >= 3}
           isSelected={isSelected}
           isHintSource={isHintSource}
           isHintTarget={isHintTarget}
+          isLeakTarget={isLeakTarget}
           isPouringSource={isPouringSource}
           isPouringFluid={isPouringSource && pourAnimation?.phase === 'pouring'}
           isPouringTarget={isPouringTarget}
@@ -205,7 +251,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
           completionPhase={completionAnimation?.tubeIndex === globalIdx ? completionAnimation?.phase ?? null : null}
           flyX={completionAnimation?.tubeIndex === globalIdx ? completionAnimation?.flyX ?? 0 : 0}
           flyY={completionAnimation?.tubeIndex === globalIdx ? completionAnimation?.flyY ?? 0 : 0}
-          hasCork={collectedTubeIndices.includes(globalIdx) || (isTubeComplete(tube, TUBE_CAPACITY) && completionAnimation?.tubeIndex !== globalIdx)}
+          hasCork={collectedTubeIndices.includes(globalIdx) || (isBottleComplete(bottle, TUBE_CAPACITY) && completionAnimation?.tubeIndex !== globalIdx)}
           isCollected={collectedTubeIndices.includes(globalIdx)}
           onClick={onTubeClick}
           disabled={disabled || !!pourAnimation || !!completionAnimation}
@@ -261,12 +307,19 @@ export const GameBoard: React.FC<GameBoardProps> = ({
           colorId={pourAnimation?.colorId || 'red'}
           active={!!pourAnimation && pourAnimation.phase === 'pouring'}
         />
+        {/* Bottom-leak drip stream: source bottle base → target bottle mouth */}
+        <WaterStream
+          fromPos={leakFrom}
+          toPos={leakTo}
+          colorId={leakAnimation?.colorId || 'red'}
+          active={!!leakAnimation}
+        />
       </div>
 
       <div className={`relative z-10 flex flex-col items-center ${rowCount >= 3 ? 'gap-3 sm:gap-4' : 'gap-8 sm:gap-10'}`}>
         {rows.map((row, rowIndex) => {
           const isPouringInRow = pourAnimation
-            ? pourAnimation.sourceIndex >= row.startIndex && pourAnimation.sourceIndex < row.startIndex + row.tubes.length
+            ? pourAnimation.sourceIndex >= row.startIndex && pourAnimation.sourceIndex < row.startIndex + row.bottles.length
             : false;
 
           return (
@@ -277,7 +330,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
               }`}
             >
               <div className="flex flex-nowrap items-end justify-center gap-1 sm:gap-2 md:gap-3">
-                {row.tubes.map((tube, localIdx) => renderTube(tube, row.startIndex + localIdx))}
+                {row.bottles.map((bottle, localIdx) => renderTube(bottle, row.startIndex + localIdx))}
               </div>
             </div>
           );

@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Tube, Level, PlayerStats, Difficulty } from './types/game';
+import { Bottle, Level, PlayerStats, Difficulty } from './types/game';
 import { CURATED_LEVELS } from './data/curatedLevels';
 import {
   canPour,
   executePour,
+  executeLeak,
+  canLeak,
   isPuzzleSolved,
-  isTubeComplete,
+  isBottleComplete,
   solveWaterSort,
   hasAnyLegalMove,
   TUBE_CAPACITY,
@@ -15,7 +17,7 @@ import { soundManager } from './utils/audio';
 
 import { GameHeader } from './components/GameHeader';
 import { ShoppingBags } from './components/ShoppingBags';
-import { GameBoard, CompletionAnimationState } from './components/GameBoard';
+import { GameBoard, CompletionAnimationState, LeakAnimationState } from './components/GameBoard';
 import { ControlBar } from './components/ControlBar';
 import { WinModal } from './components/WinModal';
 import { LevelSelectorModal } from './components/LevelSelectorModal';
@@ -32,13 +34,13 @@ const PREFS_STORAGE_KEY = 'water_sort_preferences_v1';
 export default function App() {
   // Current active level (Default to Level 2 matching reference screenshot)
   const [currentLevel, setCurrentLevel] = useState<Level>(CURATED_LEVELS[1]);
-  const [tubes, setTubes] = useState<Tube[]>(() =>
-    CURATED_LEVELS[1].tubes.map((t) => [...t])
+  const [bottles, setBottles] = useState<Bottle[]>(() =>
+    CURATED_LEVELS[1].bottles.map((b) => ({ ...b, layers: [...b.layers] }))
   );
   const [levelEntryId, setLevelEntryId] = useState(0);
 
   // History for Undo
-  const [history, setHistory] = useState<Tube[][]>([]);
+  const [history, setHistory] = useState<Bottle[][]>([]);
   const [movesCount, setMovesCount] = useState<number>(0);
   const [extraTubesAdded, setExtraTubesAdded] = useState<number>(0);
 
@@ -81,6 +83,9 @@ export default function App() {
     drainCount: number;
     riseCount: number;
   } | null>(null);
+
+  // Bottom-leak animation state (source bottle base → target bottle mouth)
+  const [leakAnimation, setLeakAnimation] = useState<LeakAnimationState | null>(null);
 
   // Modals
   const [levelSelectorOpen, setLevelSelectorOpen] = useState<boolean>(false);
@@ -153,7 +158,7 @@ export default function App() {
   const startLevel = useCallback((lvl: Level) => {
     setLevelEntryId((entryId) => entryId + 1);
     setCurrentLevel(lvl);
-    setTubes(lvl.tubes.map((t) => [...t]));
+    setBottles(lvl.bottles.map((b) => ({ ...b, layers: [...b.layers] })));
     setHistory([]);
     setMovesCount(0);
     setExtraTubesAdded(0);
@@ -236,14 +241,14 @@ export default function App() {
 
   const performPour = useCallback(
     (fromIdx: number, toIdx: number) => {
-      const check = canPour(tubes[fromIdx], tubes[toIdx], TUBE_CAPACITY);
+      const check = canPour(bottles[fromIdx], bottles[toIdx], TUBE_CAPACITY);
       if (!check.valid || !check.color) return false;
 
       // Measure exact DOM positions of both static tube slots
       const sSlot = document.getElementById(`tube-slot-${fromIdx}`);
       const tSlot = document.getElementById(`tube-slot-${toIdx}`);
 
-      const numTubes = tubes.length;
+      const numTubes = bottles.length;
       const isMultiRow = numTubes > 6;
       const rowSplit = isMultiRow ? (numTubes === 11 ? 5 : Math.ceil(numTubes / 2)) : numTubes;
 
@@ -259,7 +264,7 @@ export default function App() {
       // Tilt magnitude follows how much liquid the source tube currently holds:
       // a full bottle only needs a shallow tip to spill, while a nearly empty
       // bottle must be raised much higher to pour out the last of its liquid.
-      const sourceUnits = tubes[fromIdx].length;
+      const sourceUnits = bottles[fromIdx].layers.length;
       const tiltForUnits = (units: number) => {
         const fillRatio = Math.max(0, Math.min(1, units / TUBE_CAPACITY));
         return 38 + (1 - fillRatio) * 44; // 38° (full) → 82° (near empty)
@@ -360,18 +365,18 @@ export default function App() {
           cancelAnimationFrame(pourRafRef.current);
           pourRafRef.current = null;
         }
-        const result = executePour(tubes, fromIdx, toIdx, TUBE_CAPACITY);
+        const result = executePour(bottles, fromIdx, toIdx, TUBE_CAPACITY);
         if (result) {
           const finalMoves = movesCount + 1;
-          setHistory((prev) => [...prev, tubes.map((t) => [...t])]);
-          setTubes(result.newTubes);
+          setHistory((prev) => [...prev, bottles.map((b) => ({ ...b, layers: [...b.layers] }))]);
+          setBottles(result.newBottles);
           setMovesCount(finalMoves);
 
-          const isTargetComplete = isTubeComplete(result.newTubes[toIdx], TUBE_CAPACITY);
-          const isPuzzleComplete = isPuzzleSolved(result.newTubes, TUBE_CAPACITY);
+          const isTargetComplete = isBottleComplete(result.newBottles[toIdx], TUBE_CAPACITY);
+          const isPuzzleComplete = isPuzzleSolved(result.newBottles, TUBE_CAPACITY);
 
           if (isTargetComplete) {
-            const completedColor = result.newTubes[toIdx][0];
+            const completedColor = result.newBottles[toIdx].layers[0];
 
             // 1. Cork Drop: Wood cork stopper drops down into bottle mouth
             setTimeout(() => {
@@ -416,7 +421,7 @@ export default function App() {
               if (isPuzzleComplete) {
                 triggerWinCelebration(finalMoves);
               } else {
-                const hasMove = hasAnyLegalMove(result.newTubes, TUBE_CAPACITY);
+                const hasMove = hasAnyLegalMove(result.newBottles, TUBE_CAPACITY);
                 if (!hasMove) {
                   setIsDeadlocked(true);
                 }
@@ -427,7 +432,7 @@ export default function App() {
             if (isPuzzleComplete) {
               triggerWinCelebration(finalMoves);
             } else {
-              const hasMove = hasAnyLegalMove(result.newTubes, TUBE_CAPACITY);
+              const hasMove = hasAnyLegalMove(result.newBottles, TUBE_CAPACITY);
               if (!hasMove) {
                 setTimeout(() => {
                   setIsDeadlocked(true);
@@ -461,7 +466,77 @@ export default function App() {
 
       return true;
     },
-    [tubes, soundEnabled, vibrateEnabled, movesCount, calculateFlyVector, triggerWinCelebration]
+    [bottles, soundEnabled, vibrateEnabled, movesCount, calculateFlyVector, triggerWinCelebration]
+  );
+
+  const performLeak = useCallback(
+    (sourceIdx: number, targetIdx: number) => {
+      const source = bottles[sourceIdx];
+      if (!canLeak(source, bottles[targetIdx], TUBE_CAPACITY)) return false;
+
+      const leakColor = source.layers[0];
+
+      // Bottom-leak drip animation: stream drops from source bottle base into target mouth.
+      setLeakAnimation({ sourceIndex: sourceIdx, targetIndex: targetIdx, colorId: leakColor });
+      if (vibrateEnabled) soundManager.vibrate(20);
+
+      setTimeout(() => {
+        setLeakAnimation(null);
+        const result = executeLeak(bottles, sourceIdx, targetIdx, TUBE_CAPACITY);
+        if (!result) return;
+
+        const finalMoves = movesCount + 1;
+        setHistory((prev) => [...prev, bottles.map((b) => ({ ...b, layers: [...b.layers] }))]);
+        setBottles(result.newBottles);
+        setMovesCount(finalMoves);
+
+        const isTargetComplete = isBottleComplete(result.newBottles[targetIdx], TUBE_CAPACITY);
+        const isPuzzleComplete = isPuzzleSolved(result.newBottles, TUBE_CAPACITY);
+
+        if (isTargetComplete) {
+          const completedColor = result.newBottles[targetIdx].layers[0];
+          setTimeout(() => {
+            if (soundEnabled) soundManager.playCorkPop();
+            setCompletionAnimation({ tubeIndex: targetIdx, colorId: completedColor, phase: 'cork_drop', flyX: 0, flyY: 0 });
+          }, 200);
+          setTimeout(() => {
+            if (soundEnabled) soundManager.playTubeComplete();
+            setCompletionAnimation((prev) => (prev ? { ...prev, phase: 'whirling' } : null));
+          }, 650);
+          setTimeout(() => {
+            const { flyX, flyY } = calculateFlyVector(targetIdx, completedColor);
+            setCompletionAnimation((prev) => (prev ? { ...prev, phase: 'flying', flyX, flyY } : null));
+          }, 1350);
+          setTimeout(() => {
+            if (soundEnabled) soundManager.playBagCatch();
+            setActiveGulpColor(completedColor);
+            setCollectedColors((prev) => new Set(prev).add(completedColor));
+            setCollectedTubeIndices((prev) => [...prev, targetIdx]);
+            setCompletionAnimation(null);
+          }, 2000);
+          setTimeout(() => {
+            setActiveGulpColor(null);
+            if (isPuzzleComplete) {
+              triggerWinCelebration(finalMoves);
+            } else if (!hasAnyLegalMove(result.newBottles, TUBE_CAPACITY)) {
+              setIsDeadlocked(true);
+            }
+          }, 2600);
+        } else {
+          if (isPuzzleComplete) {
+            triggerWinCelebration(finalMoves);
+          } else if (!hasAnyLegalMove(result.newBottles, TUBE_CAPACITY)) {
+            setTimeout(() => setIsDeadlocked(true), 300);
+          }
+        }
+
+        setSelectedIndex(null);
+        setHint(null);
+      }, 900);
+
+      return true;
+    },
+    [bottles, soundEnabled, vibrateEnabled, movesCount, calculateFlyVector, triggerWinCelebration]
   );
 
   const triggerInvalidFeedback = useCallback(
@@ -478,10 +553,10 @@ export default function App() {
 
   const handleTubeClick = useCallback(
     (clickedIdx: number) => {
-      if (isWon || pourAnimation || isAutoSolving || isDeadlocked) return;
+      if (isWon || pourAnimation || leakAnimation || isAutoSolving || isDeadlocked) return;
 
       if (selectedIndex === null) {
-        if (tubes[clickedIdx].length === 0) {
+        if (bottles[clickedIdx].layers.length === 0) {
           triggerInvalidFeedback(clickedIdx);
           return;
         }
@@ -492,29 +567,45 @@ export default function App() {
         setSelectedIndex(null);
         if (soundEnabled) soundManager.playSelect();
       } else {
-        const sourceTube = tubes[selectedIndex];
-        const targetTube = tubes[clickedIdx];
-        const canDoPour = canPour(sourceTube, targetTube, TUBE_CAPACITY).valid;
+        const sourceBottle = bottles[selectedIndex];
+        const targetBottle = bottles[clickedIdx];
+
+        // Bottom-leak: the selected bottle only leaks into its designated target.
+        if (sourceBottle.type === 'bottom_leak') {
+          const leakTargetIdx = bottles.findIndex((b) => b.id === sourceBottle.leakTargetBottleId);
+          if (clickedIdx === leakTargetIdx) {
+            if (canLeak(sourceBottle, targetBottle, TUBE_CAPACITY)) {
+              performLeak(selectedIndex, clickedIdx);
+            } else {
+              triggerInvalidFeedback(clickedIdx);
+            }
+            return;
+          }
+          // Clicked a non-target bottle: fall through to a normal mouth pour.
+        }
+
+        const canDoPour = canPour(sourceBottle, targetBottle, TUBE_CAPACITY).valid;
 
         if (canDoPour) {
           performPour(selectedIndex, clickedIdx);
         } else {
-          const isTargetFull = targetTube.length >= TUBE_CAPACITY;
+          const isTargetFull = targetBottle.layers.length >= TUBE_CAPACITY;
           const isColorMismatch =
-            targetTube.length > 0 &&
-            sourceTube.length > 0 &&
-            targetTube[targetTube.length - 1] !== sourceTube[sourceTube.length - 1];
+            targetBottle.layers.length > 0 &&
+            sourceBottle.layers.length > 0 &&
+            targetBottle.layers[targetBottle.layers.length - 1] !==
+              sourceBottle.layers[sourceBottle.layers.length - 1];
 
           if (isTargetFull || isColorMismatch) {
             triggerInvalidFeedback(clickedIdx);
-            if (targetTube.length > 0 && !isTargetFull) {
+            if (targetBottle.layers.length > 0 && !isTargetFull) {
               setSelectedIndex(clickedIdx);
             }
-          } else if (targetTube.length === 0) {
+          } else if (targetBottle.layers.length === 0) {
             triggerInvalidFeedback(clickedIdx);
             setSelectedIndex(null);
           } else {
-            if (targetTube.length > 0) {
+            if (targetBottle.layers.length > 0) {
               setSelectedIndex(clickedIdx);
               if (soundEnabled) soundManager.playSelect();
               if (vibrateEnabled) soundManager.vibrate(15);
@@ -526,7 +617,7 @@ export default function App() {
         }
       }
     },
-    [selectedIndex, tubes, isWon, pourAnimation, isAutoSolving, isDeadlocked, soundEnabled, vibrateEnabled, performPour, triggerInvalidFeedback]
+    [selectedIndex, bottles, isWon, pourAnimation, leakAnimation, isAutoSolving, isDeadlocked, soundEnabled, vibrateEnabled, performPour, performLeak, triggerInvalidFeedback]
   );
 
   // Undo move
@@ -534,7 +625,7 @@ export default function App() {
     if (history.length === 0 || isAutoSolving || !!completionAnimation) return;
     const previousState = history[history.length - 1];
     setHistory((h) => h.slice(0, h.length - 1));
-    setTubes(previousState);
+    setBottles(previousState);
     setMovesCount((m) => Math.max(0, m - 1));
     setSelectedIndex(null);
     setHint(null);
@@ -549,10 +640,10 @@ export default function App() {
     // Sync collected colors & tube indices with restored state
     const restoredIndices: number[] = [];
     const restoredColors = new Set<string>();
-    previousState.forEach((t, idx) => {
-      if (isTubeComplete(t, TUBE_CAPACITY)) {
+    previousState.forEach((b, idx) => {
+      if (isBottleComplete(b, TUBE_CAPACITY)) {
         restoredIndices.push(idx);
-        restoredColors.add(t[0]);
+        restoredColors.add(b.layers[0]);
       }
     });
     setCollectedTubeIndices(restoredIndices);
@@ -569,10 +660,10 @@ export default function App() {
     const unfinishedIndices: number[] = [];
     const poolOfLiquids: string[] = [];
 
-    tubes.forEach((tube, idx) => {
-      if (!isTubeComplete(tube, TUBE_CAPACITY)) {
+    bottles.forEach((bottle, idx) => {
+      if (!isBottleComplete(bottle, TUBE_CAPACITY)) {
         unfinishedIndices.push(idx);
-        poolOfLiquids.push(...tube);
+        poolOfLiquids.push(...bottle.layers);
       }
     });
 
@@ -585,16 +676,16 @@ export default function App() {
       [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
 
-    const newTubes = tubes.map((t) => [...t]);
+    const newBottles = bottles.map((b) => ({ ...b, layers: [...b.layers] }));
     let ptr = 0;
     unfinishedIndices.forEach((idx) => {
-      const origCount = tubes[idx].length;
-      newTubes[idx] = shuffled.slice(ptr, ptr + origCount);
+      const origCount = bottles[idx].layers.length;
+      newBottles[idx].layers = shuffled.slice(ptr, ptr + origCount);
       ptr += origCount;
     });
 
-    setHistory((prev) => [...prev, tubes.map((t) => [...t])]);
-    setTubes(newTubes);
+    setHistory((prev) => [...prev, bottles.map((b) => ({ ...b, layers: [...b.layers] }))]);
+    setBottles(newBottles);
     setSelectedIndex(null);
     setHint(null);
     setIsDeadlocked(false);
@@ -605,7 +696,7 @@ export default function App() {
   // Reset level
   const handleConfirmReset = () => {
     setResetConfirmOpen(false);
-    setTubes(currentLevel.tubes.map((t) => [...t]));
+    setBottles(currentLevel.bottles.map((b) => ({ ...b, layers: [...b.layers] })));
     setHistory([]);
     setMovesCount(0);
     setExtraTubesAdded(0);
@@ -622,8 +713,11 @@ export default function App() {
 
   // Add extra empty tube
   const handleAddTube = () => {
-    if (tubes.length >= 21 || isAutoSolving) return;
-    setTubes((prev) => [...prev, []]);
+    if (bottles.length >= 21 || isAutoSolving) return;
+    setBottles((prev) => [
+      ...prev,
+      { id: `extra-${prev.length + 1}`, type: 'empty', capacity: TUBE_CAPACITY, layers: [] },
+    ]);
     setExtraTubesAdded((c) => c + 1);
     setSelectedIndex(null);
     setHint(null);
@@ -647,10 +741,14 @@ export default function App() {
     }
 
     autoSolveTimerRef.current = setTimeout(() => {
-      const result = solveWaterSort(tubes, TUBE_CAPACITY, 25000);
+      const result = solveWaterSort(bottles, TUBE_CAPACITY, 25000);
       if (result.solvable && result.moves.length > 0) {
         const move = result.moves[0];
-        performPour(move.from, move.to);
+        if (move.kind === 'leak') {
+          performLeak(move.from, move.to);
+        } else {
+          performPour(move.from, move.to);
+        }
       } else {
         setIsAutoSolving(false);
       }
@@ -659,7 +757,7 @@ export default function App() {
     return () => {
       if (autoSolveTimerRef.current) clearTimeout(autoSolveTimerRef.current);
     };
-  }, [isAutoSolving, tubes, isWon, performPour]);
+  }, [isAutoSolving, bottles, isWon, performPour, performLeak]);
 
   const handleNextLevel = () => {
     const currentId = typeof currentLevel.id === 'number' ? currentLevel.id : 0;
@@ -716,7 +814,7 @@ export default function App() {
         {/* 2. Top Gift Shopping Bags Rack (4 Bags from Reference Image) */}
         <div className="pt-0.5 pb-1">
           <ShoppingBags
-            tubes={tubes}
+            bottles={bottles}
             onUnlockBonus={handleAddTube}
             bonusUnlocked={extraTubesAdded > 0}
             activeGulpColor={activeGulpColor}
@@ -740,11 +838,12 @@ export default function App() {
           )}
 
           <GameBoard
-            tubes={tubes}
+            bottles={bottles}
             levelEntryId={levelEntryId}
             selectedIndex={selectedIndex}
             hint={hint}
             pourAnimation={pourAnimation}
+            leakAnimation={leakAnimation}
             completionAnimation={completionAnimation}
             collectedTubeIndices={collectedTubeIndices}
             soundEnabled={soundEnabled}
@@ -771,7 +870,7 @@ export default function App() {
         <DeadlockModal
           onUndo={handleUndo}
           onReset={handleConfirmReset}
-          canAddTube={tubes.length < 21}
+          canAddTube={bottles.length < 21}
           onAddTube={handleAddTube}
         />
       )}

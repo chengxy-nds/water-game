@@ -1,4 +1,4 @@
-import { Tube, Level, Difficulty } from '../types/game';
+import { Bottle, Level, Difficulty } from '../types/game';
 import { solveWaterSort, TUBE_CAPACITY } from '../solver/waterSortSolver';
 import { COLOR_KEYS } from '../utils/colors';
 
@@ -21,6 +21,10 @@ export function hashString(str: string): number {
     hash |= 0;
   }
   return Math.abs(hash);
+}
+
+function makeBottle(id: string, type: Bottle['type'], layers: string[]): Bottle {
+  return { id, type, capacity: TUBE_CAPACITY, layers };
 }
 
 /**
@@ -61,24 +65,24 @@ export function generateSolvableLevel(options: {
       [pool[i], pool[j]] = [pool[j], pool[i]];
     }
 
-    // 3. Fill tubes
-    const tubes: Tube[] = [];
+    // 3. Fill bottles
+    const bottles: Bottle[] = [];
     let poolIdx = 0;
     for (let i = 0; i < numColors; i++) {
-      const tube: Tube = [];
+      const layers: string[] = [];
       for (let j = 0; j < TUBE_CAPACITY; j++) {
-        tube.push(pool[poolIdx++]);
+        layers.push(pool[poolIdx++]);
       }
-      tubes.push(tube);
+      bottles.push(makeBottle(`b${i + 1}`, 'normal', layers));
     }
 
-    // 4. Add empty tubes
+    // 4. Add empty bottles
     for (let i = 0; i < emptyTubes; i++) {
-      tubes.push([]);
+      bottles.push(makeBottle(`b${numColors + i + 1}`, 'empty', []));
     }
 
     // 5. Check with Solver
-    const solverResult = solveWaterSort(tubes, TUBE_CAPACITY, 25000);
+    const solverResult = solveWaterSort(bottles, TUBE_CAPACITY, 25000);
 
     if (
       solverResult.solvable &&
@@ -95,7 +99,7 @@ export function generateSolvableLevel(options: {
           id: `gen-${Date.now()}-${attempt}`,
           title: `随机关卡 (${numColors}色)`,
           difficulty: diff,
-          tubes,
+          bottles,
           optimalSteps: solverResult.optimalSteps,
           description: `最优解 ${solverResult.optimalSteps} 步 · 经过 Solver 演算验证`,
           isCustom: true,
@@ -120,33 +124,33 @@ export function generateReverseScrambledLevel(
   rng: () => number = Math.random
 ): { level: Level; optimalSteps: number; visitedNodes: number } | null {
   const availableColors = [...COLOR_KEYS].slice(0, Math.min(numColors, COLOR_KEYS.length));
-  const tubes: Tube[] = [];
+  const bottles: Bottle[] = [];
 
   // Start with solved state
-  for (const color of availableColors) {
-    tubes.push([color, color, color, color]);
+  for (let i = 0; i < availableColors.length; i++) {
+    const color = availableColors[i];
+    bottles.push(makeBottle(`b${i + 1}`, 'normal', [color, color, color, color]));
   }
   for (let i = 0; i < emptyTubes; i++) {
-    tubes.push([]);
+    bottles.push(makeBottle(`b${availableColors.length + i + 1}`, 'empty', []));
   }
 
   // Apply reverse moves
   for (let step = 0; step < scrambleMoves * 3; step++) {
-    const nonFullTubes = tubes.map((t, idx) => idx).filter((idx) => tubes[idx].length < TUBE_CAPACITY);
-    const nonEmptyTubes = tubes.map((t, idx) => idx).filter((idx) => tubes[idx].length > 0);
+    const nonFullBottles = bottles.map((_, idx) => idx).filter((idx) => bottles[idx].layers.length < TUBE_CAPACITY);
+    const nonEmptyBottles = bottles.map((_, idx) => idx).filter((idx) => bottles[idx].layers.length > 0);
 
-    if (nonEmptyTubes.length === 0 || nonFullTubes.length === 0) continue;
+    if (nonEmptyBottles.length === 0 || nonFullBottles.length === 0) continue;
 
-    const fromIdx = nonEmptyTubes[Math.floor(rng() * nonEmptyTubes.length)];
-    const toIdx = nonFullTubes[Math.floor(rng() * nonFullTubes.length)];
+    const fromIdx = nonEmptyBottles[Math.floor(rng() * nonEmptyBottles.length)];
+    const toIdx = nonFullBottles[Math.floor(rng() * nonFullBottles.length)];
     if (fromIdx === toIdx) continue;
 
-    // Pop one element and push to toIdx
-    const elem = tubes[fromIdx].pop()!;
-    tubes[toIdx].push(elem);
+    const elem = bottles[fromIdx].layers.pop()!;
+    bottles[toIdx].layers.push(elem);
   }
 
-  const solverResult = solveWaterSort(tubes, TUBE_CAPACITY, 30000);
+  const solverResult = solveWaterSort(bottles, TUBE_CAPACITY, 30000);
   if (solverResult.solvable && solverResult.optimalSteps >= 5) {
     let diff: Difficulty = 'easy';
     if (solverResult.optimalSteps > 25) diff = 'master';
@@ -158,7 +162,7 @@ export function generateReverseScrambledLevel(
         id: `scramble-${Date.now()}`,
         title: `生成挑战 (${numColors}色)`,
         difficulty: diff,
-        tubes,
+        bottles,
         optimalSteps: solverResult.optimalSteps,
         description: `最优解 ${solverResult.optimalSteps} 步`,
         isCustom: true,
@@ -200,21 +204,21 @@ export function getDailyChallenge(dateString: string): Level {
   }
 
   // Curated fallback for daily if PRNG edge case
-  const fallbackTubes: Tube[] = [
-    ['red', 'blue', 'emerald', 'amber'],
-    ['amber', 'emerald', 'blue', 'red'],
-    ['blue', 'red', 'amber', 'emerald'],
-    ['emerald', 'amber', 'red', 'blue'],
-    ['purple', 'pink', 'purple', 'pink'],
-    ['pink', 'purple', 'pink', 'purple'],
-    [],
-    [],
+  const fallbackBottles: Bottle[] = [
+    makeBottle('b1', 'normal', ['red', 'blue', 'emerald', 'amber']),
+    makeBottle('b2', 'normal', ['amber', 'emerald', 'blue', 'red']),
+    makeBottle('b3', 'normal', ['blue', 'red', 'amber', 'emerald']),
+    makeBottle('b4', 'normal', ['emerald', 'amber', 'red', 'blue']),
+    makeBottle('b5', 'normal', ['purple', 'pink', 'purple', 'pink']),
+    makeBottle('b6', 'normal', ['pink', 'purple', 'pink', 'purple']),
+    makeBottle('b7', 'empty', []),
+    makeBottle('b8', 'empty', []),
   ];
   return {
     id: `daily-${dateString}`,
     title: `今日谜题 · ${dateString}`,
     difficulty: 'hard',
-    tubes: fallbackTubes,
+    bottles: fallbackBottles,
     optimalSteps: 18,
     description: `全球同题每日倒水挑战`,
   };
