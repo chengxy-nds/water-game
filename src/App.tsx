@@ -104,16 +104,10 @@ const detectLevelMechanics = (lvl: Level): Array<keyof typeof MECHANIC_INTRO> =>
 };
 
 export default function App() {
-  const [demoMode, setDemoMode] = useState(true);
-
-  if (demoMode) {
-    return <QuickDemo onEnterGame={() => setDemoMode(false)} />;
-  }
-
-  // Current active level (Default to Level 2 matching reference screenshot)
-  const [currentLevel, setCurrentLevel] = useState<Level>(CURATED_LEVELS[1]);
+  // Current active level (Default to Level 1)
+  const [currentLevel, setCurrentLevel] = useState<Level>(CURATED_LEVELS[0]);
   const [bottles, setBottles] = useState<Bottle[]>(() =>
-    CURATED_LEVELS[1].bottles.map((b) => ({ ...b, layers: [...b.layers] }))
+    CURATED_LEVELS[0].bottles.map((b) => ({ ...b, layers: [...b.layers] }))
   );
   const [levelEntryId, setLevelEntryId] = useState(0);
 
@@ -364,8 +358,14 @@ export default function App() {
       // bottle must be raised much higher to pour out the last of its liquid.
       const sourceUnits = bottles[fromIdx].layers.length;
       const tiltForUnits = (units: number) => {
-        const fillRatio = Math.max(0, Math.min(1, units / TUBE_CAPACITY));
-        return 38 + (1 - fillRatio) * 44; // 38° (full) → 82° (near empty)
+        const u = Math.max(1, Math.min(4, Math.round(units)));
+        const baseAngles: Record<number, number> = {
+          4: 55,
+          3: 66,
+          2: 76,
+          1: 86,
+        };
+        return baseAngles[u] || 75;
       };
       let tiltAngle = (isTargetRight ? 1 : -1) * tiltForUnits(sourceUnits);
 
@@ -881,6 +881,18 @@ export default function App() {
     }
   };
 
+  const handleHint = () => {
+    soundManager.playClick();
+    const result = solveWaterSort(bottles, TUBE_CAPACITY, 25000);
+    if (result.solvable && result.moves.length > 0) {
+      const move = result.moves[0];
+      setHint({ from: move.from, to: move.to });
+      setTimeout(() => {
+        setHint(null);
+      }, 5000);
+    }
+  };
+
   return (
     <div className="h-[100dvh] max-h-[100dvh] w-full flex flex-col justify-between overflow-hidden relative select-none bg-[#03081a]">
       {/* Background Starry Twilight (Reference Screenshot Match) */}
@@ -952,13 +964,14 @@ export default function App() {
           />
         </main>
 
-        {/* 4. Bottom Hero Action Buttons: Shuffle & Undo (Exact Image Match) */}
+        {/* 4. Bottom Hero Action Buttons: 4 Figma Buttons */}
         <footer className="relative z-20 -top-20 w-full">
           <ControlBar
             canUndo={history.length > 0}
-            shuffleCount={1}
-            onShuffle={handleShuffle}
             onUndo={handleUndo}
+            onRestart={() => setResetConfirmOpen(true)}
+            onHint={handleHint}
+            onAddTube={handleAddTube}
             disabled={isWon || isDeadlocked}
           />
         </footer>

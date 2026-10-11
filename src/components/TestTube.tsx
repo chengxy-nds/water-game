@@ -80,19 +80,19 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
       if (!containerRef.current) return null;
       const rect = containerRef.current.getBoundingClientRect();
       // When tilted, spout is the lower mouth lip.
-      // Scale viewBox units (60x150) to the rendered CSS pixels.
-      const scale = rect.width / 60;
-      const mouthY = rect.top + 9 * (rect.height / 150);
+      // Scale viewBox units (77x223) to the rendered CSS pixels.
+      const scale = rect.width / 77;
+      const mouthY = rect.top + 14 * (rect.height / 223);
       const cx = rect.left + rect.width * 0.5;
-      // Neck half-width is 13 in viewBox units (x 17..43).
-      const spoutX = tiltAngle > 0 ? cx + 13 * scale : tiltAngle < 0 ? cx - 13 * scale : cx;
-      const spoutY = mouthY + 4 * (rect.height / 150);
+      // Neck half-width is 16 in viewBox units (x 22.5..54.5).
+      const spoutX = tiltAngle > 0 ? cx + 16 * scale : tiltAngle < 0 ? cx - 16 * scale : cx;
+      const spoutY = mouthY + 5 * (rect.height / 223);
       return { x: spoutX, y: spoutY };
     },
     getMouthPos: () => {
       if (!containerRef.current) return null;
       const rect = containerRef.current.getBoundingClientRect();
-      return { x: rect.left + rect.width * 0.5, y: rect.top + 9 * (rect.height / 150) };
+      return { x: rect.left + rect.width * 0.5, y: rect.top + 14 * (rect.height / 223) };
     },
     getBoundingBox: () => {
       if (!containerRef.current) return null;
@@ -129,7 +129,7 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
       <div
         ref={containerRef}
         className={`flex flex-col items-center group relative select-none opacity-0 pointer-events-none ${
-          compact ? 'w-[42px] sm:w-[46px] h-[120px] sm:h-[132px]' : 'w-[54px] sm:w-[60px] h-[154px] sm:h-[171px]'
+          compact ? 'w-[42px] sm:w-[46px] h-[122px] sm:h-[133px]' : 'w-[54px] sm:w-[60px] h-[156px] sm:h-[174px]'
         }`}
       />
     );
@@ -225,32 +225,23 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
     clampedLayers[clampedLayers.length - 1].isTop = true;
   }
 
-  // Inner chamber coordinates (viewBox 0 0 60 150, 1:2.5 stout potion bottle)
-  // Chamber cylinder runs y = 28 to 130; bottom curved U-dome runs y = 130 to 138. Total height = 110px.
-  // Visual compensation: base layer has 8px in the curved dome, so giving it 33px nominal height
-  // ensures its visible straight side-wall (130 - 105 = 25.0px) matches upper layers (77 / 3 = 25.67px).
-  // All 4 layers have visually identical side-wall profiles (~25.0px to 25.7px).
-  const CHAMBER_BOTTOM_Y = 138;
-  const CHAMBER_TOP_Y = 28;
-  const CHAMBER_HEIGHT = CHAMBER_BOTTOM_Y - CHAMBER_TOP_Y; // 110px
-  const RX = 21.5;
-  const RY = 4.8;
+  // Inner chamber coordinates (viewBox 0 0 77 223, matching Figma's exact glass bottle)
+  // Inner chamber runs from CHAMBER_TOP_Y = 47.5 to CHAMBER_BOTTOM_Y = 210.5.
+  // Total chamber height = 163px.
+  // 4 units capacity: 163 / 4 = 40.75px per unit.
+  const CHAMBER_BOTTOM_Y = 210.5;
+  const CHAMBER_TOP_Y = 47.5;
+  const CHAMBER_HEIGHT = CHAMBER_BOTTOM_Y - CHAMBER_TOP_Y; // 163px
+  const RX = 32;
+  const RY = 6.0;
 
-  const getBlockNominalHeight = (layerIdx: number, totalCapacity: number = 4): number => {
-    if (totalCapacity === 4) {
-      return layerIdx === 0 ? 33.0 : 25.67;
-    }
+  const getBlockNominalHeight = (_layerIdx: number, totalCapacity: number = 4): number => {
     return CHAMBER_HEIGHT / totalCapacity;
   };
 
   const getBoundaryY = (boundaryIdx: number, totalCapacity: number = 4): number => {
     if (boundaryIdx <= 0) return CHAMBER_BOTTOM_Y;
     if (boundaryIdx >= totalCapacity) return CHAMBER_TOP_Y;
-    if (totalCapacity === 4) {
-      const boundaries = [138, 105, 79.33, 53.67, 28];
-      if (boundaryIdx < boundaries.length) return boundaries[boundaryIdx];
-      return CHAMBER_TOP_Y;
-    }
     return CHAMBER_BOTTOM_Y - boundaryIdx * (CHAMBER_HEIGHT / totalCapacity);
   };
 
@@ -482,199 +473,150 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
 
           <g key={`fluid-layers-${index}-${levelEntryId}`}>
           {/* Dynamic Pouring Stream Flow vs Stacked Liquid Layers */}
-          {isPouringSource && isPouringFluid && tiltAngle !== 0 ? (
-            /* Natural Gravity Stream Flow toward mouth lip when tilted */
+          {Math.abs(tiltAngle) > 0.5 ? (
+            /* Physics-accurate Volume-conserved Fluid Surface when tilted */
             <g clipPath={`url(#inner-clip-${index})`}>
               {(() => {
-                if (displayTube.length === 0) return null;
-                const topColorId = displayTube[displayTube.length - 1];
-                const topColorDef = getColor(topColorId);
+                if (clampedLayers.length === 0) return null;
 
                 const isTiltRight = tiltAngle > 0;
                 const rad = (tiltAngle * Math.PI) / 180;
-                const tanTheta = Math.tan(rad);
+                // In SVG coords (+Y is down), tiltAngle > 0 tilts clockwise so surface slopes with m = -tan(tiltAngle)
+                const slope = -Math.tan(rad);
 
-                // Spout lip anchor where horizontal water level meets pouring lip (Y=9)
-                const spoutLipX = isTiltRight ? 43 : 17;
-                const spoutAnchorY = 9 + (spoutLipX - 30) * tanTheta;
+                const W = 21.5;
+                const CX = 30;
+                const Y_MIN = 9;
+                const Y_MAX = 138;
+                const totalH = Y_MAX - Y_MIN;
 
-                // Total units to pour and progress
-                const totalToPour = drainingTotalCount > 0 ? drainingTotalCount : 1;
-                const pourProgress = Math.min(1, Math.max(0, sourceDrainingCount / totalToPour));
+                // Function to find C such that area under y = m*(x-CX) + C equals target volume
+                const findC_SVG = (targetH: number) => {
+                  const targetArea = 2 * W * targetH;
+                  if (targetArea <= 0.05) return Y_MAX + Math.abs(slope) * W + 10;
+                  if (targetArea >= 2 * W * totalH) return Y_MIN - Math.abs(slope) * W - 10;
 
-                // Number of full layers below the draining fluid
-                const baseRemainingUnits = Math.max(0, displayTube.length - totalToPour);
+                  let low = Y_MIN - Math.abs(slope) * W - totalH;
+                  let high = Y_MAX + Math.abs(slope) * W + totalH;
 
-                // Start surface (at pouring lip) and End surface (at remaining layers' level)
-                const yStart = spoutAnchorY;
-                const yEnd = baseRemainingUnits === 0 ? 138 : getBoundaryY(baseRemainingUnits, capacity);
-                const ySurfaceTop = yStart + pourProgress * (yEnd - yStart);
+                  const steps = 16;
+                  const dx = (2 * W) / steps;
+
+                  for (let iter = 0; iter < 16; iter++) {
+                    const mid = (low + high) * 0.5;
+                    let area = 0;
+                    for (let s = 0; s < steps; s++) {
+                      const x = (CX - W) + (s + 0.5) * dx;
+                      const yLine = Math.max(Y_MIN, Math.min(Y_MAX, slope * (x - CX) + mid));
+                      area += (Y_MAX - yLine) * dx;
+                    }
+                    if (area > targetArea) {
+                      low = mid;
+                    } else {
+                      high = mid;
+                    }
+                  }
+                  return (low + high) * 0.5;
+                };
+
+                // Compute cumulative height for each layer
+                let runningH = 0;
+                const cumulativeHeights = [0];
+                for (let i = 0; i < clampedLayers.length; i++) {
+                  const nominalH = getBlockNominalHeight(i, capacity);
+                  const effectiveH = nominalH * (clampedLayers[i].heightPercent / 100);
+                  runningH += effectiveH;
+                  cumulativeHeights.push(runningH);
+                }
+
+                const sampleCount = 18;
+                const dx = (2 * W) / sampleCount;
 
                 return (
                   <>
-                    <defs>
-                      {/* Dynamic gradients for tilted layers rotated back to bottle frame */}
-                      <linearGradient
-                        id={`tilted-top-grad-${index}`}
-                        gradientUnits="userSpaceOnUse"
-                        x1="8.5"
-                        y1="0"
-                        x2="51.5"
-                        y2="0"
-                        gradientTransform={`rotate(${tiltAngle}, 30, ${ySurfaceTop})`}
-                      >
-                        <stop offset="0%" stopColor={topColorDef.hex} stopOpacity="1" />
-                        <stop offset="14%" stopColor={topColorDef.topHex || topColorDef.hex} stopOpacity="1" />
-                        <stop offset="36%" stopColor={topColorDef.hex} stopOpacity="1" />
-                        <stop offset="70%" stopColor={topColorDef.hex} stopOpacity="1" />
-                        <stop offset="100%" stopColor={topColorDef.shadeHex || topColorDef.hex} stopOpacity="1" />
-                      </linearGradient>
-                      {Array.from({ length: baseRemainingUnits }).map((_, i) => {
-                        const k = baseRemainingUnits - 1 - i;
-                        const cId = displayTube[k];
-                        const isHiddenK = hiddenCount > 0 && k < hiddenCount;
-                        const cDef = getColor(cId);
-                        const yAnchorK = getBoundaryY(k + 1, capacity);
-                        return (
-                          <linearGradient
-                            key={`tilted-k-grad-${index}-${k}`}
-                            id={`tilted-k-grad-${index}-${k}`}
-                            gradientUnits="userSpaceOnUse"
-                            x1="8.5"
-                            y1="0"
-                            x2="51.5"
-                            y2="0"
-                            gradientTransform={`rotate(${tiltAngle}, 30, ${yAnchorK})`}
-                          >
-                            {isHiddenK ? (
-                              <>
-                                <stop offset="0%" stopColor="#8b9ab8" stopOpacity="1" />
-                                <stop offset="30%" stopColor="#c7d0e2" stopOpacity="1" />
-                                <stop offset="55%" stopColor="#e4e9f4" stopOpacity="1" />
-                                <stop offset="100%" stopColor="#8795b3" stopOpacity="1" />
-                              </>
-                            ) : (
-                              <>
-                                <stop offset="0%" stopColor={cDef.hex} stopOpacity="1" />
-                                <stop offset="14%" stopColor={cDef.topHex || cDef.hex} stopOpacity="1" />
-                                <stop offset="36%" stopColor={cDef.hex} stopOpacity="1" />
-                                <stop offset="70%" stopColor={cDef.hex} stopOpacity="1" />
-                                <stop offset="100%" stopColor={cDef.shadeHex || cDef.hex} stopOpacity="1" />
-                              </>
-                            )}
-                          </linearGradient>
-                        );
-                      })}
-                    </defs>
+                    {clampedLayers.map((layer, lIdx) => {
+                      const cDef = getColor(layer.colorId);
+                      const isHiddenLayer = hiddenCount > 0 && lIdx < hiddenCount;
+                      const isDimmed = maskHidden && lIdx === 0;
+                      const liquidFill = isHiddenLayer ? `url(#fog-grad-${index})` : `url(#grad-${cDef.id}-${index})`;
 
-                    {/* 1. Top Pouring Layer: rendered FIRST from ySurfaceTop downwards */}
-                    {pourProgress < 0.99 && (
-                      <g key="tilted-top-run" transform={`rotate(${-tiltAngle}, 30, ${ySurfaceTop})`}>
-                        {/* 3D Volumetric Fluid Body */}
-                        <rect
-                          x="-150"
-                          y={ySurfaceTop}
-                          width="360"
-                          height="320"
-                          fill={`url(#tilted-top-grad-${index})`}
-                        />
+                      const hPrev = cumulativeHeights[lIdx];
+                      const hCurr = cumulativeHeights[lIdx + 1];
+                      if (hCurr - hPrev <= 0.2) return null;
 
-                        {/* Subtle meniscus highlight along level liquid surface */}
-                        <line
-                          x1="-150"
-                          y1={ySurfaceTop}
-                          x2="210"
-                          y2={ySurfaceTop}
-                          stroke="#ffffff"
-                          strokeWidth="1.0"
-                          strokeLinecap="round"
-                          opacity="0.35"
-                        />
-                      </g>
-                    )}
+                      const cTop = findC_SVG(hCurr);
+                      const cBot = findC_SVG(hPrev);
 
-                    {/* 2. Non-draining layers below the pouring fluid:
-                        Rendered in DESCENDING order (from baseRemainingUnits - 1 DOWN to 0)
-                        so lower layers overwrite upper layers below each boundary,
-                        preserving natural gravitational stacking! */}
-                    {Array.from({ length: baseRemainingUnits })
-                      .map((_, i) => baseRemainingUnits - 1 - i)
-                      .map((k) => {
-                        const cId = displayTube[k];
-                        const yAnchorK = getBoundaryY(k + 1, capacity);
-                        const colorAbove = k === baseRemainingUnits - 1 ? topColorId : displayTube[k + 1];
-                        const hasDifferentColorAbove = colorAbove !== cId;
+                      // Build polygon path
+                      const ptsTop: Array<[number, number]> = [];
+                      const ptsBot: Array<[number, number]> = [];
 
-                        return (
-                          <g key={`tilted-layer-${k}`} transform={`rotate(${-tiltAngle}, 30, ${yAnchorK})`}>
-                            {/* Liquid body from this layer's surface downwards */}
-                            <rect
-                              x="-150"
-                              y={yAnchorK}
-                              width="360"
-                              height="320"
-                              fill={`url(#tilted-k-grad-${index}-${k})`}
+                      for (let s = 0; s <= sampleCount; s++) {
+                        const x = (CX - W) + s * dx;
+                        const yTop = Math.max(Y_MIN, Math.min(Y_MAX, slope * (x - CX) + cTop));
+                        let yBot: number;
+                        if (lIdx === 0) {
+                          const norm = (x - CX) / W;
+                          const uBottom = 130 + 8 * (norm * norm);
+                          yBot = Math.min(yTop, uBottom);
+                        } else {
+                          yBot = Math.max(Y_MIN, Math.min(Y_MAX, slope * (x - CX) + cBot));
+                        }
+                        ptsTop.push([x, yTop]);
+                        ptsBot.push([x, yBot]);
+                      }
+
+                      let pathD = `M ${ptsTop[0][0]} ${ptsTop[0][1]} `;
+                      for (let s = 1; s <= sampleCount; s++) {
+                        pathD += `L ${ptsTop[s][0]} ${ptsTop[s][1]} `;
+                      }
+                      for (let s = sampleCount; s >= 0; s--) {
+                        pathD += `L ${ptsBot[s][0]} ${ptsBot[s][1]} `;
+                      }
+                      pathD += 'Z';
+
+                      const isVeryTop = (lIdx === clampedLayers.length - 1);
+
+                      return (
+                        <g key={`tilted-layer-${lIdx}`} opacity={isDimmed ? 0.4 : 1}>
+                          <path d={pathD} fill={liquidFill} />
+                          {/* Meniscus surface highlight along topmost free surface */}
+                          {isVeryTop && (
+                            <path
+                              d={`M ${ptsTop[0][0]} ${ptsTop[0][1]} ` + ptsTop.slice(1).map(p => `L ${p[0]} ${p[1]}`).join(' ')}
+                              fill="none"
+                              stroke="rgba(255, 255, 255, 0.45)"
+                              strokeWidth="1.2"
+                              strokeLinecap="round"
                             />
+                          )}
+                          {/* Interface line between distinct color layers */}
+                          {lIdx > 0 && clampedLayers[lIdx - 1]?.colorId !== layer.colorId && (
+                            <path
+                              d={`M ${ptsBot[0][0]} ${ptsBot[0][1]} ` + ptsBot.slice(1).map(p => `L ${p[0]} ${p[1]}`).join(' ')}
+                              fill="none"
+                              stroke="rgba(255, 255, 255, 0.25)"
+                              strokeWidth="0.8"
+                            />
+                          )}
+                        </g>
+                      );
+                    })}
 
-                            {/* Crisp Meniscus Interface between different colors */}
-                            {hasDifferentColorAbove && (
-                              <>
-                                <line
-                                  x1="-150"
-                                  y1={yAnchorK}
-                                  x2="210"
-                                  y2={yAnchorK}
-                                  stroke="rgba(255, 255, 255, 0.22)"
-                                  strokeWidth="0.8"
-                                />
-                              </>
-                            )}
-
-                            {/* If top pouring fluid is fully drained, this layer becomes the top free surface */}
-                            {k === baseRemainingUnits - 1 && pourProgress >= 0.99 && (
-                              <line
-                                x1="-150"
-                                y1={yAnchorK}
-                                x2="210"
-                                y2={yAnchorK}
-                                stroke="#ffffff"
-                                strokeWidth="1.0"
-                                strokeLinecap="round"
-                                opacity="0.35"
-                              />
-                            )}
-                          </g>
-                        );
-                      })}
-
-                    {/* 3. Liquid stream guide along the lower neck wall into spout */}
-                    {pourProgress < 0.98 && (
-                      <>
-                        <path
-                          d={
-                            isTiltRight
-                              ? 'M 51.5 45 L 51.5 28 C 51.5 22, 43 22, 43 16 L 43 9'
-                              : 'M 8.5 45 L 8.5 28 C 8.5 22, 17 22, 17 16 L 17 9'
-                          }
-                          stroke={`url(#tilted-top-grad-${index})`}
-                          strokeWidth="4"
-                          strokeLinecap="round"
-                          fill="none"
-                          opacity={pourProgress < 0.9 ? 0.9 : 0.9 * (1 - (pourProgress - 0.9) / 0.08)}
-                        />
-                        <path
-                          d={
-                            isTiltRight
-                              ? 'M 50.5 45 L 50.5 28 L 42.5 16 L 42.5 9'
-                              : 'M 9.5 45 L 9.5 28 L 17.5 16 L 17.5 9'
-                          }
-                          stroke="rgba(255, 255, 255, 0.6)"
-                          strokeWidth="1.4"
-                          strokeLinecap="round"
-                          fill="none"
-                          opacity={pourProgress < 0.9 ? 0.8 : 0.8 * (1 - (pourProgress - 0.9) / 0.08)}
-                        />
-                      </>
+                    {/* Smooth fluid guide filament along the lip when pouring stream is active */}
+                    {isPouringSource && isPouringFluid && (
+                      <path
+                        d={
+                          isTiltRight
+                            ? 'M 51.5 35 L 51.5 28 C 51.5 22, 43 22, 43 16 L 43 9'
+                            : 'M 8.5 35 L 8.5 28 C 8.5 22, 17 22, 17 16 L 17 9'
+                        }
+                        stroke={`url(#grad-${getColor(clampedLayers[clampedLayers.length - 1]?.colorId || 'blue').id}-${index})`}
+                        strokeWidth="3.2"
+                        strokeLinecap="round"
+                        fill="none"
+                        opacity={0.88}
+                      />
                     )}
                   </>
                 );
