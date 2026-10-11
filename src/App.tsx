@@ -911,39 +911,29 @@ export default function App() {
         <span className="absolute bottom-[22%] left-[8%] text-sky-200/40 text-xs anim-twinkle" style={{ animationDelay: '0.5s' }}>✦</span>
       </div>
 
-      {/* Main Game Interface (Header -> Bags -> Central Game Area -> Hero Control Footer) */}
-      <div className="relative z-10 flex flex-col justify-between flex-1 max-w-lg mx-auto w-full h-full overflow-hidden">
-        {/* 1. Top Header: Settings, Level Capsule, Mobile Mini-App Pill */}
+      {/* Main Game Interface matching Figma 2:934 (瓶中有序 · 游戏主界面) */}
+      <div className="relative z-10 flex flex-col justify-between flex-1 max-w-[430px] mx-auto w-full h-full overflow-hidden">
+        {/* 1. Top Header: Navigation (Back / Title / Settings), Level Banner, Coin Badge, Data Bar */}
         <GameHeader
           currentLevel={currentLevel}
+          movesCount={movesCount}
+          coins={280}
           onOpenLevelSelector={() => setLevelSelectorOpen(true)}
           onOpenSettings={() => setSettingsOpen(true)}
-          onOpenRules={() => setRulesOpen(true)}
-          onOpenMoreMenu={() => setLevelSelectorOpen(true)}
+          onBack={() => setLevelSelectorOpen(true)}
         />
 
-        {/* 2. Top Gift Shopping Bags Rack (4 Bags from Reference Image) */}
-        <div className="pt-0.5 pb-1">
-          <ShoppingBags
-            bottles={bottles}
-            onUnlockBonus={handleAddTube}
-            bonusUnlocked={extraTubesAdded > 0}
-            activeGulpColor={activeGulpColor}
-            collectedColors={collectedColors}
-          />
-        </div>
-
-        {/* 3. Central Game Board (70% Visual Core) */}
-        <main className="flex-1 min-h-0 flex flex-col items-stretch justify-start py-1 px-1">
+        {/* 2. Central Game Board (Shelves with bottles and guidance tip bar) */}
+        <main className="flex-1 min-h-0 flex flex-col items-stretch justify-center py-1 px-1">
           {/* Clean Hint callout banner if active */}
           {hint && (
-            <div className="mb-2 px-3 py-1 rounded-full bg-amber-100 border border-amber-300 text-amber-900 text-xs font-bold flex items-center gap-1.5 shadow-sm animate-pulse">
+            <div className="mb-2 px-3 py-1 rounded-full bg-amber-100 border border-amber-300 text-amber-900 text-xs font-bold flex items-center gap-1.5 shadow-sm animate-pulse mx-auto">
               <span>💡 将 #{hint.from + 1} 瓶倒入 #{hint.to + 1} 瓶</span>
             </div>
           )}
 
           {isAutoSolving && (
-            <div className="mb-2 px-3 py-1 rounded-full bg-sky-100 border border-sky-300 text-sky-900 text-xs font-bold flex items-center gap-1.5 shadow-sm animate-pulse">
+            <div className="mb-2 px-3 py-1 rounded-full bg-sky-100 border border-sky-300 text-sky-900 text-xs font-bold flex items-center gap-1.5 shadow-sm animate-pulse mx-auto">
               <span>⚡ 自动演示中...</span>
             </div>
           )}
@@ -964,8 +954,8 @@ export default function App() {
           />
         </main>
 
-        {/* 4. Bottom Hero Action Buttons: 4 Figma Buttons */}
-        <footer className="relative z-20 -top-20 w-full">
+        {/* 3. Bottom Hero Action Buttons: 4 Figma Buttons + Daily Challenge Banner */}
+        <footer className="relative z-20 pb-1 w-full flex flex-col items-center">
           <ControlBar
             canUndo={history.length > 0}
             onUndo={handleUndo}
@@ -974,6 +964,19 @@ export default function App() {
             onAddTube={handleAddTube}
             disabled={isWon || isDeadlocked}
           />
+
+          {/* Daily Challenge Banner (Figma 2:1122) */}
+          <div
+            onClick={() => setDailyOpen(true)}
+            className="w-full max-w-[374px] px-4 pb-2 cursor-pointer active:scale-95 transition-transform select-none"
+            title="每日挑战"
+          >
+            <img
+              src="/figma/daily_challenge.png"
+              alt="每日挑战"
+              className="w-full h-auto object-contain pointer-events-none drop-shadow-[0_4px_10px_rgba(0,0,0,0.3)]"
+            />
+          </div>
         </footer>
       </div>
 

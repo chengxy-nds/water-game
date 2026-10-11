@@ -32,7 +32,7 @@ export const ControlBar: React.FC<ControlBarProps> = ({
           !canUndo ? 'opacity-40 grayscale-[0.4] pointer-events-none' : ''
         }`}
       >
-        <div className="relative w-16 h-16 sm:w-18 sm:h-18 flex items-center justify-center filter drop-shadow-[0_4px_8px_rgba(0,0,0,0.4)]">
+        <div className="relative w-[64px] sm:w-[72px] h-[78px] sm:h-[88px] flex items-center justify-center filter drop-shadow-[0_4px_8px_rgba(0,0,0,0.4)]">
           <img
             src="/btn_undo.png"
             alt="撤销"
@@ -49,7 +49,7 @@ export const ControlBar: React.FC<ControlBarProps> = ({
         title="重来本关"
         className="flex-1 flex flex-col items-center justify-center group active:scale-90 transition-transform duration-150 cursor-pointer"
       >
-        <div className="relative w-16 h-16 sm:w-18 sm:h-18 flex items-center justify-center filter drop-shadow-[0_4px_8px_rgba(0,0,0,0.4)]">
+        <div className="relative w-[64px] sm:w-[72px] h-[78px] sm:h-[88px] flex items-center justify-center filter drop-shadow-[0_4px_8px_rgba(0,0,0,0.4)]">
           <img
             src="/btn_restart.png"
             alt="重来"
@@ -66,7 +66,7 @@ export const ControlBar: React.FC<ControlBarProps> = ({
         title="获取提示"
         className="flex-1 flex flex-col items-center justify-center group active:scale-90 transition-transform duration-150 cursor-pointer"
       >
-        <div className="relative w-16 h-16 sm:w-18 sm:h-18 flex items-center justify-center filter drop-shadow-[0_4px_8px_rgba(0,0,0,0.4)]">
+        <div className="relative w-[64px] sm:w-[72px] h-[78px] sm:h-[88px] flex items-center justify-center filter drop-shadow-[0_4px_8px_rgba(0,0,0,0.4)]">
           <img
             src="/btn_hint.png"
             alt="提示"
@@ -83,7 +83,7 @@ export const ControlBar: React.FC<ControlBarProps> = ({
         title="增加一个空试管"
         className="flex-1 flex flex-col items-center justify-center group active:scale-90 transition-transform duration-150 cursor-pointer"
       >
-        <div className="relative w-16 h-16 sm:w-18 sm:h-18 flex items-center justify-center filter drop-shadow-[0_4px_8px_rgba(0,0,0,0.4)]">
+        <div className="relative w-[64px] sm:w-[72px] h-[78px] sm:h-[88px] flex items-center justify-center filter drop-shadow-[0_4px_8px_rgba(0,0,0,0.4)]">
           <img
             src="/btn_add.png"
             alt="加一瓶"

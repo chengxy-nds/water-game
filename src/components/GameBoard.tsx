@@ -320,7 +320,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
         />
       </div>
 
-      <div className={`relative z-10 flex flex-col items-center ${rowCount >= 3 ? 'gap-3 sm:gap-4' : 'gap-8 sm:gap-10'}`}>
+      <div className={`relative z-10 flex flex-col items-center ${rowCount >= 3 ? 'gap-2 sm:gap-3' : 'gap-5 sm:gap-6'}`}>
         {rows.map((row, rowIndex) => {
           const isPouringInRow = pourAnimation
             ? pourAnimation.sourceIndex >= row.startIndex && pourAnimation.sourceIndex < row.startIndex + row.bottles.length
@@ -329,16 +329,34 @@ export const GameBoard: React.FC<GameBoardProps> = ({
           return (
             <div
               key={`tube-row-${rowIndex}`}
-              className={`relative flex items-end justify-center transition-transform duration-300 ${
+              className={`relative flex flex-col items-center justify-end transition-transform duration-300 ${
                 isPouringInRow ? 'z-40' : 'z-10'
               }`}
             >
-              <div className="flex flex-nowrap items-end justify-center gap-1 sm:gap-2 md:gap-3">
+              <div className="flex flex-nowrap items-end justify-center gap-1.5 sm:gap-2.5 md:gap-3.5 z-10">
                 {row.bottles.map((bottle, localIdx) => renderTube(bottle, row.startIndex + localIdx))}
+              </div>
+
+              {/* Frosted Glow Shelf Platform from Figma 2:1039 */}
+              <div className="w-[382px] max-w-[94vw] h-[10px] -mt-1 pointer-events-none select-none z-0">
+                <img
+                  src="/figma/shelf_base.png"
+                  alt="陈列底座"
+                  className="w-full h-full object-contain drop-shadow-[0_4px_12px_rgba(56,189,248,0.35)]"
+                />
               </div>
             </div>
           );
         })}
+
+        {/* 玩法提示 (Figma 2:1092) */}
+        <div className="mt-3 w-[374px] max-w-[92vw] h-[42px] relative flex items-center justify-center select-none">
+          <img
+            src="/figma/tip_bar.png"
+            alt="玩法提示"
+            className="w-full h-full object-contain pointer-events-none drop-shadow-[0_4px_12px_rgba(0,0,0,0.3)]"
+          />
+        </div>
       </div>
     </div>
   );

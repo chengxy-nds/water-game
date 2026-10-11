@@ -233,7 +233,7 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
   const CHAMBER_TOP_Y = 47.5;
   const CHAMBER_HEIGHT = CHAMBER_BOTTOM_Y - CHAMBER_TOP_Y; // 163px
   const RX = 32;
-  const RY = 6.0;
+  const RY = 8.0;
 
   const getBlockNominalHeight = (_layerIdx: number, totalCapacity: number = 4): number => {
     return CHAMBER_HEIGHT / totalCapacity;
@@ -317,14 +317,14 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
         }`}
       >
         <svg
-          viewBox="0 0 60 150"
+          viewBox="0 0 77 223"
           className={`overflow-visible select-none ${
-            compact ? 'w-[42px] sm:w-[46px] h-[120px] sm:h-[132px]' : 'w-[54px] sm:w-[60px] h-[154px] sm:h-[171px]'
+            compact ? 'w-[44px] sm:w-[50px] h-[127px] sm:h-[145px]' : 'w-[62px] sm:w-[70px] h-[180px] sm:h-[203px]'
           }`}
         >
           <defs>
             <filter id={`liquid-glow-${index}`} x="-30%" y="-30%" width="160%" height="180%">
-              <feGaussianBlur stdDeviation="1.7" result="blur" />
+              <feGaussianBlur stdDeviation="2.0" result="blur" />
               <feMerge>
                 <feMergeNode in="blur" />
                 <feMergeNode in="SourceGraphic" />
@@ -411,65 +411,51 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
               <stop offset="100%" stopColor="#8795b3" />
             </linearGradient>
 
-            {/* Outer bottle silhouette clip so the cloth cover never overflows the glass */}
+            {/* Outer bottle silhouette clip matching Figma */}
             <clipPath id={`outer-clip-${index}`}>
-              <path d="M 17 9 L 17 16 C 17 22, 6 22, 6 28 L 6 130 C 6 136, 16 141, 30 141 C 44 141, 54 136, 54 130 L 54 28 C 54 22, 43 22, 43 16 L 43 9 Z" />
+              <path
+                d="
+                  M 24 14
+                  L 24 28
+                  C 24 38, 4.5 38, 4.5 47.5
+                  L 4.5 186.5
+                  C 4.5 204, 15 215, 38.5 215
+                  C 62 215, 72.5 204, 72.5 186.5
+                  L 72.5 47.5
+                  C 72.5 38, 53 38, 53 28
+                  L 53 14
+                  Z
+                "
+              />
             </clipPath>
 
-            {/* Inner chamber clip conforming exactly to inner bottle cavity */}
+            {/* Inner chamber clip conforming exactly to Figma's inner bottle cavity (clip11_0_1) */}
             <clipPath id={`inner-clip-${index}`}>
               <path
                 d="
-                  M 17 16
-                  C 17 22, 8.5 22, 8.5 28
-                  L 8.5 130
-                  C 8.5 135, 18 138, 30 138
-                  C 42 138, 51.5 135, 51.5 130
-                  L 51.5 28
-                  C 51.5 22, 43 22, 43 16
-                  L 43 9
-                  L 17 9
+                  M 6.3 47.5
+                  H 70.3
+                  V 186.5
+                  C 70.3 199.755, 59.555 210.5, 46.3 210.5
+                  H 30.3
+                  C 17.045 210.5, 6.3 199.755, 6.3 186.5
+                  V 47.5
                   Z
                 "
               />
             </clipPath>
           </defs>
 
-          {/* 1. Transparent Glass Back Body */}
-          <path
-            d="
-              M 17 9
-              L 17 16
-              C 17 22, 6 22, 6 28
-              L 6 130
-              C 6 136, 16 141, 30 141
-              C 44 141, 54 136, 54 130
-              L 54 28
-              C 54 22, 43 22, 43 16
-              L 43 9
-              Z
-            "
-            fill={`url(#tube-bg-${index})`}
+          {/* 1. Crystal-Clear Transparent Glass Bottle (No dark box, no star) */}
+          <image
+            href="/figma/bottle_empty_clean.png"
+            x="0"
+            y="0"
+            width="77"
+            height="223"
+            preserveAspectRatio="none"
           />
 
-          {/* Far (back) wall — slightly narrower & raised for front/back parallax */}
-          <path
-            d="
-              M 18 4.2
-              L 18 11.2
-              C 18 17.2, 7 17.2, 7 23.2
-              L 7 125.2
-              C 7 131.2, 17 136.2, 30 136.2
-              C 43 136.2, 53 131.2, 53 125.2
-              L 53 23.2
-              C 53 17.2, 42 17.2, 42 11.2
-              L 42 4.2
-              Z
-            "
-            fill="rgba(150, 180, 255, 0.10)"
-            stroke="rgba(200, 215, 255, 0.30)"
-            strokeWidth="0.8"
-          />
 
           <g key={`fluid-layers-${index}-${levelEntryId}`}>
           {/* Dynamic Pouring Stream Flow vs Stacked Liquid Layers */}
@@ -484,10 +470,10 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
                 // In SVG coords (+Y is down), tiltAngle > 0 tilts clockwise so surface slopes with m = -tan(tiltAngle)
                 const slope = -Math.tan(rad);
 
-                const W = 21.5;
-                const CX = 30;
-                const Y_MIN = 9;
-                const Y_MAX = 138;
+                const W = 32;
+                const CX = 38.5;
+                const Y_MIN = 14;
+                const Y_MAX = 210.5;
                 const totalH = Y_MAX - Y_MIN;
 
                 // Function to find C such that area under y = m*(x-CX) + C equals target volume
@@ -556,9 +542,14 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
                         const yTop = Math.max(Y_MIN, Math.min(Y_MAX, slope * (x - CX) + cTop));
                         let yBot: number;
                         if (lIdx === 0) {
-                          const norm = (x - CX) / W;
-                          const uBottom = 130 + 8 * (norm * norm);
-                          yBot = Math.min(yTop, uBottom);
+                          const distFromEdge = Math.min(x - (CX - W), (CX + W) - x);
+                          if (distFromEdge < 14) {
+                            const cornerDelta = 14 - distFromEdge;
+                            const cornerLift = 14 - Math.sqrt(Math.max(0, 14 * 14 - cornerDelta * cornerDelta));
+                            yBot = Math.min(yTop, 210.5 - cornerLift);
+                          } else {
+                            yBot = Math.min(yTop, 210.5);
+                          }
                         } else {
                           yBot = Math.max(Y_MIN, Math.min(Y_MAX, slope * (x - CX) + cBot));
                         }
@@ -608,8 +599,8 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
                       <path
                         d={
                           isTiltRight
-                            ? 'M 51.5 35 L 51.5 28 C 51.5 22, 43 22, 43 16 L 43 9'
-                            : 'M 8.5 35 L 8.5 28 C 8.5 22, 17 22, 17 16 L 17 9'
+                            ? 'M 70.3 47.5 L 70.3 35 C 70.3 28, 53 28, 53 14'
+                            : 'M 6.3 47.5 L 6.3 35 C 6.3 28, 24 28, 24 14'
                         }
                         stroke={`url(#grad-${getColor(clampedLayers[clampedLayers.length - 1]?.colorId || 'blue').id}-${index})`}
                         strokeWidth="3.2"
@@ -634,28 +625,30 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
 
                 const bodyPath = isBottom
                   ? `
-                    M 8.5 ${yTop}
-                    L 8.5 138
-                    L 51.5 138
-                    L 51.5 ${yTop}
-                    A ${RX} ${RY} 0 0 1 8.5 ${yTop}
+                    M 6.3 ${yTop}
+                    L 6.3 186.5
+                    C 6.3 199.755, 17.045 210.5, 30.3 210.5
+                    H 46.3
+                    C 59.555 210.5, 70.3 199.755, 70.3 186.5
+                    L 70.3 ${yTop}
+                    A ${RX} ${RY} 0 0 1 6.3 ${yTop}
                     Z
                   `
                   : `
-                    M 8.5 ${yTop}
-                    L 8.5 ${yBottom}
-                    A ${RX} ${RY} 0 0 0 51.5 ${yBottom}
-                    L 51.5 ${yTop}
-                    A ${RX} ${RY} 0 0 1 8.5 ${yTop}
+                    M 6.3 ${yTop}
+                    L 6.3 ${yBottom}
+                    A ${RX} ${RY} 0 0 0 70.3 ${yBottom}
+                    L 70.3 ${yTop}
+                    A ${RX} ${RY} 0 0 1 6.3 ${yTop}
                     Z
                   `;
 
                 return (
                   <g key={`liquid-block-${layer.colorId}-${lIdx}`} opacity={isDimmed ? 0.4 : 1}>
                     <ellipse
-                      cx="30"
-                      cy={Math.min(yBottom + 4, 138)}
-                      rx={18.8}
+                      cx="38.5"
+                      cy={Math.min(yBottom + 4, 210.5)}
+                      rx={24}
                       ry={Math.max(6, (yBottom - yTop) * 0.26)}
                       fill={`url(#liquid-bloom-${index})`}
                       opacity={0.7}
@@ -678,10 +671,10 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
                     {/* Frosted fog question mark over hidden bottom layers */}
                     {isHiddenLayer && (
                       <text
-                        x="30"
+                        x="38.5"
                         y={(yTop + yBottom) / 2 + 3}
                         textAnchor="middle"
-                        fontSize="11"
+                        fontSize="14"
                         fontWeight="bold"
                         fill="rgba(25, 35, 65, 0.6)"
                       >
@@ -692,7 +685,7 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
                     {/* Subtle boundary glare between different stacked colors; no harsh black seam */}
                     {!isBottom && calculatedLayers[lIdx - 1]?.colorId !== layer.colorId && (
                       <path
-                        d={`M 8.5 ${yBottom} A ${RX} ${RY} 0 0 0 51.5 ${yBottom}`}
+                        d={`M 6.3 ${yBottom} A ${RX} ${RY} 0 0 0 70.3 ${yBottom}`}
                         stroke="rgba(255, 255, 255, 0.16)"
                         strokeWidth="0.8"
                         fill="none"
@@ -724,7 +717,7 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
                         }}
                       >
                         <ellipse
-                          cx="30"
+                          cx="38.5"
                           cy={yTop}
                           rx={RX}
                           ry={RY}
@@ -733,9 +726,9 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
                           strokeWidth="0.65"
                         />
                         <path
-                          d={`M 11.5 ${yTop + 1.4} Q 30 ${yTop + 4.8} 48.5 ${yTop + 1.4}`}
+                          d={`M 14 ${yTop + 1.4} Q 38.5 ${yTop + 5.5} 63 ${yTop + 1.4}`}
                           stroke="#ffffff"
-                          strokeWidth="0.9"
+                          strokeWidth="1.1"
                           strokeLinecap="round"
                           fill="none"
                           opacity="0.42"
@@ -750,144 +743,15 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
           )}
           </g>
 
-          {/* Crystal Glass Specular Reflections Layer (OVER the liquid) */}
-          {/* Outer Glass Contour Outline */}
-          <path
-            d="
-              M 17 9
-              L 17 16
-              C 17 22, 6 22, 6 28
-              L 6 130
-              C 6 136, 16 141, 30 141
-              C 44 141, 54 136, 54 130
-              L 54 28
-              C 54 22, 43 22, 43 16
-              L 43 9
-            "
-            fill="none"
-            stroke="#536be9"
-            strokeWidth="3.0"
-            strokeLinejoin="round"
-            opacity="0.9"
-          />
-
-          {/* Inner Glass Wall Refraction Line (Visible Glass Thickness) */}
-          <path
-            d="M 40 32 C 43 30, 46 33, 46 38 L 46 50 C 45 53, 42 51, 41 48 Z"
-            fill="rgba(224, 233, 255, 0.28)"
-          />
-          <path
-            d="M 42 34 C 44 34, 45 36, 45 39 L 45 43"
-            fill="none"
-            stroke="rgba(255, 255, 255, 0.68)"
-            strokeWidth="1.1"
-            strokeLinecap="round"
-          />
-          <path
-            d="
-              M 18 11
-              L 18 16.5
-              C 18 21.5, 7.5 22.5, 7.5 28
-              L 7.5 129
-              C 7.5 134, 17 140.5, 30 140.5
-              C 43 140.5, 52.5 134, 52.5 129
-              L 52.5 28
-              C 52.5 22.5, 42 21.5, 42 16.5
-              L 42 11
-            "
-            fill="none"
-            stroke="rgba(198, 211, 255, 0.55)"
-            strokeWidth="0.85"
-          />
-
-          {/* Left Vertical High-Gloss Specular Stripe (Continuous flow from neck through shoulder to base) */}
-          <path
-            d="M 19 14 C 15 18, 9.5 22, 9.5 28 L 9.5 128 C 9.5 131, 13 135, 18 136"
-            fill="none"
-            stroke="#5b72f2"
-            strokeWidth="2.8"
-            strokeLinecap="round"
-            opacity="0.38"
-          />
-          <path
-            d="M 19 14 C 15 18, 9.5 22, 9.5 28 L 9.5 128 C 9.5 131, 13 135, 18 136"
-            fill="none"
-            stroke={`url(#specular-fade-${index})`}
-            strokeWidth="1.25"
-            strokeLinecap="round"
-          />
-
-          {/* Solid Crystal Base Refraction Smile Arcs */}
-          <path
-            d="M 13 136 Q 30 141.5 47 136"
-            stroke="#5268e5"
-            strokeWidth="2.6"
-            strokeLinecap="round"
-            fill="none"
-            opacity="0.82"
-          />
-          <path
-            d="M 18 137.5 Q 30 142 42 137.5"
-            stroke="#ffffff"
-            strokeWidth="1.2"
-            strokeLinecap="round"
-            fill="none"
-            opacity="0.72"
-          />
-
-          {/* 5. Top Lip Bead Collar Ring (3D Torus Lip) */}
-          <ellipse
-            cx="30"
-            cy="9.8"
-            rx="16.5"
-            ry="4.8"
-            fill="#172457"
-            stroke="#6e83ff"
-            strokeWidth="1.1"
-            opacity="0.95"
-          />
-          <ellipse
-            cx="30"
-            cy="9"
-            rx="15.8"
-            ry="4.6"
-            fill={`url(#lip-${index})`}
-            stroke="#91a2ff"
-            strokeWidth="1.8"
-          />
-          {/* Rolled lip 3D depth shadow under rim */}
-          <path
-            d="M 14.5 9 C 14.5 14, 45.5 14, 45.5 9"
-            stroke="#0b1938"
-            strokeWidth="2.4"
-            fill="none"
-            opacity="0.75"
-          />
-          {/* Inner dark cavity */}
-          <ellipse
-            cx="30"
-            cy="9"
-            rx="12.5"
-            ry="3.0"
-            fill="#020817"
-            stroke="rgba(159, 174, 255, 0.82)"
-            strokeWidth="1.15"
-          />
-          <path
-            d="M 20 10.4 Q 30 13.6 40 10.4"
-            stroke="rgba(201, 216, 255, 0.95)"
-            strokeWidth="1.1"
-            strokeLinecap="round"
-            fill="none"
-          />
-          {/* Front crescent specular arc */}
-          <path
-            d="M 15.5 7.1 Q 30 4.9 44.5 7.1"
-            stroke="#ffffff"
-            strokeWidth="1.7"
-            strokeLinecap="round"
-            fill="none"
-            opacity="0.95"
+          {/* 3. High-Gloss Specular Glass Reflections Overlay (True Alpha Transparency) */}
+          <image
+            href="/figma/bottle_specular_clean.png"
+            x="0"
+            y="0"
+            width="77"
+            height="223"
+            preserveAspectRatio="none"
+            style={{ pointerEvents: 'none' }}
           />
 
           {/* 6. Wooden Cork Stopper */}
@@ -895,34 +759,34 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
             <g className={isCorkDropping ? 'anim-cork-drop' : ''}>
               {/* Tapered Cork Stopper Plug Body */}
               <path
-                d="M 21.5 1 L 22.5 10.5 C 22.5 12, 37.5 12, 37.5 10.5 L 38.5 1 Z"
+                d="M 28 4 L 29.5 15 C 29.5 17, 47.5 17, 47.5 15 L 49 4 Z"
                 fill={`url(#cork-grad-${index})`}
                 stroke="#78350f"
                 strokeWidth="0.8"
               />
               {/* Top Flange / Rim of Cork */}
               <ellipse
-                cx="30"
-                cy="1"
-                rx="8.5"
-                ry="2.6"
+                cx="38.5"
+                cy="4"
+                rx="11"
+                ry="3.5"
                 fill="#d97706"
                 stroke="#b45309"
                 strokeWidth="0.8"
               />
               {/* Specular Highlight on Cork Rim */}
               <ellipse
-                cx="30"
-                cy="0.8"
-                rx="6"
-                ry="1.4"
+                cx="38.5"
+                cy="3.8"
+                rx="8"
+                ry="1.8"
                 fill="#fef3c7"
                 opacity="0.65"
               />
             </g>
           )}
 
-          {/* 7. Masked-bottle cloth cover (hides layers; bottom layer peeks dimly) */}
+          {/* 7. Masked-bottle cloth cover */}
           {(maskHidden || maskFalling) && (
             <g clipPath={`url(#outer-clip-${index})`} className={maskFalling ? 'anim-mask-fall' : ''}>
               <defs>
@@ -934,19 +798,14 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
                   <stop offset="100%" stopColor="#a87a50" />
                 </linearGradient>
               </defs>
-              {/* Burlap cloth body from shoulder down to just above the bottom layer */}
               <path
-                d="M 6 28 L 6 96 C 6 101, 10 103, 13 100 L 17 103 C 20 106, 25 106, 28 103 L 31 105 C 34 107, 38 106, 40 103 L 44 104 C 47 105, 51 102, 54 97 L 54 28 C 54 22, 43 22, 43 16 L 17 16 C 17 22, 6 22, 6 28 Z"
+                d="M 6.3 47.5 L 6.3 160 C 6.3 165, 12 168, 16 164 L 22 168 C 26 172, 32 172, 36 168 L 40 170 C 44 173, 50 171, 52 167 L 58 169 C 62 170, 70.3 166, 70.3 160 L 70.3 47.5 C 70.3 38, 53 38, 53 28 L 24 28 C 24 38, 6.3 38, 6.3 47.5 Z"
                 fill={`url(#cloth-grad-${index})`}
                 stroke="#7a5230"
                 strokeWidth="1.1"
               />
-              {/* Fabric fold creases */}
-              <path d="M 30 24 L 29 100" stroke="#7a5230" strokeWidth="1.4" opacity="0.45" fill="none" />
-              <path d="M 18 27 L 20 98" stroke="#7a5230" strokeWidth="1" opacity="0.3" fill="none" />
-              <path d="M 42 27 L 40 98" stroke="#7a5230" strokeWidth="1" opacity="0.3" fill="none" />
-              {/* Sewn question mark */}
-              <text x="30" y="67" textAnchor="middle" fontSize="20" fontWeight="bold" fill="#5f3d1e" opacity="0.85">
+              <path d="M 38.5 38 L 38.5 165" stroke="#7a5230" strokeWidth="1.4" opacity="0.45" fill="none" />
+              <text x="38.5" y="115" textAnchor="middle" fontSize="24" fontWeight="bold" fill="#5f3d1e" opacity="0.85">
                 ?
               </text>
             </g>
@@ -956,51 +815,21 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
           {isLeaky && (
             <g pointerEvents="none">
               <path
-                d="M 21 136.5 Q 30 127 39 136.5"
+                d="M 27 207 Q 38.5 195 50 207"
                 stroke="rgba(223, 233, 255, 0.88)"
-                strokeWidth="1.25"
+                strokeWidth="1.5"
                 strokeLinecap="round"
                 fill="none"
               />
               <path
-                d="M 23.5 138.5 C 26.5 135.2, 27.8 134.2, 30 133.6 C 32.2 134.2, 33.5 135.2, 36.5 138.5"
-                stroke="rgba(210, 228, 255, 0.9)"
-                strokeWidth="1.1"
-                strokeLinecap="round"
-                fill="none"
-              />
-              <path
-                d="M 30 133.3 L 30 144.4"
+                d="M 38.5 203 L 38.5 216"
                 stroke="#edf5ff"
-                strokeWidth="1.6"
+                strokeWidth="2.0"
                 strokeLinecap="round"
                 fill="none"
                 opacity="1"
               />
-              <path
-                d="M 18.5 141.8 Q 30 144.8 41.5 141.8"
-                stroke="rgba(233, 242, 255, 0.92)"
-                strokeWidth="1.15"
-                strokeLinecap="round"
-                fill="none"
-              />
-              <path
-                d="M 23.5 141.7 L 26.4 138.1 L 28.6 135.9 L 30 134.3 L 31.4 135.9 L 33.6 138.1 L 36.5 141.7"
-                stroke="rgba(215, 230, 255, 0.9)"
-                strokeWidth="0.9"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                fill="none"
-              />
-              <path
-                d="M 17 139.2 L 24 136.6 L 20.4 134.8 L 27.2 132.5 L 25 130.1 L 30 128.8 L 35 130.1 L 32.8 132.5 L 39.6 134.8 L 36 136.6 L 43 139.2"
-                stroke="rgba(170, 198, 255, 0.7)"
-                strokeWidth="0.8"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                fill="none"
-              />
-              <circle cx="30" cy="138.7" r="1.4" fill="#f1f7ff" />
+              <circle cx="38.5" cy="210" r="1.8" fill="#f1f7ff" />
             </g>
           )}
         </svg>
