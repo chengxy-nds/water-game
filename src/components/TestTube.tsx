@@ -751,7 +751,7 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
             width="77"
             height="223"
             preserveAspectRatio="none"
-            style={{ pointerEvents: 'none' }}
+            style={{ pointerEvents: 'none', mixBlendMode: 'lighten' }}
           />
 
           {/* 6. Wooden Cork Stopper */}

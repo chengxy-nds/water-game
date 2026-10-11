@@ -894,13 +894,13 @@ export default function App() {
   };
 
   return (
-    <div className="h-[100dvh] max-h-[100dvh] w-full flex flex-col justify-between overflow-hidden relative select-none bg-[#03081a]">
-      {/* Background Starry Twilight (Reference Screenshot Match) */}
+    <div className="h-[100dvh] max-h-[100dvh] w-full flex flex-col justify-between overflow-hidden relative select-none bg-[#0A0F2E]">
+      {/* Background Starry Twilight (Figma Frame 2:934 Match) */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
         <div
           className="absolute inset-0"
           style={{
-            background: 'radial-gradient(ellipse 68% 34% at 50% -2%, rgba(0, 139, 160, 0.4) 0%, rgba(9, 58, 105, 0.2) 48%, transparent 100%), linear-gradient(180deg, #06132e 0%, #081a39 56%, #050e24 100%)',
+            background: 'linear-gradient(180deg, #0A0F2E 0%, #0D1535 50%, #080E28 100%)',
           }}
         />
         {/* Subtle twinkling stars across cosmic sky */}
