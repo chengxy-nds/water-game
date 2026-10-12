@@ -786,28 +786,18 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
             </g>
           )}
 
-          {/* 7. Masked-bottle cloth cover */}
+          {/* 7. Masked-bottle authentic cloth cover from Figma (Node 9:58) */}
           {(maskHidden || maskFalling) && (
-            <g clipPath={`url(#outer-clip-${index})`} className={maskFalling ? 'anim-mask-fall' : ''}>
-              <defs>
-                <linearGradient id={`cloth-grad-${index}`} x1="0" y1="0" x2="1" y2="0">
-                  <stop offset="0%" stopColor="#b58a60" />
-                  <stop offset="20%" stopColor="#dcab76" />
-                  <stop offset="50%" stopColor="#c89662" />
-                  <stop offset="80%" stopColor="#dcab76" />
-                  <stop offset="100%" stopColor="#a87a50" />
-                </linearGradient>
-              </defs>
-              <path
-                d="M 6.3 47.5 L 6.3 160 C 6.3 165, 12 168, 16 164 L 22 168 C 26 172, 32 172, 36 168 L 40 170 C 44 173, 50 171, 52 167 L 58 169 C 62 170, 70.3 166, 70.3 160 L 70.3 47.5 C 70.3 38, 53 38, 53 28 L 24 28 C 24 38, 6.3 38, 6.3 47.5 Z"
-                fill={`url(#cloth-grad-${index})`}
-                stroke="#7a5230"
-                strokeWidth="1.1"
+            <g className={maskFalling ? 'anim-mask-fall' : ''} pointerEvents="none">
+              <image
+                href="/assets_figma/cloth_cover.png"
+                x="-3.5"
+                y="24"
+                width="84"
+                height="194"
+                preserveAspectRatio="contain"
+                style={{ filter: 'drop-shadow(0 6px 10px rgba(0,0,0,0.4))' }}
               />
-              <path d="M 38.5 38 L 38.5 165" stroke="#7a5230" strokeWidth="1.4" opacity="0.45" fill="none" />
-              <text x="38.5" y="115" textAnchor="middle" fontSize="24" fontWeight="bold" fill="#5f3d1e" opacity="0.85">
-                ?
-              </text>
             </g>
           )}
 

@@ -50,6 +50,30 @@ interface GameBoardProps {
   disabled?: boolean;
 }
 
+/**
+ * 瓶子上下货架分层排布算法：
+ * 1. 一排最多 7 个瓶子
+ * 2. 瓶子少时（<=3 瓶）单排放置；
+ * 3. 4~14 瓶优雅均分成 2 层货架（如 4 瓶 2+2，5 瓶 3+2，6 瓶 3+3，7 瓶 4+3，10 瓶 5+5 等），避免瓶子过少全挤在 1 行不美观；
+ * 4. >= 15 瓶均分成 3 层货架（每层最多 7 瓶）。
+ */
+export const getRowDistribution = (total: number): number[] => {
+  if (total <= 0) return [];
+  if (total <= 3) return [total];
+  if (total <= 14) {
+    const top = Math.ceil(total / 2);
+    return [top, total - top];
+  }
+  const rows = 3;
+  const base = Math.floor(total / rows);
+  const rem = total % rows;
+  return [
+    Math.min(7, base + (rem > 0 ? 1 : 0)),
+    Math.min(7, base + (rem > 1 ? 1 : 0)),
+    Math.min(7, base),
+  ];
+};
+
 export const GameBoard: React.FC<GameBoardProps> = ({
   bottles,
   levelEntryId = 0,
@@ -193,19 +217,17 @@ export const GameBoard: React.FC<GameBoardProps> = ({
     };
   };
 
-  const rowCount = Math.min(3, Math.max(1, Math.ceil(bottles.length / 7)));
-  const baseRowSize = Math.floor(bottles.length / rowCount);
-  const extraTubes = bottles.length % rowCount;
+  const rowDistribution = getRowDistribution(bottles.length);
+  const rowCount = rowDistribution.length;
   const rows: { startIndex: number; bottles: Bottle[] }[] = [];
   let rowStartIndex = 0;
 
-  for (let rowIndex = 0; rowIndex < rowCount; rowIndex++) {
-    const rowSize = baseRowSize + (rowIndex >= rowCount - extraTubes ? 1 : 0);
+  for (const size of rowDistribution) {
     rows.push({
       startIndex: rowStartIndex,
-      bottles: bottles.slice(rowStartIndex, rowStartIndex + rowSize),
+      bottles: bottles.slice(rowStartIndex, rowStartIndex + size),
     });
-    rowStartIndex += rowSize;
+    rowStartIndex += size;
   }
 
   // When a bottom_leak bottle is selected, resolve and highlight its fixed target
@@ -338,25 +360,22 @@ export const GameBoard: React.FC<GameBoardProps> = ({
               </div>
 
               {/* Frosted Glow Shelf Platform from Figma 2:1039 */}
-              <div className="w-[382px] max-w-[94vw] h-[10px] -mt-1 pointer-events-none select-none z-0">
+              <div
+                className="h-[10px] -mt-1 pointer-events-none select-none z-0 transition-all duration-300 flex items-center justify-center"
+                style={{
+                  width: `${Math.min(382, Math.max(160, row.bottles.length * (rowCount >= 3 ? 48 : 62) + 32))}px`,
+                  maxWidth: '94vw',
+                }}
+              >
                 <img
                   src="/figma/shelf_base.png"
                   alt="陈列底座"
-                  className="w-full h-full object-contain drop-shadow-[0_4px_12px_rgba(56,189,248,0.35)]"
+                  className="w-full h-full object-fill drop-shadow-[0_4px_12px_rgba(56,189,248,0.35)]"
                 />
               </div>
             </div>
           );
         })}
-
-        {/* 玩法提示 (Figma 2:1092) */}
-        <div className="mt-3 w-[374px] max-w-[92vw] h-[42px] relative flex items-center justify-center select-none">
-          <img
-            src="/figma/tip_bar.png"
-            alt="玩法提示"
-            className="w-full h-full object-contain pointer-events-none drop-shadow-[0_4px_12px_rgba(0,0,0,0.3)]"
-          />
-        </div>
       </div>
     </div>
   );

@@ -17,7 +17,7 @@ import { soundManager } from './utils/audio';
 
 import { GameHeader } from './components/GameHeader';
 import { ShoppingBags } from './components/ShoppingBags';
-import { GameBoard, CompletionAnimationState, LeakAnimationState } from './components/GameBoard';
+import { GameBoard, CompletionAnimationState, LeakAnimationState, getRowDistribution } from './components/GameBoard';
 import { ControlBar } from './components/ControlBar';
 import { WinModal } from './components/WinModal';
 import { LevelSelectorModal } from './components/LevelSelectorModal';
@@ -103,6 +103,25 @@ const detectLevelMechanics = (lvl: Level): Array<keyof typeof MECHANIC_INTRO> =>
   return found;
 };
 
+// 提取关卡所有液体颜色，左边3个袋子随机抽取目标色，超出3个放入待补充队列
+const initBagPool = (lvl: Level) => {
+  const allColors: string[] = [];
+  lvl.bottles.forEach((b) => {
+    b.layers.forEach((c) => {
+      if (!allColors.includes(c)) allColors.push(c);
+    });
+  });
+  // 随机打乱
+  const shuffled = [...allColors].sort(() => Math.random() - 0.5);
+  const active: (string | null)[] = [
+    shuffled[0] || null,
+    shuffled[1] || null,
+    shuffled[2] || null,
+  ];
+  const pending = shuffled.slice(3);
+  return { active, pending };
+};
+
 export default function App() {
   // Current active level (Default to Level 1)
   const [currentLevel, setCurrentLevel] = useState<Level>(CURATED_LEVELS[0]);
@@ -134,7 +153,14 @@ export default function App() {
   // 3-Tier Hint Modal state
   const [activeHintData, setActiveHintData] = useState<HintData | null>(null);
 
-  // Bottle Completion Celebration (Cork drop -> Whirl -> Fly -> Shopping Bag Gulp)
+  // Shopping Bags Lifecycle: 3 dynamic bags on left, 1 ad video bonus bag on right
+  const [activeBagColors, setActiveBagColors] = useState<(string | null)[]>(() => initBagPool(CURATED_LEVELS[0]).active);
+  const [pendingBagColors, setPendingBagColors] = useState<string[]>(() => initBagPool(CURATED_LEVELS[0]).pending);
+  const [liftingSlotIndex, setLiftingSlotIndex] = useState<number | null>(null);
+  const [replenishingSlotIndex, setReplenishingSlotIndex] = useState<number | null>(null);
+  const [unlockedBonusColor, setUnlockedBonusColor] = useState<string | null>(null);
+
+  // Bottle Completion Celebration (Cork drop -> Whirl -> Fly -> Shopping Bag Gulp -> Hand Lift)
   const [completionAnimation, setCompletionAnimation] = useState<CompletionAnimationState | null>(null);
   const [collectedTubeIndices, setCollectedTubeIndices] = useState<number[]>([]);
   const [activeGulpColor, setActiveGulpColor] = useState<string | null>(null);
@@ -251,6 +277,12 @@ export default function App() {
     setActiveGulpColor(null);
     setCollectedTubeIndices([]);
     setCollectedColors(new Set());
+    const bagPool = initBagPool(lvl);
+    setActiveBagColors(bagPool.active);
+    setPendingBagColors(bagPool.pending);
+    setLiftingSlotIndex(null);
+    setReplenishingSlotIndex(null);
+    setUnlockedBonusColor(null);
   }, []);
 
   useEffect(() => {
@@ -331,6 +363,136 @@ export default function App() {
     [currentLevel, stats]
   );
 
+  // Bottle completed animation flow: Cork Pop -> Whirling -> Fly to Bag -> Bag Gulp -> Hand Lift-Away -> Bag Replenishment
+  const handleBottleCompleted = useCallback(
+    (
+      targetTubeIdx: number,
+      completedColor: string,
+      isPuzzleComplete: boolean,
+      finalMoves: number,
+      newBottles: Bottle[]
+    ) => {
+      // 保证该目标色已在 activeBagColors 之中展示，以保证飞入目标精准存在
+      setActiveBagColors((prevActive) => {
+        if (prevActive.includes(completedColor)) return prevActive;
+        const replaceIdx = prevActive.findIndex((c) => !c || !collectedColors.has(c));
+        const targetIdx = replaceIdx !== -1 ? replaceIdx : 0;
+        const oldColor = prevActive[targetIdx];
+        const next = [...prevActive];
+        next[targetIdx] = completedColor;
+        setPendingBagColors((prevPending) => {
+          const filtered = prevPending.filter((c) => c !== completedColor);
+          if (oldColor) filtered.push(oldColor);
+          return filtered;
+        });
+        return next;
+      });
+
+      // 1. Cork Drop: 木塞塞入瓶口
+      setTimeout(() => {
+        if (soundEnabled) soundManager.playCorkPop();
+        setCompletionAnimation({
+          tubeIndex: targetTubeIdx,
+          colorId: completedColor,
+          phase: 'cork_drop',
+          flyX: 0,
+          flyY: 0,
+        });
+      }, 300);
+
+      // 2. Whirling: 闪烁粒子光环围绕瓶身旋转
+      setTimeout(() => {
+        if (soundEnabled) soundManager.playTubeComplete();
+        setCompletionAnimation((prev) =>
+          prev ? { ...prev, phase: 'whirling' } : null
+        );
+      }, 750);
+
+      // 3. Flying: 瓶子起飞滑向对应的购物袋
+      setTimeout(() => {
+        const { flyX, flyY } = calculateFlyVector(targetTubeIdx, completedColor);
+        setCompletionAnimation((prev) =>
+          prev ? { ...prev, phase: 'flying', flyX, flyY } : null
+        );
+      }, 1450);
+
+      // 4. Bag Gulp: 购物袋弹性吞咽并将瓶子收纳
+      setTimeout(() => {
+        if (soundEnabled) soundManager.playBagCatch();
+        setActiveGulpColor(completedColor);
+        setCollectedTubeIndices((prev) => [...prev, targetTubeIdx]);
+        setCompletionAnimation(null);
+      }, 2100);
+
+      // 5. Hand Grab & Lift Away: 一只手伸出抓紧提绳，向上将该购物袋拎走飞出屏幕
+      setTimeout(() => {
+        setActiveGulpColor(null);
+        setActiveBagColors((curActive) => {
+          const slotIdx = curActive.indexOf(completedColor);
+          if (slotIdx !== -1) {
+            setLiftingSlotIndex(slotIdx);
+            if (soundEnabled) soundManager.playTubeComplete();
+          } else if (unlockedBonusColor === completedColor) {
+            setLiftingSlotIndex(3);
+            if (soundEnabled) soundManager.playTubeComplete();
+          }
+          return curActive;
+        });
+      }, 2500);
+
+      // 6. Bag Replenishment: 购物袋被拎走后，从待收集池中补充新购物袋弹入该槽位
+      setTimeout(() => {
+        setLiftingSlotIndex((currentLifting) => {
+          const slotIdx = currentLifting;
+          if (slotIdx !== null) {
+            setCollectedColors((prev) => new Set(prev).add(completedColor));
+
+            if (slotIdx === 3) {
+              // 第 4 槽位完成收集，重置该槽位
+              setUnlockedBonusColor(null);
+            } else {
+              setPendingBagColors((prevPending) => {
+                let nextColor: string | null = null;
+                let newPending = [...prevPending];
+                if (newPending.length > 0) {
+                  nextColor = newPending[0];
+                  newPending = newPending.slice(1);
+                }
+
+                setActiveBagColors((prevActive) => {
+                  const nextActive = [...prevActive];
+                  nextActive[slotIdx] = nextColor;
+                  return nextActive;
+                });
+
+                if (nextColor) {
+                  setReplenishingSlotIndex(slotIdx);
+                  setTimeout(() => {
+                    setReplenishingSlotIndex(null);
+                  }, 550);
+                }
+
+                return newPending;
+              });
+            }
+          }
+          return null;
+        });
+
+        // 7. 结算胜负或死锁检测
+        if (isPuzzleComplete) {
+          triggerWinCelebration(finalMoves);
+        } else {
+          const hasMove = hasAnyLegalMove(newBottles, TUBE_CAPACITY);
+          if (!hasMove) {
+            setIsDeadlocked(true);
+          }
+        }
+      }, 3250);
+    },
+    [soundEnabled, calculateFlyVector, collectedColors, triggerWinCelebration]
+  );
+
   const performPour = useCallback(
     (fromIdx: number, toIdx: number) => {
       const check = canPour(bottles[fromIdx], bottles[toIdx], TUBE_CAPACITY);
@@ -340,22 +502,26 @@ export default function App() {
       const sSlot = document.getElementById(`tube-slot-${fromIdx}`);
       const tSlot = document.getElementById(`tube-slot-${toIdx}`);
 
-      const numTubes = bottles.length;
-      const isMultiRow = numTubes > 6;
-      const rowSplit = isMultiRow ? (numTubes === 11 ? 5 : Math.ceil(numTubes / 2)) : numTubes;
+      const rowSizes = getRowDistribution(bottles.length);
+      const getTubeRowCol = (idx: number) => {
+        let accumulated = 0;
+        for (let r = 0; r < rowSizes.length; r++) {
+          if (idx < accumulated + rowSizes[r]) {
+            return { row: r, col: idx - accumulated };
+          }
+          accumulated += rowSizes[r];
+        }
+        return { row: 0, col: idx };
+      };
 
-      const fromRow = Math.floor(fromIdx / rowSplit);
-      const fromCol = fromIdx % rowSplit;
-      const toRow = Math.floor(toIdx / rowSplit);
-      const toCol = toIdx % rowSplit;
+      const fromPos = getTubeRowCol(fromIdx);
+      const toPos = getTubeRowCol(toIdx);
 
-      let exactX = (toCol - fromCol) * 65;
-      let exactY = (toRow - fromRow) * 200 - 20;
-      let isTargetRight = toCol >= fromCol;
+      let exactX = (toPos.col - fromPos.col) * 65;
+      let exactY = (toPos.row - fromPos.row) * 180 - 20;
+      let isTargetRight = toPos.col >= fromPos.col;
 
-      // Tilt magnitude follows how much liquid the source tube currently holds:
-      // a full bottle only needs a shallow tip to spill, while a nearly empty
-      // bottle must be raised much higher to pour out the last of its liquid.
+      // Tilt magnitude follows how much liquid the source tube currently holds
       const sourceUnits = bottles[fromIdx].layers.length;
       const tiltForUnits = (units: number) => {
         const u = Math.max(1, Math.min(4, Math.round(units)));
@@ -475,56 +641,7 @@ export default function App() {
 
           if (isTargetComplete) {
             const completedColor = result.newBottles[toIdx].layers[0];
-
-            // 1. Cork Drop: Wood cork stopper drops down into bottle mouth
-            setTimeout(() => {
-              if (soundEnabled) soundManager.playCorkPop();
-              setCompletionAnimation({
-                tubeIndex: toIdx,
-                colorId: completedColor,
-                phase: 'cork_drop',
-                flyX: 0,
-                flyY: 0,
-              });
-            }, 300);
-
-            // 2. Whirling: Sparkling particle halo rotates around bottle body
-            setTimeout(() => {
-              if (soundEnabled) soundManager.playTubeComplete();
-              setCompletionAnimation((prev) =>
-                prev ? { ...prev, phase: 'whirling' } : null
-              );
-            }, 750);
-
-            // 3. Flying: Bottle takes off and glides smoothly up into matching shopping bag
-            setTimeout(() => {
-              const { flyX, flyY } = calculateFlyVector(toIdx, completedColor);
-              setCompletionAnimation((prev) =>
-                prev ? { ...prev, phase: 'flying', flyX, flyY } : null
-              );
-            }, 1450);
-
-            // 4. Bag Gulp: Shopping bag gulps with elastic bounce and collects bottle inside
-            setTimeout(() => {
-              if (soundEnabled) soundManager.playBagCatch();
-              setActiveGulpColor(completedColor);
-              setCollectedColors((prev) => new Set(prev).add(completedColor));
-              setCollectedTubeIndices((prev) => [...prev, toIdx]);
-              setCompletionAnimation(null);
-            }, 2100);
-
-            // 5. Bag settles & check puzzle win or deadlock
-            setTimeout(() => {
-              setActiveGulpColor(null);
-              if (isPuzzleComplete) {
-                triggerWinCelebration(finalMoves);
-              } else {
-                const hasMove = hasAnyLegalMove(result.newBottles, TUBE_CAPACITY);
-                if (!hasMove) {
-                  setIsDeadlocked(true);
-                }
-              }
-            }, 2700);
+            handleBottleCompleted(toIdx, completedColor, isPuzzleComplete, finalMoves, result.newBottles);
           } else {
             // Target tube was not completed by this pour
             if (isPuzzleComplete) {
@@ -564,7 +681,7 @@ export default function App() {
 
       return true;
     },
-    [bottles, soundEnabled, vibrateEnabled, movesCount, calculateFlyVector, triggerWinCelebration]
+    [bottles, soundEnabled, vibrateEnabled, movesCount, handleBottleCompleted, triggerWinCelebration]
   );
 
   const performLeak = useCallback(
@@ -593,33 +710,7 @@ export default function App() {
 
         if (isTargetComplete) {
           const completedColor = result.newBottles[targetIdx].layers[0];
-          setTimeout(() => {
-            if (soundEnabled) soundManager.playCorkPop();
-            setCompletionAnimation({ tubeIndex: targetIdx, colorId: completedColor, phase: 'cork_drop', flyX: 0, flyY: 0 });
-          }, 200);
-          setTimeout(() => {
-            if (soundEnabled) soundManager.playTubeComplete();
-            setCompletionAnimation((prev) => (prev ? { ...prev, phase: 'whirling' } : null));
-          }, 650);
-          setTimeout(() => {
-            const { flyX, flyY } = calculateFlyVector(targetIdx, completedColor);
-            setCompletionAnimation((prev) => (prev ? { ...prev, phase: 'flying', flyX, flyY } : null));
-          }, 1350);
-          setTimeout(() => {
-            if (soundEnabled) soundManager.playBagCatch();
-            setActiveGulpColor(completedColor);
-            setCollectedColors((prev) => new Set(prev).add(completedColor));
-            setCollectedTubeIndices((prev) => [...prev, targetIdx]);
-            setCompletionAnimation(null);
-          }, 2000);
-          setTimeout(() => {
-            setActiveGulpColor(null);
-            if (isPuzzleComplete) {
-              triggerWinCelebration(finalMoves);
-            } else if (!hasAnyLegalMove(result.newBottles, TUBE_CAPACITY)) {
-              setIsDeadlocked(true);
-            }
-          }, 2600);
+          handleBottleCompleted(targetIdx, completedColor, isPuzzleComplete, finalMoves, result.newBottles);
         } else {
           if (isPuzzleComplete) {
             triggerWinCelebration(finalMoves);
@@ -634,7 +725,7 @@ export default function App() {
 
       return true;
     },
-    [bottles, soundEnabled, vibrateEnabled, movesCount, calculateFlyVector, triggerWinCelebration]
+    [bottles, soundEnabled, vibrateEnabled, movesCount, handleBottleCompleted, triggerWinCelebration]
   );
 
   const triggerInvalidFeedback = useCallback(
@@ -720,7 +811,7 @@ export default function App() {
 
   // Undo move
   const handleUndo = () => {
-    if (history.length === 0 || isAutoSolving || !!completionAnimation) return;
+    if (history.length === 0 || isAutoSolving || !!completionAnimation || liftingSlotIndex !== null) return;
     const previousState = history[history.length - 1];
     setHistory((h) => h.slice(0, h.length - 1));
     setBottles(previousState);
@@ -806,10 +897,16 @@ export default function App() {
     setActiveGulpColor(null);
     setCollectedTubeIndices([]);
     setCollectedColors(new Set());
+    const bagPool = initBagPool(currentLevel);
+    setActiveBagColors(bagPool.active);
+    setPendingBagColors(bagPool.pending);
+    setLiftingSlotIndex(null);
+    setReplenishingSlotIndex(null);
+    setUnlockedBonusColor(null);
     if (soundEnabled) soundManager.playUndo();
   };
 
-  // Add extra empty tube
+  // Add extra empty tube & unlock bonus bag color
   const handleAddTube = () => {
     if (bottles.length >= 21 || isAutoSolving) return;
     setBottles((prev) => [
@@ -817,6 +914,21 @@ export default function App() {
       { id: `extra-${prev.length + 1}`, type: 'empty', capacity: TUBE_CAPACITY, layers: [] },
     ]);
     setExtraTubesAdded((c) => c + 1);
+
+    // 看完视频解锁一个具体颜色：优先取待收集池中的下一色，或关卡未完成颜色
+    if (!unlockedBonusColor) {
+      let chosenColor: string | null = null;
+      if (pendingBagColors.length > 0) {
+        chosenColor = pendingBagColors[0];
+        setPendingBagColors((prev) => prev.slice(1));
+      } else {
+        const levelColors = Array.from(new Set(currentLevel.bottles.flatMap((b) => b.layers)));
+        const uncollected = levelColors.filter((c) => !collectedColors.has(c));
+        chosenColor = uncollected.length > 0 ? uncollected[0] : (levelColors[0] || 'yellow');
+      }
+      setUnlockedBonusColor(chosenColor);
+    }
+
     setSelectedIndex(null);
     setHint(null);
     setIsDeadlocked(false);
@@ -913,17 +1025,32 @@ export default function App() {
 
       {/* Main Game Interface matching Figma 2:934 (瓶中有序 · 游戏主界面) */}
       <div className="relative z-10 flex flex-col justify-between flex-1 max-w-[430px] mx-auto w-full h-full overflow-hidden">
-        {/* 1. Top Header: Navigation (Back / Title / Settings), Level Banner, Coin Badge, Data Bar */}
+        {/* 1. Top Header: Settings, Level Capsule, Daily Challenge */}
         <GameHeader
           currentLevel={currentLevel}
           movesCount={movesCount}
           coins={280}
           onOpenLevelSelector={() => setLevelSelectorOpen(true)}
           onOpenSettings={() => setSettingsOpen(true)}
+          onOpenChallenge={() => setDailyOpen(true)}
           onBack={() => setLevelSelectorOpen(true)}
         />
 
-        {/* 2. Central Game Board (Shelves with bottles and guidance tip bar) */}
+        {/* 2. Top Gift Shopping Bags Rack: 3 Dynamic Bags + 1 Video Unlock Bag */}
+        <div className="pt-0 pb-1 flex-shrink-0">
+          <ShoppingBags
+            activeBagColors={activeBagColors}
+            liftingSlotIndex={liftingSlotIndex}
+            replenishingSlotIndex={replenishingSlotIndex}
+            activeGulpColor={activeGulpColor}
+            collectedColors={collectedColors}
+            onUnlockBonus={handleAddTube}
+            bonusUnlocked={extraTubesAdded > 0}
+            unlockedBonusColor={unlockedBonusColor}
+          />
+        </div>
+
+        {/* 3. Central Game Board (Shelves with bottles and guidance tip bar) */}
         <main className="flex-1 min-h-0 flex flex-col items-stretch justify-center py-1 px-1">
           {/* Clean Hint callout banner if active */}
           {hint && (
@@ -954,8 +1081,8 @@ export default function App() {
           />
         </main>
 
-        {/* 3. Bottom Hero Action Buttons: 4 Figma Buttons + Daily Challenge Banner */}
-        <footer className="relative z-20 pb-1 w-full flex flex-col items-center">
+        {/* 3. Bottom Hero Action Buttons: 4 Control Buttons */}
+        <footer className="relative z-20 pb-3 w-full flex flex-col items-center">
           <ControlBar
             canUndo={history.length > 0}
             onUndo={handleUndo}
@@ -964,19 +1091,6 @@ export default function App() {
             onAddTube={handleAddTube}
             disabled={isWon || isDeadlocked}
           />
-
-          {/* Daily Challenge Banner (Figma 2:1122) */}
-          <div
-            onClick={() => setDailyOpen(true)}
-            className="w-full max-w-[374px] px-4 pb-2 cursor-pointer active:scale-95 transition-transform select-none"
-            title="每日挑战"
-          >
-            <img
-              src="/figma/daily_challenge.png"
-              alt="每日挑战"
-              className="w-full h-auto object-contain pointer-events-none drop-shadow-[0_4px_10px_rgba(0,0,0,0.3)]"
-            />
-          </div>
         </footer>
       </div>
 

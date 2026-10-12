@@ -50,6 +50,11 @@ class SoundManager {
     }
   }
 
+  // Soft tap when clicking generic UI buttons
+  playClick() {
+    this.playSelect();
+  }
+
   // Liquid stream pouring sound with organic harmonics
   playPour(amount: number = 1) {
     this.playDynamicPour(0, amount, 4);

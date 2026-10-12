@@ -13,8 +13,6 @@ interface ControlBarProps {
 
 export const ControlBar: React.FC<ControlBarProps> = ({
   canUndo,
-  undoCount = 3,
-  hintCount = 3,
   onUndo,
   onRestart,
   onHint,
@@ -22,21 +20,21 @@ export const ControlBar: React.FC<ControlBarProps> = ({
   disabled = false,
 }) => {
   return (
-    <div className="w-full max-w-md mx-auto px-4 pt-1 pb-4 select-none z-20 flex items-center justify-between gap-2 sm:gap-4">
+    <div className="w-full max-w-[350px] mx-auto px-3 pt-0 pb-3 select-none z-20 flex items-center justify-between gap-2.5 sm:gap-3.5">
       {/* 1. 撤销 (Undo) */}
       <button
         onClick={onUndo}
         disabled={!canUndo || disabled}
         title="撤销上一步"
-        className={`flex-1 flex flex-col items-center justify-center group active:scale-90 transition-transform duration-150 cursor-pointer ${
+        className={`flex flex-col items-center justify-center active:scale-90 transition-transform duration-150 cursor-pointer ${
           !canUndo ? 'opacity-40 grayscale-[0.4] pointer-events-none' : ''
         }`}
       >
-        <div className="relative w-[64px] sm:w-[72px] h-[78px] sm:h-[88px] flex items-center justify-center filter drop-shadow-[0_4px_8px_rgba(0,0,0,0.4)]">
+        <div className="relative w-[68px] sm:w-[72px] h-[86px] sm:h-[90px] flex items-center justify-center filter drop-shadow-[0_4px_10px_rgba(0,0,0,0.35)]">
           <img
             src="/btn_undo.png"
-            alt="撤销"
-            className="w-full h-full object-contain pointer-events-none group-hover:brightness-110 transition-all"
+            alt="撤回"
+            className="w-full h-full object-contain pointer-events-none transition-transform"
             draggable={false}
           />
         </div>
@@ -47,13 +45,13 @@ export const ControlBar: React.FC<ControlBarProps> = ({
         onClick={onRestart}
         disabled={disabled}
         title="重来本关"
-        className="flex-1 flex flex-col items-center justify-center group active:scale-90 transition-transform duration-150 cursor-pointer"
+        className="flex flex-col items-center justify-center active:scale-90 transition-transform duration-150 cursor-pointer"
       >
-        <div className="relative w-[64px] sm:w-[72px] h-[78px] sm:h-[88px] flex items-center justify-center filter drop-shadow-[0_4px_8px_rgba(0,0,0,0.4)]">
+        <div className="relative w-[68px] sm:w-[72px] h-[86px] sm:h-[90px] flex items-center justify-center filter drop-shadow-[0_4px_10px_rgba(0,0,0,0.35)]">
           <img
             src="/btn_restart.png"
             alt="重来"
-            className="w-full h-full object-contain pointer-events-none group-hover:brightness-110 transition-all"
+            className="w-full h-full object-contain pointer-events-none transition-transform"
             draggable={false}
           />
         </div>
@@ -64,13 +62,13 @@ export const ControlBar: React.FC<ControlBarProps> = ({
         onClick={onHint}
         disabled={disabled}
         title="获取提示"
-        className="flex-1 flex flex-col items-center justify-center group active:scale-90 transition-transform duration-150 cursor-pointer"
+        className="flex flex-col items-center justify-center active:scale-90 transition-transform duration-150 cursor-pointer"
       >
-        <div className="relative w-[64px] sm:w-[72px] h-[78px] sm:h-[88px] flex items-center justify-center filter drop-shadow-[0_4px_8px_rgba(0,0,0,0.4)]">
+        <div className="relative w-[68px] sm:w-[72px] h-[86px] sm:h-[90px] flex items-center justify-center filter drop-shadow-[0_4px_10px_rgba(0,0,0,0.35)]">
           <img
             src="/btn_hint.png"
             alt="提示"
-            className="w-full h-full object-contain pointer-events-none group-hover:brightness-110 transition-all"
+            className="w-full h-full object-contain pointer-events-none transition-transform"
             draggable={false}
           />
         </div>
@@ -81,13 +79,13 @@ export const ControlBar: React.FC<ControlBarProps> = ({
         onClick={onAddTube}
         disabled={disabled}
         title="增加一个空试管"
-        className="flex-1 flex flex-col items-center justify-center group active:scale-90 transition-transform duration-150 cursor-pointer"
+        className="flex flex-col items-center justify-center active:scale-90 transition-transform duration-150 cursor-pointer"
       >
-        <div className="relative w-[64px] sm:w-[72px] h-[78px] sm:h-[88px] flex items-center justify-center filter drop-shadow-[0_4px_8px_rgba(0,0,0,0.4)]">
+        <div className="relative w-[68px] sm:w-[72px] h-[86px] sm:h-[90px] flex items-center justify-center filter drop-shadow-[0_4px_10px_rgba(0,0,0,0.35)]">
           <img
             src="/btn_add.png"
             alt="加一瓶"
-            className="w-full h-full object-contain pointer-events-none group-hover:brightness-110 transition-all"
+            className="w-full h-full object-contain pointer-events-none transition-transform"
             draggable={false}
           />
         </div>
@@ -95,4 +93,3 @@ export const ControlBar: React.FC<ControlBarProps> = ({
     </div>
   );
 };
-
