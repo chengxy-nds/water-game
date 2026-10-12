@@ -18,6 +18,13 @@ export function isBottleComplete(bottle: Bottle, capacity: number = TUBE_CAPACIT
   return bottle.layers.every((c) => c === first);
 }
 
+export function isBottleReadyToCollect(bottle: Bottle, capacity: number = TUBE_CAPACITY): boolean {
+  if (!isBottleComplete(bottle, capacity)) return false;
+  if (bottle.type === 'masked' && !bottle.maskRevealed) return false;
+  if (bottle.type === 'hidden' && (bottle.hiddenBottomLayers ?? 0) > 0) return false;
+  return true;
+}
+
 /**
  * Checks if a bottle is monochromatic (all present layers share one color).
  */
@@ -33,7 +40,7 @@ export function isBottleMonochromatic(bottle: Bottle): boolean {
 export function countCompletedBottles(bottles: Bottle[], capacity: number = TUBE_CAPACITY): number {
   let count = 0;
   for (const b of bottles) {
-    if (b.countsTowardObjective !== false && isBottleComplete(b, capacity)) count++;
+    if (b.countsTowardObjective !== false && isBottleReadyToCollect(b, capacity)) count++;
   }
   return count;
 }
@@ -61,7 +68,7 @@ export function isPuzzleSolved(bottles: Bottle[], capacity: number = TUBE_CAPACI
   if (nonEmptyBottles.length === 0) return true;
 
   for (const b of nonEmptyBottles) {
-    if (!isBottleComplete(b, capacity)) return false;
+    if (!isBottleReadyToCollect(b, capacity)) return false;
   }
 
   const seenColors = new Set<string>();
@@ -97,13 +104,11 @@ export function getTopColorInfo(bottle: Bottle): { color: string | null; count: 
 export function getPourOutCount(bottle: Bottle): number {
   const layers = bottle.layers;
   if (layers.length === 0) return 0;
+  const hiddenBottomLayers = bottle.type === 'hidden' ? Math.min(3, bottle.hiddenBottomLayers ?? 0) : 0;
+  if (hiddenBottomLayers > 0) return 1;
   const top = layers[layers.length - 1];
-  const lowestVisible =
-    bottle.type === 'hidden'
-      ? Math.min(layers.length - 1, bottle.hiddenBottomLayers ?? 0)
-      : 0;
   let count = 0;
-  for (let i = layers.length - 1; i >= lowestVisible; i--) {
+  for (let i = layers.length - 1; i >= 0; i--) {
     if (layers[i] === top) count++;
     else break;
   }
@@ -119,6 +124,7 @@ export function canPour(
   capacity: number = TUBE_CAPACITY
 ): { valid: boolean; count: number; color: string | null } {
   if (from.type === 'bottom_leak') return { valid: false, count: 0, color: null };
+  if (to.type === 'bottom_leak') return { valid: false, count: 0, color: null };
   if (from.layers.length === 0) return { valid: false, count: 0, color: null };
   if (to.layers.length >= capacity) return { valid: false, count: 0, color: null };
 
@@ -140,8 +146,7 @@ export function canPour(
 
 /**
  * Checks whether a bottom-leak from `source` into `target` is legal.
- * Empty targets are allowed and simply receive the leaked bottom layer;
- * non-empty targets must match the topmost color of the receiving bottle.
+ * The target must be non-empty and its top color must match the leaking layer.
  */
 export function isDirectlyBelow(
   sourceIndex: number,
@@ -179,7 +184,7 @@ export function canLeak(
   if (source.layers.length === 0) return false;
   if (source.id === target.id) return false;
   if (target.layers.length >= capacity) return false;
-  if (target.layers.length === 0) return true;
+  if (target.layers.length === 0) return false;
   return source.layers[0] === target.layers[target.layers.length - 1];
 }
 
@@ -192,7 +197,7 @@ export function hasAnyLegalMove(bottles: Bottle[], capacity: number = TUBE_CAPAC
     const fromBottle = bottles[from];
     if (fromBottle.type === 'bottom_leak') continue;
     if (fromBottle.layers.length === 0) continue;
-    if (isBottleComplete(fromBottle, capacity)) continue;
+    if (isBottleReadyToCollect(fromBottle, capacity)) continue;
 
     for (let to = 0; to < n; to++) {
       if (from === to) continue;
@@ -230,12 +235,7 @@ export function executePour(
 
   const source = newBottles[fromIdx];
   if (source.type === 'hidden') {
-    // A hidden layer is revealed only once every known layer above it has been
-    // poured out — i.e. once it becomes the top of the bottle.
-    source.hiddenBottomLayers = Math.max(
-      0,
-      Math.min(source.hiddenBottomLayers ?? 0, source.layers.length - 1)
-    );
+    source.hiddenBottomLayers = Math.max(0, Math.min(3, (source.hiddenBottomLayers ?? 0) - 1));
   }
 
   applyMaskUnlock(newBottles, capacity);
@@ -389,7 +389,7 @@ export function solveWaterSort(
     for (let from = 0; from < n; from++) {
       const fromBottle = bottles[from];
       if (fromBottle.layers.length === 0) continue;
-      if (isBottleComplete(fromBottle, capacity)) continue;
+      if (isBottleReadyToCollect(fromBottle, capacity)) continue;
 
       const fromColor = fromBottle.layers[fromBottle.layers.length - 1];
       const fromCount = getPourOutCount(fromBottle);
@@ -402,10 +402,10 @@ export function solveWaterSort(
         if (from === to) continue;
         const toBottle = bottles[to];
 
-        if (toBottle.layers.length >= capacity) continue;
+        if (toBottle.type === 'bottom_leak' || toBottle.layers.length >= capacity) continue;
 
         if (toBottle.layers.length === 0) {
-          if (fromIsMono) continue;
+          if (fromIsMono && isBottleReadyToCollect(fromBottle, capacity)) continue;
           if (pouredToEmpty) continue;
           if (to !== firstEmptyIdx && firstEmptyIdx !== -1) continue;
           pouredToEmpty = true;
