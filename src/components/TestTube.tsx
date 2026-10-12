@@ -11,15 +11,15 @@ export interface TestTubeRef {
 
 export const BOTTLE_VIEWBOX_WIDTH = 77;
 export const BOTTLE_VIEWBOX_HEIGHT = 223;
-export const BOTTLE_MOUTH_CENTER = { x: 38.5, y: 14 };
+export const BOTTLE_MOUTH_CENTER = { x: 38.5, y: 5.0 };
 export const BOTTLE_CHAMBER_TOP = 47.5;
 export const BOTTLE_CHAMBER_BOTTOM = 210.5;
 
 export const getBottleMouthPoint = () => BOTTLE_MOUTH_CENTER;
 
 export const getBottlePourSpoutPoint = (tiltAngle: number) => ({
-  x: tiltAngle >= 0 ? 53 : 24,
-  y: 14,
+  x: tiltAngle >= 0 ? 51.0 : 26.0,
+  y: 5.0,
 });
 
 export const getBottleLiquidSurfaceY = (units: number, capacity = TUBE_CAPACITY) =>
@@ -402,8 +402,8 @@ export const TestTube = React.memo(forwardRef<TestTubeRef, TestTubeProps>(({
             id="active-pour-spout-anchor"
             className="pointer-events-none absolute"
             style={{
-              left: `${((tiltAngle >= 0 ? 53 : 24) / BOTTLE_VIEWBOX_WIDTH) * 100}%`,
-              top: `${(14 / BOTTLE_VIEWBOX_HEIGHT) * 100}%`,
+              left: `${((tiltAngle >= 0 ? 51.0 : 26.0) / BOTTLE_VIEWBOX_WIDTH) * 100}%`,
+              top: `${(5.0 / BOTTLE_VIEWBOX_HEIGHT) * 100}%`,
               width: '0px',
               height: '0px',
               visibility: 'hidden',
@@ -556,14 +556,14 @@ export const TestTube = React.memo(forwardRef<TestTubeRef, TestTubeProps>(({
             <clipPath id={`tilted-chamber-clip-${index}`}>
               <path
                 d="
-                  M 25.5 14
-                  L 25.5 28
-                  C 25.5 38, 6.3 38, 6.3 47.5
+                  M 26.0 5.0
+                  L 26.0 28.0
+                  C 26.0 38, 6.3 38, 6.3 47.5
                   L 6.3 196.0
                   A 32 14.5 0 0 0 70.3 196.0
                   L 70.3 47.5
-                  C 70.3 38, 51.5 38, 51.5 28
-                  L 51.5 14
+                  C 70.3 38, 51.0 38, 51.0 28
+                  L 51.0 5.0
                   Z
                 "
               />
@@ -595,8 +595,8 @@ export const TestTube = React.memo(forwardRef<TestTubeRef, TestTubeProps>(({
                 const cosA = Math.cos(rad);
                 const absSinA = Math.abs(sinA);
 
-                // Spout lip depth in gravity coordinates (where fluid connects to outflow stream)
-                const Y_lip = 13.0 * absSinA + Math.max(-4, 2.0 * cosA);
+                // Spout lip depth in gravity coordinates (connects exactly to top rim at y=5.0)
+                const Y_lip = 5.0 * absSinA + Math.max(-4, 1.5 * cosA);
 
                 // Deepest cavity wall in gravity coordinates:
                 // When tilt angle > 90deg, bottle base rises into the sky (cosA < 0),

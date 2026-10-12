@@ -41,7 +41,7 @@ import { QuickDemo } from './components/QuickDemo';
 const STATS_STORAGE_KEY = 'water_sort_player_stats_v1';
 const PREFS_STORAGE_KEY = 'water_sort_preferences_v1';
 const MECHANIC_TUTORIAL_KEY = 'water_sort_mechanics_seen_v1';
-const POUR_MOUTH_GAP_Y = 32;
+const POUR_MOUTH_GAP_Y = 16;
 const POUR_MOUTH_OFFSET_X = 14;
 
 interface GameSnapshot {
@@ -626,8 +626,8 @@ export default function App() {
 
         alignForTilt = (angleDegrees: number) => {
           const isRight = angleDegrees >= 0;
-          const spoutSvgX = isRight ? 53 : 24;
-          const spoutSvgY = 14;
+          const spoutSvgX = isRight ? 51.0 : 26.0;
+          const spoutSvgY = 5.0;
 
           const vectorX = ((spoutSvgX - BOTTLE_MOUTH_CENTER.x) / BOTTLE_VIEWBOX_WIDTH) * W;
           const vectorY = ((spoutSvgY - BOTTLE_MOUTH_CENTER.y) / BOTTLE_VIEWBOX_HEIGHT) * H;
