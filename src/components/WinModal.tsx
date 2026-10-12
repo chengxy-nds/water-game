@@ -77,7 +77,7 @@ export const WinModal: React.FC<WinModalProps> = ({
 
   return (
     <div className="win-overlay fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in duration-300">
-      <div className="win-card relative w-full max-w-sm rounded-[32px] p-6 flex flex-col items-center text-center overflow-hidden">
+      <div className="win-card relative w-full max-w-sm rounded-[36px] p-6 flex flex-col items-center text-center overflow-hidden">
         <div className="win-card-glint" aria-hidden="true" />
         <div className="win-ambient-glow" aria-hidden="true" />
 
@@ -88,8 +88,10 @@ export const WinModal: React.FC<WinModalProps> = ({
           </div>
         </div>
 
+        <h2 className="win-congrats-title" aria-label="恭喜通关">恭喜通关</h2>
+
         {/* Animated Stars */}
-        <div className="flex items-center gap-2 mb-5 mt-2">
+        <div className="flex items-center gap-2 mb-5 mt-3">
           {[1, 2, 3].map((s) => (
             <div
               key={s}
@@ -105,7 +107,7 @@ export const WinModal: React.FC<WinModalProps> = ({
         </div>
 
         {/* Evaluation Card (Section 21 & 22: Optimal Solver Score & Difference) */}
-        <div className="win-stats w-full rounded-[24px] p-3.5 mb-4 grid grid-cols-1 items-center">
+        <div className="win-stats w-full max-w-[230px] rounded-[24px] p-3.5 mb-5 grid grid-cols-1 items-center">
           <div className="flex flex-col">
             <span className="win-stat-label text-[11px] font-medium">本次用步</span>
             <span className="win-stat-value text-xl font-black">{movesCount} 步</span>

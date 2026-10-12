@@ -13,7 +13,7 @@ export const BOTTLE_VIEWBOX_WIDTH = 77;
 export const BOTTLE_VIEWBOX_HEIGHT = 223;
 export const BOTTLE_MOUTH_CENTER = { x: 38.5, y: 14 };
 export const BOTTLE_CHAMBER_TOP = 47.5;
-export const BOTTLE_CHAMBER_BOTTOM = 210.5;
+export const BOTTLE_CHAMBER_BOTTOM = 207.5;
 
 export const getBottleMouthPoint = () => BOTTLE_MOUTH_CENTER;
 
@@ -242,12 +242,12 @@ export const TestTube = React.memo(forwardRef<TestTubeRef, TestTubeProps>(({
   }
 
   // Inner chamber coordinates (viewBox 0 0 77 223, matching Figma's exact glass bottle)
-  // Inner chamber runs from CHAMBER_TOP_Y = 47.5 to CHAMBER_BOTTOM_Y = 210.5.
-  // Total chamber height = 163px.
-  // 4 units capacity: 163 / 4 = 40.75px per unit.
-  const CHAMBER_BOTTOM_Y = 210.5;
+  // Inner chamber runs from CHAMBER_TOP_Y = 47.5 to CHAMBER_BOTTOM_Y = 207.5.
+  // Total chamber height = 160px.
+  // 4 units capacity: 160 / 4 = 40px per unit.
+  const CHAMBER_BOTTOM_Y = 207.5;
   const CHAMBER_TOP_Y = 47.5;
-  const CHAMBER_HEIGHT = CHAMBER_BOTTOM_Y - CHAMBER_TOP_Y; // 163px
+  const CHAMBER_HEIGHT = CHAMBER_BOTTOM_Y - CHAMBER_TOP_Y; // 160px
   const RX = 32;
   const RY = 8.0;
 
@@ -468,17 +468,15 @@ export const TestTube = React.memo(forwardRef<TestTubeRef, TestTubeProps>(({
               />
             </clipPath>
 
-            {/* Inner chamber clip conforming exactly to Figma's inner bottle cavity (clip11_0_1) */}
+            {/* Inner chamber clip conforming exactly to natural curved bottle base */}
             <clipPath id={`inner-clip-${index}`}>
               <path
                 d="
                   M 6.3 47.5
                   H 70.3
-                  V 186.5
-                  C 70.3 199.755, 59.555 210.5, 46.3 210.5
-                  H 30.3
-                  C 17.045 210.5, 6.3 199.755, 6.3 186.5
-                  V 47.5
+                  V 196.0
+                  C 70.3 203.0, 57.0 207.5, 38.5 207.5
+                  C 20.0 207.5, 6.3 203.0, 6.3 196.0
                   Z
                 "
               />
@@ -491,10 +489,9 @@ export const TestTube = React.memo(forwardRef<TestTubeRef, TestTubeProps>(({
                   M 25.5 14
                   L 25.5 28
                   C 25.5 38, 6.3 38, 6.3 47.5
-                  L 6.3 186.5
-                  C 6.3 199.755, 17.045 210.5, 30.3 210.5
-                  H 46.3
-                  C 59.555 210.5, 70.3 199.755, 70.3 186.5
+                  L 6.3 196.0
+                  C 6.3 203.0, 20.0 207.5, 38.5 207.5
+                  C 57.0 207.5, 70.3 203.0, 70.3 196.0
                   L 70.3 47.5
                   C 70.3 38, 51.5 38, 51.5 28
                   L 51.5 14
@@ -645,10 +642,9 @@ export const TestTube = React.memo(forwardRef<TestTubeRef, TestTubeProps>(({
                 const bodyPath = isBottom
                   ? `
                     M 6.3 ${yTop}
-                    L 6.3 186.5
-                    C 6.3 199.755, 17.045 210.5, 30.3 210.5
-                    H 46.3
-                    C 59.555 210.5, 70.3 199.755, 70.3 186.5
+                    L 6.3 196.0
+                    C 6.3 203.0, 20.0 207.5, 38.5 207.5
+                    C 57.0 207.5, 70.3 203.0, 70.3 196.0
                     L 70.3 ${yTop}
                     A ${RX} ${RY} 0 0 1 6.3 ${yTop}
                     Z
@@ -666,9 +662,9 @@ export const TestTube = React.memo(forwardRef<TestTubeRef, TestTubeProps>(({
                   <g key={`liquid-block-${layer.colorId}-${lIdx}`} opacity={isDimmed ? 0.4 : 1}>
                     <ellipse
                       cx="38.5"
-                      cy={Math.min(yBottom + 4, 210.5)}
+                      cy={Math.min(yBottom + 2, 207.5)}
                       rx={24}
-                      ry={Math.max(6, (yBottom - yTop) * 0.26)}
+                      ry={Math.max(5, (yBottom - yTop) * 0.22)}
                       fill={`url(#liquid-bloom-${index})`}
                       opacity={0.7}
                       filter={`url(#liquid-glow-${index})`}
