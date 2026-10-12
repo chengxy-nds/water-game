@@ -56,7 +56,7 @@ interface TestTubeProps {
   disabled?: boolean;
 }
 
-export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
+export const TestTube = React.memo(forwardRef<TestTubeRef, TestTubeProps>(({
   index,
   bottle,
   capacity = TUBE_CAPACITY,
@@ -276,7 +276,7 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
 
   const transformStyle: React.CSSProperties = {
     transform: isFlying
-      ? `translate(${flyX}px, ${flyY}px) scale(0.38) rotate(-6deg)`
+      ? `translate(${flyX}px, ${flyY}px) scale(0.22) rotate(-3deg)`
       : isPouringSource
       ? `translate(${translateX}px, ${translateY}px) rotate(${tiltAngle}deg)`
       : isSelected
@@ -289,7 +289,7 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
         ? 'transform 0s'
         : 'transform 0.45s cubic-bezier(0.25, 1, 0.5, 1)'
       : 'transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1)',
-    opacity: isFlying ? 0.05 : 1,
+    opacity: isFlying ? 0.78 : 1,
     zIndex: isFlying ? 90 : isPouringSource ? 45 : isSelected ? 30 : 10,
     transformOrigin: isPouringSource
       ? `50% ${(BOTTLE_MOUTH_CENTER.y / BOTTLE_VIEWBOX_HEIGHT) * 100}%`
@@ -523,10 +523,10 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
                   let low = Y_MIN - Math.abs(slope) * W - totalH;
                   let high = Y_MAX + Math.abs(slope) * W + totalH;
 
-                  const steps = 32;
+                  const steps = 16;
                   const dx = (2 * W) / steps;
 
-                  for (let iter = 0; iter < 24; iter++) {
+                  for (let iter = 0; iter < 14; iter++) {
                     const mid = (low + high) * 0.5;
                     let area = 0;
                     for (let s = 0; s < steps; s++) {
@@ -553,8 +553,9 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
                   cumulativeHeights.push(runningH);
                 }
 
-                const sampleCount = 48;
-                const dx = (2 * W) / sampleCount;
+                const boundaryOffsets = cumulativeHeights.map(findC_SVG);
+                const yAtBoundary = (x: number, offset: number) =>
+                  Math.max(Y_MIN, Math.min(Y_MAX, slope * (x - CX) + offset));
 
                 return (
                   <>
@@ -568,41 +569,14 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
                       const hCurr = cumulativeHeights[lIdx + 1];
                       if (hCurr - hPrev <= 0.2) return null;
 
-                      const cTop = findC_SVG(hCurr);
-                      const cBot = findC_SVG(hPrev);
-
-                      // Build polygon path
-                      const ptsTop: Array<[number, number]> = [];
-                      const ptsBot: Array<[number, number]> = [];
-
-                      for (let s = 0; s <= sampleCount; s++) {
-                        const x = (CX - W) + s * dx;
-                        const yTop = Math.max(Y_MIN, Math.min(Y_MAX, slope * (x - CX) + cTop));
-                        let yBot: number;
-                        if (lIdx === 0) {
-                          const distFromEdge = Math.min(x - (CX - W), (CX + W) - x);
-                          if (distFromEdge < 14) {
-                            const cornerDelta = 14 - distFromEdge;
-                            const cornerLift = 14 - Math.sqrt(Math.max(0, 14 * 14 - cornerDelta * cornerDelta));
-                            yBot = Math.min(yTop, Y_MAX - cornerLift);
-                          } else {
-                            yBot = Math.min(yTop, Y_MAX);
-                          }
-                        } else {
-                          yBot = Math.max(Y_MIN, Math.min(Y_MAX, slope * (x - CX) + cBot));
-                        }
-                        ptsTop.push([x, yTop]);
-                        ptsBot.push([x, yBot]);
-                      }
-
-                      let pathD = `M ${ptsTop[0][0]} ${ptsTop[0][1]} `;
-                      for (let s = 1; s <= sampleCount; s++) {
-                        pathD += `L ${ptsTop[s][0]} ${ptsTop[s][1]} `;
-                      }
-                      for (let s = sampleCount; s >= 0; s--) {
-                        pathD += `L ${ptsBot[s][0]} ${ptsBot[s][1]} `;
-                      }
-                      pathD += 'Z';
+                      const topLeft = yAtBoundary(CX - W, boundaryOffsets[lIdx + 1]);
+                      const topRight = yAtBoundary(CX + W, boundaryOffsets[lIdx + 1]);
+                      const bottomLeft = yAtBoundary(CX - W, boundaryOffsets[lIdx]);
+                      const bottomRight = yAtBoundary(CX + W, boundaryOffsets[lIdx]);
+                      const topEdge = `M 6.3 ${topLeft} L 70.3 ${topRight}`;
+                      const pathD = lIdx === 0
+                        ? `${topEdge} L 70.3 186.5 C 70.3 199.755, 59.555 210.5, 46.3 210.5 H 30.3 C 17.045 210.5, 6.3 199.755, 6.3 186.5 Z`
+                        : `${topEdge} L 70.3 ${bottomRight} L 6.3 ${bottomLeft} Z`;
 
                       const isVeryTop = (lIdx === clampedLayers.length - 1);
 
@@ -612,7 +586,7 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
                           {/* Meniscus surface highlight along topmost free surface */}
                           {isVeryTop && (
                             <path
-                              d={`M ${ptsTop[0][0]} ${ptsTop[0][1]} ` + ptsTop.slice(1).map(p => `L ${p[0]} ${p[1]}`).join(' ')}
+                              d={topEdge}
                               fill="none"
                               stroke="rgba(255, 255, 255, 0.45)"
                               strokeWidth="1.2"
@@ -622,7 +596,7 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
                           {/* Interface line between distinct color layers */}
                           {lIdx > 0 && clampedLayers[lIdx - 1]?.colorId !== layer.colorId && (
                             <path
-                              d={`M ${ptsBot[0][0]} ${ptsBot[0][1]} ` + ptsBot.slice(1).map(p => `L ${p[0]} ${p[1]}`).join(' ')}
+                              d={`M 6.3 ${bottomLeft} L 70.3 ${bottomRight}`}
                               fill="none"
                               stroke="rgba(255, 255, 255, 0.25)"
                               strokeWidth="0.8"
@@ -907,12 +881,12 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
           {(maskHidden || maskFalling) && (
             <g className={maskFalling ? 'anim-mask-fall' : ''} pointerEvents="none">
               <image
-                href="/assets_figma/cloth_cover.png"
-                x="-3.5"
-                y="24"
-                width="84"
-                height="194"
-                preserveAspectRatio="contain"
+                href="/assets_figma/cloth_cover_clean.png"
+                x="-7.5"
+                y="0"
+                width="92"
+                height="223"
+                preserveAspectRatio="none"
                 style={{ filter: 'drop-shadow(0 6px 10px rgba(0,0,0,0.4))' }}
               />
             </g>
@@ -955,6 +929,6 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
       />
     </div>
   );
-});
+}));
 
 TestTube.displayName = 'TestTube';

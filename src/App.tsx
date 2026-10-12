@@ -377,7 +377,7 @@ export default function App() {
       const renderedHeight = bagImage.naturalHeight * imageScale;
       const imageTop = imageRect.top + (imageRect.height - renderedHeight) / 2;
       const targetX = imageRect.left + imageRect.width / 2;
-      const targetY = imageTop + renderedHeight * 0.29;
+      const targetY = imageTop + renderedHeight * 0.62;
       const curX = tubeRect.left + tubeRect.width * 0.5;
       const curY = tubeRect.bottom;
       return {
@@ -505,7 +505,7 @@ export default function App() {
           }
           return curActive;
         });
-      }, 2500);
+      }, 2600);
 
       // 6. Bag Replenishment: 购物袋被拎走后，从待收集池中补充新购物袋弹入该槽位
       setTimeout(() => {
@@ -555,7 +555,7 @@ export default function App() {
             setIsDeadlocked(true);
           }
         }
-      }, 3250);
+      }, 3350);
     },
     [soundEnabled, calculateFlyVector, collectedColors, triggerWinCelebration]
   );

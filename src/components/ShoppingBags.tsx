@@ -16,6 +16,29 @@ export const COLOR_BAG_MAP: Record<string, string> = {
   amber: '/assets_figma/bag_yellow.png',
 };
 
+const RiderHand: React.FC = () => (
+  <div className="rider-hand-grab absolute left-1/2 top-0 z-20 pointer-events-none" aria-hidden="true">
+    <svg width="44" height="48" viewBox="0 0 44 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="rider-sleeve" x1="10" y1="0" x2="31" y2="18" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#38BDF8" />
+          <stop offset="1" stopColor="#1D4ED8" />
+        </linearGradient>
+        <linearGradient id="rider-glove" x1="14" y1="13" x2="32" y2="35" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#334155" />
+          <stop offset="1" stopColor="#0F172A" />
+        </linearGradient>
+      </defs>
+      <path d="M12 0H30L28 15H15L12 0Z" fill="url(#rider-sleeve)" />
+      <path d="M14 12H29L28 18H15L14 12Z" fill="#BAE6FD" stroke="#0284C7" strokeWidth="1.2" />
+      <path d="M16 17C15 14 19 12 21 15L23 18C23 14 27 14 28 18L31 21C34 24 33 30 30 33C27 36 21 35 17 32C13 29 12 23 14 20L16 17Z" fill="url(#rider-glove)" stroke="#0B1220" strokeWidth="1.2" />
+      <path d="M18 22C20 24 23 25 26 24M17 26C20 28 24 29 28 28M19 30C22 32 25 32 28 31" stroke="#93C5FD" strokeWidth="1.2" strokeLinecap="round" opacity="0.9" />
+      <path d="M15 20C18 20 20 22 21 25L18 27C15 26 13 24 13 22C13 21 14 20 15 20Z" fill="#475569" stroke="#0B1220" strokeWidth="0.8" />
+      <path d="M18 16L27 16" stroke="#E0F2FE" strokeWidth="1" strokeLinecap="round" opacity="0.8" />
+    </svg>
+  </div>
+);
+
 export interface ShoppingBagsProps {
   // 左侧最多 3 个当前正在展示的颜色（null 表示已收集完毕且无后续补充）
   activeBagColors: (string | null)[];
@@ -102,7 +125,7 @@ export const ShoppingBags: React.FC<ShoppingBagsProps> = ({
                 : 'filter drop-shadow-[0_6px_12px_rgba(0,0,0,0.45)]'
             }`}
           >
-            {isLifting && <span className="bag-lift-glint absolute left-1/2 top-[24%] -translate-x-1/2 z-10 pointer-events-none" />}
+            {isLifting && <RiderHand />}
 
             <div className="relative w-[68px] sm:w-[74px] h-[132px] sm:h-[144px]">
               <img
@@ -148,7 +171,7 @@ export const ShoppingBags: React.FC<ShoppingBagsProps> = ({
         onClick={!bonusUnlocked ? onUnlockBonus : undefined}
         title={!bonusUnlocked ? '看视频解锁颜色与空瓶' : `已解锁: ${unlockedBonusColor || '奖励袋'}`}
       >
-        {isBonusLifting && <span className="bag-lift-glint absolute left-1/2 top-[24%] -translate-x-1/2 z-10 pointer-events-none" />}
+        {isBonusLifting && <RiderHand />}
 
         <div className="relative w-[68px] sm:w-[74px] h-[132px] sm:h-[144px]">
           <img

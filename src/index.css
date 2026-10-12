@@ -192,77 +192,59 @@
 
 /* Shopping Bag Gulp / Catch Reaction */
 @keyframes bagGulp {
-  0% {
+  0%, 100% {
     transform: scale(1);
   }
-  25% {
-    transform: scale(1.28) translateY(-8px);
-    filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.9));
+  28% {
+    transform: scale(1.07, 0.94) translateY(-3px);
+    filter: drop-shadow(0 0 14px rgba(186, 230, 253, 0.8));
   }
-  50% {
-    transform: scale(0.92) translateY(3px);
+  58% {
+    transform: scale(0.97, 1.04) translateY(2px);
   }
-  75% {
-    transform: scale(1.08) translateY(-2px);
-  }
-  100% {
-    transform: scale(1) translateY(0);
+  78% {
+    transform: scale(1.02, 0.99) translateY(-1px);
   }
 }
 .anim-bag-gulp {
-  animation: bagGulp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  transform-origin: 50% 34%;
+  animation: bagGulp 0.48s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-/* Hand grabs handle and lifts shopping bag away off the top of screen */
 @keyframes bagLiftAway {
   0% {
     transform: translateY(0) scale(1) rotate(0deg);
     opacity: 1;
   }
   18% {
-    /* Hand tightens grip, bag dips slightly */
-    transform: translateY(6px) scale(0.98) rotate(-1.5deg);
+    transform: translateY(-3px) scale(1.02) rotate(-1deg);
     opacity: 1;
   }
-  38% {
-    /* Swift lift upward */
-    transform: translateY(-24px) scale(1.03) rotate(2deg);
+  42% {
+    transform: translateY(-30px) scale(0.98) rotate(1.5deg);
     opacity: 1;
-  }
-  70% {
-    /* Accelerating upward flight */
-    transform: translateY(-110px) scale(0.92) rotate(-3deg);
-    opacity: 0.85;
   }
   100% {
-    /* Flees completely off top screen */
-    transform: translateY(-260px) scale(0.72) rotate(4deg);
+    transform: translateY(-190px) scale(0.86) rotate(-2deg);
     opacity: 0;
   }
 }
 
 .anim-bag-lift-away {
-  animation: bagLiftAway 0.75s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  transform-origin: 50% 34%;
+  animation: bagLiftAway 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
-/* Cute Hand Grabber appears and reaches down to grab handle */
-@keyframes handGrabGrip {
-  0% {
-    transform: translate(-50%, -30px) scale(0.8);
-    opacity: 0;
-  }
-  30% {
-    transform: translate(-50%, 0px) scale(1.05);
-    opacity: 1;
-  }
-  100% {
-    transform: translate(-50%, 0px) scale(1);
-    opacity: 1;
-  }
+.rider-hand-grab {
+  transform-origin: 50% 100%;
+  filter: drop-shadow(0 3px 5px rgba(2, 6, 23, 0.42));
+  animation: riderHandGrab 0.24s cubic-bezier(0.2, 0.85, 0.25, 1) both;
 }
 
-.anim-hand-grab {
-  animation: handGrabGrip 0.25s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+@keyframes riderHandGrab {
+  0% { transform: translate(-50%, -15px) scale(0.88); opacity: 0; }
+  65% { transform: translate(-50%, 2px) scale(1.04); opacity: 1; }
+  100% { transform: translate(-50%, 0) scale(1); opacity: 1; }
 }
 
 /* Replenished shopping bag bounces down from top shelf */

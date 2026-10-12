@@ -1,10 +1,9 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useMemo } from 'react';
 import { Bottle } from '../types/game';
 import {
   BOTTLE_CHAMBER_BOTTOM,
   BOTTLE_MOUTH_CENTER,
   TestTube,
-  TestTubeRef,
   getBottleLiquidSurfaceY,
   getBottlePourSpoutPoint,
 } from './TestTube';
@@ -96,12 +95,6 @@ export const GameBoard: React.FC<GameBoardProps> = ({
   disabled = false,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const tubeRefs = useRef<(TestTubeRef | null)[]>([]);
-
-  // Keep tube refs array matched with tubes length
-  useEffect(() => {
-    tubeRefs.current = tubeRefs.current.slice(0, bottles.length);
-  }, [bottles.length]);
 
   // Dynamic acoustic physical feedback: Liquid stream pouring sound with rising pitch
   // As liquid is injected into the tube, the air column resonance & impact pitch rise with liquid level
@@ -129,38 +122,26 @@ export const GameBoard: React.FC<GameBoardProps> = ({
   }, [pourAnimation?.phase, pourAnimation?.targetIndex, pourAnimation?.count, bottles, soundEnabled]);
 
   // Live coordinates of water stream
-  const [streamFrom, setStreamFrom] = useState<{ x: number; y: number } | null>(null);
-  const [streamTo, setStreamTo] = useState<{ x: number; y: number } | null>(null);
-
-  // Measure exact real-world stream coordinates
-  useEffect(() => {
-    if (!pourAnimation || pourAnimation.phase !== 'pouring') {
-      setStreamFrom(null);
-      setStreamTo(null);
-      return;
-    }
-
+  const pourStreamPositions = useMemo(() => {
+    if (!pourAnimation || pourAnimation.phase !== 'pouring') return null;
     const sourceSvg = document.querySelector<SVGSVGElement>(`#tube-slot-${pourAnimation.sourceIndex} svg`);
     const targetSvg = document.querySelector<SVGSVGElement>(`#tube-slot-${pourAnimation.targetIndex} svg`);
     const sourceMatrix = sourceSvg?.getScreenCTM() ?? null;
     const targetMatrix = targetSvg?.getScreenCTM() ?? null;
+    if (!sourceSvg || !targetSvg || !sourceMatrix || !targetMatrix) return null;
 
-    if (sourceMatrix && targetMatrix) {
-      const spoutPoint = getBottlePourSpoutPoint(pourAnimation.tiltAngle);
-      const sourceLip = sourceSvg!.createSVGPoint();
-      sourceLip.x = spoutPoint.x;
-      sourceLip.y = spoutPoint.y;
-      const sourceLipScreen = sourceLip.matrixTransform(sourceMatrix);
-
-      const targetSurface = targetSvg!.createSVGPoint();
-      targetSurface.x = BOTTLE_MOUTH_CENTER.x;
-      targetSurface.y = BOTTLE_MOUTH_CENTER.y;
-      const targetSurfaceScreen = targetSurface.matrixTransform(targetMatrix);
-
-      setStreamFrom({ x: sourceLipScreen.x, y: sourceLipScreen.y });
-      setStreamTo({ x: targetSurfaceScreen.x, y: targetSurfaceScreen.y });
-    }
-  }, [pourAnimation, bottles]);
+    const sourceLip = sourceSvg.createSVGPoint();
+    const spoutPoint = getBottlePourSpoutPoint(pourAnimation.tiltAngle);
+    sourceLip.x = spoutPoint.x;
+    sourceLip.y = spoutPoint.y;
+    const targetMouth = targetSvg.createSVGPoint();
+    targetMouth.x = BOTTLE_MOUTH_CENTER.x;
+    targetMouth.y = BOTTLE_MOUTH_CENTER.y;
+    return {
+      from: sourceLip.matrixTransform(sourceMatrix),
+      to: targetMouth.matrixTransform(targetMatrix),
+    };
+  }, [pourAnimation]);
 
   // Leak stream coordinates: source bottle bottom → target bottle top (screen space)
   const [leakFrom, setLeakFrom] = useState<{ x: number; y: number } | null>(null);
@@ -246,7 +227,6 @@ export const GameBoard: React.FC<GameBoardProps> = ({
         }`}
       >
         <TestTube
-          ref={(el) => { tubeRefs.current[globalIdx] = el; }}
           index={globalIdx}
           bottle={bottle}
           levelEntryId={levelEntryId}
@@ -320,8 +300,8 @@ export const GameBoard: React.FC<GameBoardProps> = ({
       {/* Procedural Viscous Water Stream with gooey filter applied for liquid cohesion */}
       <div className="fixed inset-0 pointer-events-none z-50">
         <WaterStream
-          fromPos={streamFrom}
-          toPos={streamTo}
+          fromPos={pourStreamPositions?.from ?? null}
+          toPos={pourStreamPositions?.to ?? null}
           colorId={pourAnimation?.colorId || 'red'}
           active={!!pourAnimation && pourAnimation.phase === 'pouring'}
           showSplash={false}
