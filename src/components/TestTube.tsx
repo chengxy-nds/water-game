@@ -483,6 +483,25 @@ export const TestTube = React.memo(forwardRef<TestTubeRef, TestTubeProps>(({
                 "
               />
             </clipPath>
+
+            {/* Full-flow internal bottle cavity clip for tilted pouring (connects mouth to base) */}
+            <clipPath id={`tilted-chamber-clip-${index}`}>
+              <path
+                d="
+                  M 25.5 14
+                  L 25.5 28
+                  C 25.5 38, 6.3 38, 6.3 47.5
+                  L 6.3 186.5
+                  C 6.3 199.755, 17.045 210.5, 30.3 210.5
+                  H 46.3
+                  C 59.555 210.5, 70.3 199.755, 70.3 186.5
+                  L 70.3 47.5
+                  C 70.3 38, 51.5 38, 51.5 28
+                  L 51.5 14
+                  Z
+                "
+              />
+            </clipPath>
           </defs>
 
           {/* 1. Crystal-Clear Transparent Glass Bottle (No dark box, no star) */}
@@ -499,130 +518,117 @@ export const TestTube = React.memo(forwardRef<TestTubeRef, TestTubeProps>(({
           <g key={`fluid-layers-${index}-${levelEntryId}`}>
           {/* Dynamic Pouring Stream Flow vs Stacked Liquid Layers */}
           {Math.abs(tiltAngle) > 0.5 ? (
-            /* Physics-accurate Volume-conserved Fluid Surface when tilted */
-            <g clipPath={`url(#inner-clip-${index})`}>
+            /* Authentic Fluid Wedge: Continuous bottom fill + 2.5D horizontal elliptic surface */
+            <g clipPath={`url(#tilted-chamber-clip-${index})`}>
               {(() => {
                 if (clampedLayers.length === 0) return null;
 
                 const fluidSurfaceAngle = tiltAngle;
                 const rad = (fluidSurfaceAngle * Math.PI) / 180;
-                // Keep the layered color bands readable while preserving a volume-based sloped surface.
-                const slope = -Math.tan(rad);
+                const sinA = Math.sin(rad);
+                const cosA = Math.cos(rad);
+                const absSinA = Math.abs(sinA);
 
-                const W = 32;
-                const CX = 38.5;
-                const Y_MIN = BOTTLE_CHAMBER_TOP;
-                const Y_MAX = 210.5;
-                const totalH = Y_MAX - Y_MIN;
+                // Spout lip depth in gravity coordinates (where fluid connects to outflow stream)
+                const Y_lip = 13.0 * absSinA + Math.max(-4, 2.0 * cosA);
 
-                const sampleCount = 48;
-                const dx = (2 * W) / sampleCount;
-                const crossSections = Array.from({ length: sampleCount }, (_, sampleIndex) => {
-                  const x = CX - W + (sampleIndex + 0.5) * dx;
-                  const leftBaseY = x < 30.3
-                    ? 186.5 + Math.sqrt(Math.max(0, 24 * 24 - (x - 30.3) ** 2))
-                    : 210.5;
-                  const bottomY = x > 46.3
-                    ? 186.5 + Math.sqrt(Math.max(0, 24 * 24 - (x - 46.3) ** 2))
-                    : leftBaseY;
-                  return { x, bottomY };
-                });
+                // Deepest cavity wall in gravity coordinates:
+                // When tilt angle > 90deg, bottle base rises into the sky (cosA < 0),
+                // so the lowest gravitational points naturally shift to the downward neck/spout.
+                const baseContribution = Math.max(0, 181.0 * cosA);
+                const Y_deep = Math.max(Y_lip + 28, 32.0 * absSinA + baseContribution);
+                const H_delta = Math.max(20, Y_deep - Y_lip);
 
-                const totalArea = crossSections.reduce(
-                  (area, section) => area + (section.bottomY - Y_MIN) * dx,
-                  0
+                // Total remaining fluid units
+                const totalUnits = clampedLayers.reduce((sum, l) => sum + l.heightPercent / 100, 0);
+                if (totalUnits <= 0.01) return null;
+
+                const fillRatio = Math.max(0, Math.min(1, totalUnits / capacity));
+
+                // Natural surface depth: free surface connects to spout lip and smoothly recedes as it empties
+                const Y_surface = Y_lip + (1 - Math.min(1, Math.sqrt(fillRatio))) * 10;
+
+                // CRITICAL: The fluid bottom MUST extend to 260 to completely fill the lower wall and base!
+                // No artificial bottom cutoff; cavity clipPath shapes the true bottom fluid profile.
+                const Y_bottom_fill = 260;
+
+                // Divide fluid layers from surface (topmost/draining) down to bottommost (filling deep base)
+                const layerThicknesses = clampedLayers.map((l) =>
+                  (l.heightPercent / 100 / totalUnits) * (Y_deep - Y_surface)
                 );
-                const getFilledArea = (lineOffset: number) =>
-                  crossSections.reduce((area, section) => {
-                    const freeSurfaceY = slope * (section.x - CX) + lineOffset;
-                    const filledHeight = Math.max(
-                      0,
-                      Math.min(section.bottomY - Y_MIN, section.bottomY - Math.max(Y_MIN, freeSurfaceY))
-                    );
-                    return area + filledHeight * dx;
-                  }, 0);
 
-                // Solve each liquid boundary against the bottle's rounded interior, not a rectangular approximation.
-                const findC_SVG = (targetH: number) => {
-                  const targetArea = totalArea * Math.max(0, Math.min(1, targetH / totalH));
-                  let low = Y_MIN - Math.abs(slope) * W - totalH;
-                  let high = Y_MAX + Math.abs(slope) * W + totalH;
+                let currentLevel = Y_surface;
+                const gravityLayers = [];
 
-                  for (let iter = 0; iter < 18; iter++) {
-                    const mid = (low + high) * 0.5;
-                    if (getFilledArea(mid) > targetArea) {
-                      low = mid;
-                    } else {
-                      high = mid;
-                    }
-                  }
-                  return (low + high) * 0.5;
-                };
-
-                // Compute cumulative height for each layer
-                let runningH = 0;
-                const cumulativeHeights = [0];
-                for (let i = 0; i < clampedLayers.length; i++) {
-                  const nominalH = getBlockNominalHeight(i, capacity);
-                  const effectiveH = nominalH * (clampedLayers[i].heightPercent / 100);
-                  runningH += effectiveH;
-                  cumulativeHeights.push(runningH);
+                // clampedLayers: idx 0 = base layer, idx len-1 = top draining layer
+                for (let i = clampedLayers.length - 1; i >= 0; i--) {
+                  const thickness = layerThicknesses[i];
+                  const yTop = currentLevel;
+                  // The bottommost layer (i === 0) fills all the way to 260 to ensure full solid bottom
+                  const yBottom = i === 0 ? Y_bottom_fill : currentLevel + thickness;
+                  currentLevel += thickness;
+                  gravityLayers.push({
+                    layer: clampedLayers[i],
+                    lIdx: i,
+                    yTop,
+                    yBottom,
+                  });
                 }
 
-                const boundaryOffsets = cumulativeHeights.map(findC_SVG);
-                const yAtBoundary = (x: number, offset: number) =>
-                  Math.max(Y_MIN, Math.min(Y_MAX, slope * (x - CX) + offset));
+                // 2.5D Perspective Ellipse on the free surface
+                const ellipseRx = 28;
+                const ellipseRy = 7.5;
+                // Center ellipse along the liquid wedge surface
+                const ellipseCx = fluidSurfaceAngle >= 0 ? 12 : -12;
 
                 return (
-                  <>
-                    {clampedLayers.map((layer, lIdx) => {
+                  <g transform={`rotate(${-fluidSurfaceAngle}, 38.5, 14)`}>
+                    {gravityLayers.map(({ layer, lIdx, yTop, yBottom }) => {
                       const cDef = getColor(layer.colorId);
                       const isHiddenLayer = hiddenCount > 0 && lIdx < hiddenCount;
                       const isDimmed = maskHidden && lIdx === 0;
-                      const liquidFill = isHiddenLayer ? `url(#fog-grad-${index})` : `url(#tilted-grad-${cDef.id}-${index})`;
-
-                      const hPrev = cumulativeHeights[lIdx];
-                      const hCurr = cumulativeHeights[lIdx + 1];
-                      if (hCurr - hPrev <= 0.2) return null;
-
-                      const topLeft = yAtBoundary(CX - W, boundaryOffsets[lIdx + 1]);
-                      const topRight = yAtBoundary(CX + W, boundaryOffsets[lIdx + 1]);
-                      const bottomLeft = yAtBoundary(CX - W, boundaryOffsets[lIdx]);
-                      const bottomRight = yAtBoundary(CX + W, boundaryOffsets[lIdx]);
-                      const topEdge = `M 6.3 ${topLeft} L 70.3 ${topRight}`;
-                      const pathD = lIdx === 0
-                        ? `${topEdge} L 70.3 186.5 C 70.3 199.755, 59.555 210.5, 46.3 210.5 H 30.3 C 17.045 210.5, 6.3 199.755, 6.3 186.5 Z`
-                        : `${topEdge} L 70.3 ${bottomRight} L 6.3 ${bottomLeft} Z`;
-
+                      const liquidFill = isHiddenLayer ? `url(#fog-grad-${index})` : `url(#grad-${cDef.id}-${index})`;
                       const isVeryTop = (lIdx === clampedLayers.length - 1);
 
                       return (
                         <g key={`tilted-layer-${lIdx}`} opacity={isDimmed ? 0.4 : 1}>
-                          <path d={pathD} fill={liquidFill} />
-                          {/* Meniscus surface highlight along topmost free surface */}
+                          {/* Continuous solid fluid wedge in gravity space (clipped by bottle inner walls) */}
+                          <rect
+                            x={-160}
+                            y={yTop}
+                            width={380}
+                            height={Math.max(0.5, yBottom - yTop)}
+                            fill={liquidFill}
+                          />
+
+                          {/* Top Free Surface: Natural Horizontal Waterline Sheen */}
                           {isVeryTop && (
-                            <path
-                              d={topEdge}
-                              fill="none"
-                              stroke="rgba(255, 255, 255, 0.45)"
-                              strokeWidth="1.2"
+                            <line
+                              x1={-160}
+                              y1={yTop}
+                              x2={220}
+                              y2={yTop}
+                              stroke="rgba(255, 255, 255, 0.42)"
+                              strokeWidth="0.9"
                               strokeLinecap="round"
                             />
                           )}
-                          {/* Interface line between distinct color layers */}
+
+                          {/* Subtle horizontal interface between distinct stacked colors */}
                           {lIdx > 0 && clampedLayers[lIdx - 1]?.colorId !== layer.colorId && (
-                            <path
-                              d={`M 6.3 ${bottomLeft} L 70.3 ${bottomRight}`}
-                              fill="none"
-                              stroke="rgba(255, 255, 255, 0.25)"
-                              strokeWidth="0.8"
+                            <line
+                              x1={-160}
+                              y1={yTop + (layerThicknesses[lIdx] || 0)}
+                              x2={220}
+                              y2={yTop + (layerThicknesses[lIdx] || 0)}
+                              stroke="rgba(255, 255, 255, 0.22)"
+                              strokeWidth="0.6"
                             />
                           )}
                         </g>
                       );
                     })}
-
-                  </>
+                  </g>
                 );
               })()}
             </g>

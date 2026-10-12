@@ -590,11 +590,15 @@ export default function App() {
       let exactY = (toPos.row - fromPos.row) * 180 - POUR_MOUTH_GAP_Y;
       let alignForTilt = (_angle: number) => ({ x: exactX, y: exactY });
 
-      // Tilt magnitude follows how much liquid the source tube currently holds
+      // Tilt magnitude follows real physics: remaining 1/4 liquid requires bottle base to rise higher than the mouth (>90deg)
       const sourceUnits = bottles[fromIdx].layers.length;
       const tiltForUnits = (units: number) => {
         const fillRatio = Math.max(0, Math.min(1, units / TUBE_CAPACITY));
-        return 44 + (1 - fillRatio) * 38;
+        // 4 units (full) -> 58deg
+        // 2 units (half) -> 86deg
+        // 1 unit (1/4 remaining) -> 101deg (base distinctly higher than mouth!)
+        // 0 units (drained) -> 114deg (firmly tipped downward)
+        return 58 + Math.pow(1 - fillRatio, 1.15) * 56;
       };
       let tiltAngle = (isTargetRight ? 1 : -1) * tiltForUnits(sourceUnits);
 

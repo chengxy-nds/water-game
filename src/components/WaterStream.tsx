@@ -193,19 +193,31 @@ export const WaterStream: React.FC<WaterStreamProps> = ({
         ctx.lineWidth = 1.4;
         ctx.stroke();
 
-        // C. Left & Right surging foam curls (authentic liquid wave crests like Fig 2)
-        const leftCurlX = xImp - moundW * 0.7;
-        const rightCurlX = xImp + moundW * 0.7;
-        const waveSway = Math.sin(phase * 3.8) * 1.5;
+        // C. Left & Right bouncing liquid pearls (authentic droplet pearls with specular glint)
+        const leftPearlX = xImp - moundW * 0.72;
+        const rightPearlX = xImp + moundW * 0.72;
+        const waveSway = Math.sin(phase * 3.6) * 1.2;
 
+        // Left water droplet pearl
         ctx.beginPath();
-        ctx.arc(leftCurlX, yImp - 3 + waveSway, 3.2, 0, Math.PI * 2);
+        ctx.arc(leftPearlX, yImp - 2.8 + waveSway, 3.6, 0, Math.PI * 2);
         ctx.fillStyle = topHex;
         ctx.fill();
-
+        // Left pearl specular glint
         ctx.beginPath();
-        ctx.arc(rightCurlX, yImp - 2.5 - waveSway, 2.8, 0, Math.PI * 2);
+        ctx.arc(leftPearlX - 1.0, yImp - 3.8 + waveSway, 0.9, 0, Math.PI * 2);
+        ctx.fillStyle = '#ffffff';
+        ctx.fill();
+
+        // Right water droplet pearl
+        ctx.beginPath();
+        ctx.arc(rightPearlX, yImp - 2.4 - waveSway, 3.0, 0, Math.PI * 2);
         ctx.fillStyle = topHex;
+        ctx.fill();
+        // Right pearl specular glint
+        ctx.beginPath();
+        ctx.arc(rightPearlX - 0.8, yImp - 3.2 - waveSway, 0.8, 0, Math.PI * 2);
+        ctx.fillStyle = '#ffffff';
         ctx.fill();
 
         // D. Floating frothy micro-bubbles around impact center

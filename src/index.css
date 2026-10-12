@@ -467,3 +467,158 @@
   background: rgba(56, 189, 248, 0.3);
   border-radius: 4px;
 }
+
+/* Victory screen: soft blue jelly glass, scoped to the settlement modal. */
+.win-overlay {
+  overflow-y: auto;
+  background:
+    radial-gradient(ellipse at 50% 28%, rgba(128, 190, 255, 0.38), transparent 58%),
+    linear-gradient(145deg, rgba(91, 142, 205, 0.34), rgba(10, 24, 63, 0.78));
+  backdrop-filter: blur(12px) saturate(1.18);
+  -webkit-backdrop-filter: blur(12px) saturate(1.18);
+}
+
+.win-card {
+  isolation: isolate;
+  color: #f8fbff;
+  background:
+    linear-gradient(145deg, rgba(242, 249, 255, 0.3), rgba(207, 229, 255, 0.12) 42%, rgba(134, 178, 231, 0.18)),
+    rgba(220, 237, 255, 0.13);
+  border: 1px solid rgba(239, 248, 255, 0.72);
+  box-shadow:
+    0 26px 80px rgba(1, 12, 42, 0.48),
+    0 5px 24px rgba(116, 190, 255, 0.2),
+    inset 0 2px 3px rgba(255, 255, 255, 0.72),
+    inset 0 -12px 24px rgba(127, 181, 245, 0.12);
+  backdrop-filter: blur(28px) saturate(1.4);
+  -webkit-backdrop-filter: blur(28px) saturate(1.4);
+  animation: win-card-enter 460ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.win-card::before {
+  position: absolute;
+  z-index: -1;
+  inset: 1px;
+  border-radius: inherit;
+  content: '';
+  pointer-events: none;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.24), transparent 30%, transparent 70%, rgba(141, 198, 255, 0.12));
+}
+
+.win-card-glint {
+  position: absolute;
+  top: 7px;
+  left: 8%;
+  right: 8%;
+  height: 34px;
+  border-radius: 28px 28px 50% 50%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.38), rgba(255, 255, 255, 0));
+  filter: blur(1px);
+  pointer-events: none;
+}
+
+.win-ambient-glow {
+  position: absolute;
+  z-index: -1;
+  top: -100px;
+  left: 50%;
+  width: 240px;
+  height: 240px;
+  border-radius: 50%;
+  transform: translateX(-50%);
+  background: radial-gradient(circle, rgba(255, 216, 124, 0.34), rgba(255, 216, 124, 0) 70%);
+  filter: blur(12px);
+  pointer-events: none;
+}
+
+.win-trophy-badge {
+  color: #fff9db;
+  background: linear-gradient(145deg, #ffe99c 0%, #ffc843 42%, #f3a91e 100%);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow:
+    0 9px 26px rgba(244, 176, 31, 0.4),
+    inset 0 2px 3px rgba(255, 255, 255, 0.92),
+    inset 0 -4px 9px rgba(174, 99, 0, 0.18);
+}
+
+.win-passed {
+  color: white;
+  background: linear-gradient(180deg, #51d7de, #16a6c5);
+  border: 2px solid rgba(230, 255, 255, 0.9);
+  box-shadow: 0 3px 12px rgba(21, 196, 220, 0.38), inset 0 1px 2px rgba(255, 255, 255, 0.65);
+}
+
+.win-title { color: #fff; text-shadow: 0 2px 9px rgba(35, 76, 130, 0.36); }
+.win-subtitle { color: rgba(242, 248, 255, 0.88); text-shadow: 0 1px 5px rgba(17, 53, 106, 0.3); }
+.win-star { filter: drop-shadow(0 2px 5px rgba(55, 87, 141, 0.24)); }
+
+.win-stats {
+  background: linear-gradient(135deg, rgba(247, 251, 255, 0.2), rgba(198, 222, 255, 0.12));
+  border: 1px solid rgba(239, 248, 255, 0.64);
+  box-shadow: 0 8px 22px rgba(19, 52, 102, 0.14), inset 0 1px 2px rgba(255, 255, 255, 0.7), inset 0 -2px 6px rgba(179, 217, 255, 0.12);
+}
+
+.win-stat-cell { border-left: 1px solid rgba(239, 248, 255, 0.55); border-right: 1px solid rgba(239, 248, 255, 0.55); }
+.win-stat-label { color: rgba(239, 247, 255, 0.82); }
+.win-stat-value { color: #fff; text-shadow: 0 2px 8px rgba(31, 68, 118, 0.3); }
+.win-stat-optimal { color: #75f0f5; text-shadow: 0 2px 10px rgba(23, 220, 239, 0.24); }
+.win-stat-diff { color: #ffdc73; text-shadow: 0 2px 9px rgba(255, 192, 45, 0.24); }
+.win-stat-diff.is-perfect { color: #9df3c6; }
+.win-stat-diff.is-close { color: #ffe18b; }
+.win-comment { min-height: 18px; text-shadow: 0 1px 5px rgba(28, 61, 105, 0.32); }
+.win-comment-perfect { color: #ffe07e; }
+.win-comment-good { color: #c7f6ff; }
+.win-comment-keepgoing { color: rgba(242, 248, 255, 0.9); }
+
+.win-primary-button {
+  color: #fff;
+  background: linear-gradient(180deg, #65dfff 0%, #27b7f5 42%, #1681ec 100%);
+  border: 1.5px solid rgba(231, 251, 255, 0.94);
+  box-shadow: 0 8px 22px rgba(14, 137, 238, 0.34), inset 0 2px 3px rgba(255, 255, 255, 0.82), inset 0 -4px 8px rgba(13, 64, 174, 0.28);
+  text-shadow: 0 1px 3px rgba(12, 75, 151, 0.32);
+}
+
+.win-primary-button::before {
+  position: absolute;
+  top: 5px;
+  left: 5%;
+  right: 5%;
+  height: 38%;
+  border-radius: 999px;
+  content: '';
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.54), rgba(255, 255, 255, 0));
+  pointer-events: none;
+}
+
+.win-primary-button:hover { filter: brightness(1.08); transform: translateY(-1px); }
+.win-primary-button:active { filter: brightness(0.98); transform: scale(0.98); }
+.win-primary-button:focus-visible, .win-secondary-button:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+
+.win-secondary-button {
+  color: rgba(248, 252, 255, 0.98);
+  background: linear-gradient(145deg, rgba(250, 253, 255, 0.2), rgba(196, 220, 255, 0.11));
+  border: 1px solid rgba(241, 249, 255, 0.67);
+  box-shadow: 0 4px 14px rgba(17, 48, 98, 0.14), inset 0 1.5px 2px rgba(255, 255, 255, 0.62), inset 0 -2px 5px rgba(170, 207, 255, 0.12);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.win-secondary-button:hover { background-color: rgba(235, 246, 255, 0.15); filter: brightness(1.1); }
+
+@keyframes win-card-enter {
+  from { opacity: 0; transform: translateY(12px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (max-height: 650px) {
+  .win-overlay { align-items: flex-start; }
+  .win-card { margin: auto 0; padding: 18px; transform: scale(0.94); }
+  .win-trophy-wrap { margin-bottom: 8px; }
+  .win-trophy-badge { width: 64px; height: 64px; }
+  .win-trophy-badge svg { width: 32px; height: 32px; }
+  .win-star svg { width: 28px; height: 28px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .win-card { animation: none; }
+}
