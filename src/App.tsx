@@ -7,7 +7,7 @@ import {
   executeLeak,
   canLeak,
   isPuzzleSolved,
-  isBottleComplete,
+  isBottleReadyToCollect,
   solveWaterSort,
   hasAnyLegalMove,
   TUBE_CAPACITY,
@@ -18,6 +18,7 @@ import { soundManager } from './utils/audio';
 import { GameHeader } from './components/GameHeader';
 import { ShoppingBags } from './components/ShoppingBags';
 import { GameBoard, CompletionAnimationState, LeakAnimationState, getRowDistribution } from './components/GameBoard';
+import { getBottleMouthPoint, getBottlePourSpoutPoint } from './components/TestTube';
 import { ControlBar } from './components/ControlBar';
 import { WinModal } from './components/WinModal';
 import { LevelSelectorModal } from './components/LevelSelectorModal';
@@ -34,6 +35,16 @@ import { QuickDemo } from './components/QuickDemo';
 const STATS_STORAGE_KEY = 'water_sort_player_stats_v1';
 const PREFS_STORAGE_KEY = 'water_sort_preferences_v1';
 const MECHANIC_TUTORIAL_KEY = 'water_sort_mechanics_seen_v1';
+const POUR_MOUTH_GAP_PX = 18;
+
+interface GameSnapshot {
+  bottles: Bottle[];
+  activeBagColors: (string | null)[];
+  pendingBagColors: string[];
+  collectedTubeIndices: number[];
+  collectedColors: string[];
+  unlockedBonusColor: string | null;
+}
 
 const MECHANIC_INTRO: Record<'normal' | 'masked' | 'hidden' | 'bottom_leak', MechanicIntroData> = {
   normal: {
@@ -103,23 +114,42 @@ const detectLevelMechanics = (lvl: Level): Array<keyof typeof MECHANIC_INTRO> =>
   return found;
 };
 
-// 提取关卡所有液体颜色，左边3个袋子随机抽取目标色，超出3个放入待补充队列
-const initBagPool = (lvl: Level) => {
+const getVisibleBottleColors = (bottles: Bottle[]) => {
   const allColors: string[] = [];
-  lvl.bottles.forEach((b) => {
-    b.layers.forEach((c) => {
+  bottles.forEach((b) => {
+    const firstVisibleLayer = b.type === 'hidden' ? Math.min(b.layers.length, b.hiddenBottomLayers ?? 0) : 0;
+    b.layers.slice(firstVisibleLayer).forEach((c) => {
       if (!allColors.includes(c)) allColors.push(c);
     });
   });
-  // 随机打乱
-  const shuffled = [...allColors].sort(() => Math.random() - 0.5);
+  return allColors;
+};
+
+const initBagPool = (lvl: Level) => {
+  const visibleColors = getVisibleBottleColors(lvl.bottles);
   const active: (string | null)[] = [
-    shuffled[0] || null,
-    shuffled[1] || null,
-    shuffled[2] || null,
+    visibleColors[0] || null,
+    visibleColors[1] || null,
+    visibleColors[2] || null,
   ];
-  const pending = shuffled.slice(3);
+  const pending = visibleColors.slice(3);
   return { active, pending };
+};
+
+const getNewlyRevealedHiddenColors = (before: Bottle[], after: Bottle[]) => {
+  const revealed: string[] = [];
+  after.forEach((bottle) => {
+    if (bottle.type !== 'hidden') return;
+    const previous = before.find((item) => item.id === bottle.id);
+    if (!previous || previous.type !== 'hidden') return;
+    const oldHidden = Math.min(previous.layers.length, previous.hiddenBottomLayers ?? 0);
+    const newHidden = Math.min(bottle.layers.length, bottle.hiddenBottomLayers ?? 0);
+    for (let layerIdx = newHidden; layerIdx < oldHidden; layerIdx++) {
+      const color = bottle.layers[layerIdx];
+      if (color && !revealed.includes(color)) revealed.push(color);
+    }
+  });
+  return revealed;
 };
 
 export default function App() {
@@ -131,7 +161,7 @@ export default function App() {
   const [levelEntryId, setLevelEntryId] = useState(0);
 
   // History for Undo
-  const [history, setHistory] = useState<Bottle[][]>([]);
+  const [history, setHistory] = useState<GameSnapshot[]>([]);
   const [movesCount, setMovesCount] = useState<number>(0);
   const [extraTubesAdded, setExtraTubesAdded] = useState<number>(0);
 
@@ -165,6 +195,36 @@ export default function App() {
   const [collectedTubeIndices, setCollectedTubeIndices] = useState<number[]>([]);
   const [activeGulpColor, setActiveGulpColor] = useState<string | null>(null);
   const [collectedColors, setCollectedColors] = useState<Set<string>>(new Set());
+
+  const captureGameSnapshot = useCallback((): GameSnapshot => ({
+    bottles: bottles.map((bottle) => ({ ...bottle, layers: [...bottle.layers] })),
+    activeBagColors: [...activeBagColors],
+    pendingBagColors: [...pendingBagColors],
+    collectedTubeIndices: [...collectedTubeIndices],
+    collectedColors: [...collectedColors],
+    unlockedBonusColor,
+  }), [bottles, activeBagColors, pendingBagColors, collectedTubeIndices, collectedColors, unlockedBonusColor]);
+
+  const registerRevealedHiddenColors = useCallback((before: Bottle[], after: Bottle[]) => {
+    const colors = getNewlyRevealedHiddenColors(before, after);
+    if (colors.length === 0) return;
+
+    const nextActive = [...activeBagColors];
+    const deferred: string[] = [];
+    for (const color of colors) {
+      if (nextActive.includes(color) || pendingBagColors.includes(color) || collectedColors.has(color)) continue;
+      const emptySlot = nextActive.findIndex((slot) => !slot);
+      if (emptySlot >= 0) nextActive[emptySlot] = color;
+      else deferred.push(color);
+    }
+    setActiveBagColors(nextActive);
+    if (deferred.length > 0) {
+      setPendingBagColors((previousPending) => {
+        const known = new Set([...previousPending, ...nextActive.filter(Boolean), ...collectedColors]);
+        return [...previousPending, ...deferred.filter((color) => !known.has(color))];
+      });
+    }
+  }, [activeBagColors, pendingBagColors, collectedColors]);
 
   const pourRafRef = useRef<number | null>(null);
 
@@ -306,13 +366,20 @@ export default function App() {
   const calculateFlyVector = useCallback((tubeIdx: number, colorId: string) => {
     const tubeEl = document.getElementById(`tube-slot-${tubeIdx}`);
     const bagEl = document.getElementById(`shopping-bag-${colorId}`);
-    if (tubeEl && bagEl) {
+    const bagImage = bagEl?.querySelector<HTMLImageElement>('[data-bag-art]');
+    if (tubeEl && bagEl && bagImage?.naturalWidth && bagImage.naturalHeight) {
       const tubeRect = tubeEl.getBoundingClientRect();
-      const bagRect = bagEl.getBoundingClientRect();
-      const targetX = bagRect.left + bagRect.width * 0.5;
-      const targetY = bagRect.top + bagRect.height * 0.55;
+      const imageRect = bagImage.getBoundingClientRect();
+      const imageScale = Math.min(
+        imageRect.width / bagImage.naturalWidth,
+        imageRect.height / bagImage.naturalHeight
+      );
+      const renderedHeight = bagImage.naturalHeight * imageScale;
+      const imageTop = imageRect.top + (imageRect.height - renderedHeight) / 2;
+      const targetX = imageRect.left + imageRect.width / 2;
+      const targetY = imageTop + renderedHeight * 0.29;
       const curX = tubeRect.left + tubeRect.width * 0.5;
-      const curY = tubeRect.top + tubeRect.height * 0.5;
+      const curY = tubeRect.bottom;
       return {
         flyX: targetX - curX,
         flyY: targetY - curY,
@@ -520,38 +587,48 @@ export default function App() {
       let exactX = (toPos.col - fromPos.col) * 65;
       let exactY = (toPos.row - fromPos.row) * 180 - 20;
       let isTargetRight = toPos.col >= fromPos.col;
+      let alignForTilt = (_angle: number) => ({ x: exactX, y: exactY });
 
       // Tilt magnitude follows how much liquid the source tube currently holds
       const sourceUnits = bottles[fromIdx].layers.length;
       const tiltForUnits = (units: number) => {
-        const u = Math.max(1, Math.min(4, Math.round(units)));
-        const baseAngles: Record<number, number> = {
-          4: 55,
-          3: 66,
-          2: 76,
-          1: 86,
-        };
-        return baseAngles[u] || 75;
+        const fillRatio = Math.max(0, Math.min(1, units / TUBE_CAPACITY));
+        return 38 + (1 - fillRatio) * 22;
       };
       let tiltAngle = (isTargetRight ? 1 : -1) * tiltForUnits(sourceUnits);
 
       if (sSlot && tSlot) {
-        const sBox = sSlot.getBoundingClientRect();
-        const tBox = tSlot.getBoundingClientRect();
-
-        const sScaleY = sBox.height / 150;
-        const tScaleY = tBox.height / 150;
-        const sMouthX = sBox.left + sBox.width * 0.5;
-        const sMouthY = sBox.top + 9 * sScaleY;
-        const tMouthX = tBox.left + tBox.width * 0.5;
-        const tMouthY = tBox.top + 9 * tScaleY;
-
-        isTargetRight = tMouthX >= sMouthX;
-        tiltAngle = (isTargetRight ? 1 : -1) * tiltForUnits(sourceUnits);
-
-        // Align the pouring mouth lip directly over target bottle mouth center.
-        exactX = (tMouthX - sMouthX) - (isTargetRight ? 4.0 : -4.0);
-        exactY = (tMouthY - sMouthY) - 18.5;
+        const sourceSvg = sSlot.querySelector<SVGSVGElement>('svg');
+        const targetSvg = tSlot.querySelector<SVGSVGElement>('svg');
+        const sourceMatrix = sourceSvg?.getScreenCTM();
+        const targetMatrix = targetSvg?.getScreenCTM();
+        const mouth = getBottleMouthPoint();
+        if (sourceSvg && targetSvg && sourceMatrix && targetMatrix) {
+          const toScreen = (svg: SVGSVGElement, x: number, y: number, matrix: DOMMatrix) => {
+            const point = svg.createSVGPoint();
+            point.x = x;
+            point.y = y;
+            return point.matrixTransform(matrix);
+          };
+          const sourcePivot = toScreen(sourceSvg, mouth.x, mouth.y, sourceMatrix);
+          const targetMouth = toScreen(targetSvg, mouth.x, mouth.y, targetMatrix);
+          isTargetRight = targetMouth.x >= sourcePivot.x;
+          tiltAngle = (isTargetRight ? 1 : -1) * tiltForUnits(sourceUnits);
+          alignForTilt = (angleDegrees: number) => {
+            const spout = getBottlePourSpoutPoint(angleDegrees);
+            const spoutScreen = toScreen(sourceSvg, spout.x, spout.y, sourceMatrix);
+            const vectorX = spoutScreen.x - sourcePivot.x;
+            const vectorY = spoutScreen.y - sourcePivot.y;
+            const angle = (angleDegrees * Math.PI) / 180;
+            const rotatedX = vectorX * Math.cos(angle) - vectorY * Math.sin(angle);
+            const rotatedY = vectorX * Math.sin(angle) + vectorY * Math.cos(angle);
+            return {
+              x: targetMouth.x - sourcePivot.x - rotatedX,
+              y: targetMouth.y - POUR_MOUTH_GAP_PX - sourcePivot.y - rotatedY,
+            };
+          };
+          ({ x: exactX, y: exactY } = alignForTilt(tiltAngle));
+        }
       }
 
       // Phase 1: Fly and align above target tube lip
@@ -574,6 +651,32 @@ export default function App() {
       setTimeout(() => {
         const streamStartTime = performance.now();
         const pourDuration = 1000; // ms for continuous fluid transfer
+        let alignedTranslateX = exactX;
+        let alignedTranslateY = exactY;
+        let settleFrames = 0;
+
+        const measureSpoutCorrection = (angle: number) => {
+          const sourceSvg = document.querySelector<SVGSVGElement>(`#tube-slot-${fromIdx} svg`);
+          const targetSvg = document.querySelector<SVGSVGElement>(`#tube-slot-${toIdx} svg`);
+          const sourceMatrix = sourceSvg?.getScreenCTM();
+          const targetMatrix = targetSvg?.getScreenCTM();
+          if (!sourceSvg || !targetSvg || !sourceMatrix || !targetMatrix) return null;
+
+          const sourcePoint = sourceSvg.createSVGPoint();
+          const sourceSpout = getBottlePourSpoutPoint(angle);
+          sourcePoint.x = sourceSpout.x;
+          sourcePoint.y = sourceSpout.y;
+          const sourceScreen = sourcePoint.matrixTransform(sourceMatrix);
+
+          const targetPoint = targetSvg.createSVGPoint();
+          targetPoint.x = getBottleMouthPoint().x;
+          targetPoint.y = getBottleMouthPoint().y;
+          const targetScreen = targetPoint.matrixTransform(targetMatrix);
+          return {
+            x: targetScreen.x - sourceScreen.x,
+            y: targetScreen.y - POUR_MOUTH_GAP_PX - sourceScreen.y,
+          };
+        };
 
         setPourAnimation({
           sourceIndex: fromIdx,
@@ -604,6 +707,11 @@ export default function App() {
           // Keep tipping the bottle up as it drains (less water → higher tilt).
           const remainingUnits = sourceUnits - currentAmount;
           const currentTilt = (isTargetRight ? 1 : -1) * tiltForUnits(remainingUnits);
+          const spoutCorrection = measureSpoutCorrection(currentTilt);
+          if (spoutCorrection) {
+            alignedTranslateX += spoutCorrection.x;
+            alignedTranslateY += spoutCorrection.y;
+          }
 
           setPourAnimation((prev) => {
             if (!prev || prev.phase !== 'pouring') return prev;
@@ -612,10 +720,13 @@ export default function App() {
               drainCount: currentAmount,
               riseCount: currentAmount,
               tiltAngle: currentTilt,
+              translateX: alignedTranslateX,
+              translateY: alignedTranslateY,
             };
           });
 
-          if (progress < 1) {
+          if (progress >= 1) settleFrames += 1;
+          if (progress < 1 || settleFrames < 2) {
             pourRafRef.current = requestAnimationFrame(animatePourStream);
           }
         };
@@ -632,14 +743,14 @@ export default function App() {
         const result = executePour(bottles, fromIdx, toIdx, TUBE_CAPACITY);
         if (result) {
           const finalMoves = movesCount + 1;
-          setHistory((prev) => [...prev, bottles.map((b) => ({ ...b, layers: [...b.layers] }))]);
+          setHistory((prev) => [...prev, captureGameSnapshot()]);
+          registerRevealedHiddenColors(bottles, result.newBottles);
           setBottles(result.newBottles);
           setMovesCount(finalMoves);
 
-          const isTargetComplete = isBottleComplete(result.newBottles[toIdx], TUBE_CAPACITY);
           const isPuzzleComplete = isPuzzleSolved(result.newBottles, TUBE_CAPACITY);
 
-          if (isTargetComplete) {
+          if (isBottleReadyToCollect(result.newBottles[toIdx], TUBE_CAPACITY)) {
             const completedColor = result.newBottles[toIdx].layers[0];
             handleBottleCompleted(toIdx, completedColor, isPuzzleComplete, finalMoves, result.newBottles);
           } else {
@@ -681,7 +792,7 @@ export default function App() {
 
       return true;
     },
-    [bottles, soundEnabled, vibrateEnabled, movesCount, handleBottleCompleted, triggerWinCelebration]
+    [bottles, soundEnabled, vibrateEnabled, movesCount, handleBottleCompleted, triggerWinCelebration, registerRevealedHiddenColors, captureGameSnapshot]
   );
 
   const performLeak = useCallback(
@@ -701,14 +812,13 @@ export default function App() {
         if (!result) return;
 
         const finalMoves = movesCount + 1;
-        setHistory((prev) => [...prev, bottles.map((b) => ({ ...b, layers: [...b.layers] }))]);
+        setHistory((prev) => [...prev, captureGameSnapshot()]);
         setBottles(result.newBottles);
         setMovesCount(finalMoves);
 
-        const isTargetComplete = isBottleComplete(result.newBottles[targetIdx], TUBE_CAPACITY);
         const isPuzzleComplete = isPuzzleSolved(result.newBottles, TUBE_CAPACITY);
 
-        if (isTargetComplete) {
+        if (isBottleReadyToCollect(result.newBottles[targetIdx], TUBE_CAPACITY)) {
           const completedColor = result.newBottles[targetIdx].layers[0];
           handleBottleCompleted(targetIdx, completedColor, isPuzzleComplete, finalMoves, result.newBottles);
         } else {
@@ -725,7 +835,7 @@ export default function App() {
 
       return true;
     },
-    [bottles, soundEnabled, vibrateEnabled, movesCount, handleBottleCompleted, triggerWinCelebration]
+    [bottles, soundEnabled, vibrateEnabled, movesCount, handleBottleCompleted, triggerWinCelebration, captureGameSnapshot]
   );
 
   const triggerInvalidFeedback = useCallback(
@@ -814,7 +924,7 @@ export default function App() {
     if (history.length === 0 || isAutoSolving || !!completionAnimation || liftingSlotIndex !== null) return;
     const previousState = history[history.length - 1];
     setHistory((h) => h.slice(0, h.length - 1));
-    setBottles(previousState);
+    setBottles(previousState.bottles);
     setMovesCount((m) => Math.max(0, m - 1));
     setSelectedIndex(null);
     setHint(null);
@@ -827,16 +937,11 @@ export default function App() {
     setActiveGulpColor(null);
 
     // Sync collected colors & tube indices with restored state
-    const restoredIndices: number[] = [];
-    const restoredColors = new Set<string>();
-    previousState.forEach((b, idx) => {
-      if (isBottleComplete(b, TUBE_CAPACITY)) {
-        restoredIndices.push(idx);
-        restoredColors.add(b.layers[0]);
-      }
-    });
-    setCollectedTubeIndices(restoredIndices);
-    setCollectedColors(restoredColors);
+    setActiveBagColors(previousState.activeBagColors);
+    setPendingBagColors(previousState.pendingBagColors);
+    setCollectedTubeIndices(previousState.collectedTubeIndices);
+    setCollectedColors(new Set(previousState.collectedColors));
+    setUnlockedBonusColor(previousState.unlockedBonusColor);
 
     if (soundEnabled) soundManager.playUndo();
     if (vibrateEnabled) soundManager.vibrate(15);
@@ -850,7 +955,8 @@ export default function App() {
     const poolOfLiquids: string[] = [];
 
     bottles.forEach((bottle, idx) => {
-      if (!isBottleComplete(bottle, TUBE_CAPACITY)) {
+      const canShuffle = bottle.type === 'normal' || bottle.type === 'empty' || bottle.type === 'masked';
+      if (canShuffle && !isBottleReadyToCollect(bottle, TUBE_CAPACITY)) {
         unfinishedIndices.push(idx);
         poolOfLiquids.push(...bottle.layers);
       }
@@ -873,7 +979,7 @@ export default function App() {
       ptr += origCount;
     });
 
-    setHistory((prev) => [...prev, bottles.map((b) => ({ ...b, layers: [...b.layers] }))]);
+    setHistory((prev) => [...prev, captureGameSnapshot()]);
     setBottles(newBottles);
     setSelectedIndex(null);
     setHint(null);
@@ -922,7 +1028,7 @@ export default function App() {
         chosenColor = pendingBagColors[0];
         setPendingBagColors((prev) => prev.slice(1));
       } else {
-        const levelColors = Array.from(new Set(currentLevel.bottles.flatMap((b) => b.layers)));
+        const levelColors = getVisibleBottleColors(bottles);
         const uncollected = levelColors.filter((c) => !collectedColors.has(c));
         chosenColor = uncollected.length > 0 ? uncollected[0] : (levelColors[0] || 'yellow');
       }

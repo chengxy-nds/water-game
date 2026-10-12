@@ -265,24 +265,24 @@ export function executeLeak(
 }
 
 /**
- * Canonical state key. Normal/empty bottles are sorted (interchangeable);
- * special bottles (masked/hidden/bottom_leak) stay in their fixed positions.
+ * Canonical state key. Only normal/empty bottles are interchangeable; special
+ * bottles keep their fixed positions and include their mechanic state.
  */
 function bottleSignature(b: Bottle): string {
-  if (b.layers.length === 0) return 'E';
-  // Hidden bottles carry their fog depth; all other bottle types are solver-equivalent
-  // (masked ≡ normal since the cloth never gates a move), so their signature omits type.
-  const h = b.type === 'hidden' ? `:h${b.hiddenBottomLayers ?? 0}` : '';
-  return `${b.layers.join(',')}${h}`;
+  const layers = b.layers.length === 0 ? 'E' : b.layers.join(',');
+  if (b.type === 'hidden') return `${layers}:h${b.hiddenBottomLayers ?? 0}`;
+  if (b.type === 'masked') return `${layers}:m${b.maskRevealed ? 1 : 0}`;
+  if (b.type === 'bottom_leak') return `${layers}:l`;
+  return layers;
 }
 
-const NORMAL_PLACEHOLDER = ''; // printable sentinel marking a sortable normal/empty/masked slot
+const NORMAL_PLACEHOLDER = '__NORMAL_BOTTLE_SLOT__';
 
 function getCanonicalKey(bottles: Bottle[]): string {
   const sortableSigs: string[] = [];
   const parts: string[] = [];
   for (const b of bottles) {
-    if (b.type === 'normal' || b.type === 'empty' || b.type === 'masked') {
+    if (b.type === 'normal' || b.type === 'empty') {
       sortableSigs.push(bottleSignature(b));
       parts.push(NORMAL_PLACEHOLDER);
     } else {

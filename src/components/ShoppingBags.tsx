@@ -16,46 +16,10 @@ export const COLOR_BAG_MAP: Record<string, string> = {
   amber: '/assets_figma/bag_yellow.png',
 };
 
-// 拟态可爱卡通手部 SVG 组件：自上方伸出，指节自然扣紧购物袋纸绳把手
-const HandGrabber: React.FC = () => (
-  <div className="absolute -top-7 left-1/2 -translate-x-1/2 pointer-events-none z-50 anim-hand-grab filter drop-shadow-[0_4px_10px_rgba(0,0,0,0.5)]">
-    <svg width="56" height="56" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
-      {/* 休闲天蓝色短袖口 */}
-      <rect x="20" y="0" width="16" height="8" rx="3" fill="#38BDF8" stroke="#0284C7" strokeWidth="1" />
-      {/* 露出手腕 */}
-      <path d="M22 7 L34 7 L35 18 L21 18 Z" fill="#FDE68A" />
-      {/* 手背与掌部 */}
-      <path
-        d="M18 16 C18 12 38 12 38 16 C41 22 40 28 36 32 C32 35 24 35 20 32 C17 28 17 22 18 16 Z"
-        fill="#FDE68A"
-        stroke="#D97706"
-        strokeWidth="1"
-      />
-      {/* 4 个可爱的抓提手弯曲手指，自然扣在提手绳上 */}
-      <circle cx="21" cy="30" r="4" fill="#F59E0B" stroke="#B45309" strokeWidth="0.8" />
-      <circle cx="26" cy="32" r="4.2" fill="#F59E0B" stroke="#B45309" strokeWidth="0.8" />
-      <circle cx="31" cy="31" r="4.2" fill="#F59E0B" stroke="#B45309" strokeWidth="0.8" />
-      <circle cx="36" cy="29" r="3.8" fill="#F59E0B" stroke="#B45309" strokeWidth="0.8" />
-      {/* 指腹高光 */}
-      <ellipse cx="21" cy="31" rx="1.5" ry="1" fill="#FEF3C7" opacity="0.8" />
-      <ellipse cx="26" cy="33" rx="1.6" ry="1.1" fill="#FEF3C7" opacity="0.8" />
-      <ellipse cx="31" cy="32" rx="1.6" ry="1.1" fill="#FEF3C7" opacity="0.8" />
-      <ellipse cx="36" cy="30" rx="1.4" ry="0.9" fill="#FEF3C7" opacity="0.8" />
-      {/* 大拇指侧面扣压 */}
-      <path
-        d="M16 23 C14 25 15 29 19 30 C21 30 22 28 21 25 C20 23 18 22 16 23 Z"
-        fill="#FDE68A"
-        stroke="#D97706"
-        strokeWidth="0.8"
-      />
-    </svg>
-  </div>
-);
-
 export interface ShoppingBagsProps {
   // 左侧最多 3 个当前正在展示的颜色（null 表示已收集完毕且无后续补充）
   activeBagColors: (string | null)[];
-  // 当前正在被手拎走的槽位索引 (0, 1, 2)
+  // 当前正在自动升空离场的槽位索引 (0, 1, 2)
   liftingSlotIndex?: number | null;
   // 当前正在从上方掉落弹入补位的槽位索引 (0, 1, 2)
   replenishingSlotIndex?: number | null;
@@ -138,14 +102,14 @@ export const ShoppingBags: React.FC<ShoppingBagsProps> = ({
                 : 'filter drop-shadow-[0_6px_12px_rgba(0,0,0,0.45)]'
             }`}
           >
-            {/* 当该袋子被手拎走时，手部伸出抓握提手 */}
-            {isLifting && <HandGrabber />}
+            {isLifting && <span className="bag-lift-glint absolute left-1/2 top-[24%] -translate-x-1/2 z-10 pointer-events-none" />}
 
             <div className="relative w-[68px] sm:w-[74px] h-[132px] sm:h-[144px]">
               <img
                 src={bagImg}
                 alt={`购物袋-${colorId}`}
                 className="w-full h-full object-contain pointer-events-none"
+                data-bag-art
                 draggable={false}
               />
 
@@ -184,12 +148,13 @@ export const ShoppingBags: React.FC<ShoppingBagsProps> = ({
         onClick={!bonusUnlocked ? onUnlockBonus : undefined}
         title={!bonusUnlocked ? '看视频解锁颜色与空瓶' : `已解锁: ${unlockedBonusColor || '奖励袋'}`}
       >
-        {isBonusLifting && <HandGrabber />}
+        {isBonusLifting && <span className="bag-lift-glint absolute left-1/2 top-[24%] -translate-x-1/2 z-10 pointer-events-none" />}
 
         <div className="relative w-[68px] sm:w-[74px] h-[132px] sm:h-[144px]">
           <img
             src={bonusBagImg}
             alt={unlockedBonusColor ? `已解锁购物袋-${unlockedBonusColor}` : '看视频解锁购物袋'}
+            data-bag-art
             className={`w-full h-full object-contain pointer-events-none ${
               bonusUnlocked && unlockedBonusColor ? 'anim-bag-drop-in' : ''
             }`}

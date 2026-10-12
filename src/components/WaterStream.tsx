@@ -6,6 +6,7 @@ interface WaterStreamProps {
   toPos: { x: number; y: number } | null;
   colorId: string;
   active: boolean;
+  showSplash?: boolean;
 }
 
 export const WaterStream: React.FC<WaterStreamProps> = ({
@@ -13,6 +14,7 @@ export const WaterStream: React.FC<WaterStreamProps> = ({
   toPos,
   colorId,
   active,
+  showSplash = true,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const animFrameRef = useRef<number | null>(null);
@@ -70,13 +72,16 @@ export const WaterStream: React.FC<WaterStreamProps> = ({
       const x2 = currentTo.x;
       const y2 = currentTo.y;
       const dx = x2 - x1;
-      const dy = Math.max(22, y2 - y1);
-      const sway = Math.sin(phase * 2) * Math.min(12, Math.abs(dx) * 0.05 + 2.8);
+      const dy = y2 - y1;
+      const curveSide = dx === 0 ? 1 : Math.sign(dx);
+      const curveAmount = Math.max(8, Math.min(20, Math.abs(dy) * 0.1));
+      const sway = Math.sin(phase * 2) * Math.min(8, Math.abs(dx) * 0.05 + 2.8);
+      const gravityBend = Math.max(0, Math.min(18, dy * 0.08));
 
-      const cp1x = x1 + dx * 0.2 + sway;
-      const cp1y = y1 + dy * 0.26;
-      const cp2x = x1 + dx * 0.82 - sway * 0.7;
-      const cp2y = y1 + dy * 0.58;
+      const cp1x = x1 + dx * 0.28 + curveSide * curveAmount + sway;
+      const cp1y = y1 + dy * 0.16 + gravityBend * 0.25;
+      const cp2x = x2;
+      const cp2y = y1 + dy * 0.78;
 
       const streamPath = new Path2D();
       streamPath.moveTo(x1, y1);
@@ -99,23 +104,25 @@ export const WaterStream: React.FC<WaterStreamProps> = ({
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
 
-      ctx.shadowBlur = 28;
+      ctx.shadowBlur = 16;
       ctx.shadowColor = mainHex;
-      ctx.lineWidth = 18;
+      ctx.lineWidth = 8;
       ctx.strokeStyle = glowHex;
       ctx.stroke(streamPath);
 
-      ctx.shadowBlur = 18;
-      ctx.lineWidth = 12;
+      ctx.shadowBlur = 8;
+      ctx.lineWidth = 4.2;
       ctx.strokeStyle = mainHex;
       ctx.stroke(streamPath);
 
       ctx.shadowBlur = 0;
-      ctx.lineWidth = 5.2;
+      ctx.lineWidth = 1.6;
       ctx.strokeStyle = topHex;
       ctx.stroke(streamPath);
 
-      for (let i = 0; i < 4; i += 1) {
+      const streamLength = Math.hypot(dx, dy);
+      const highlightCount = streamLength < 36 ? 1 : 4;
+      for (let i = 0; i < highlightCount; i += 1) {
         const t = 0.08 + ((phase * 0.06 + i * 0.24) % 0.8);
         const p = pointOnCurve(t);
         const before = pointOnCurve(Math.max(0, t - 0.02));
@@ -127,33 +134,53 @@ export const WaterStream: React.FC<WaterStreamProps> = ({
         ctx.fillStyle = i % 2 === 0 ? '#ffffff' : topHex;
         ctx.globalAlpha = 0.34 + 0.2 * Math.sin(phase * 2 + i);
         ctx.beginPath();
-        ctx.ellipse(0, 0, 1.4, 6.5, 0, 0, Math.PI * 2);
+        ctx.ellipse(0, 0, 0.9, 4.5, 0, 0, Math.PI * 2);
         ctx.fill();
         ctx.restore();
       }
 
-      const moundY = y2;
-      const splashPulse = 1 + Math.sin(phase * 4.4) * 0.24;
+      if (showSplash) {
+        const moundY = y2;
+        const splashPulse = 1 + Math.sin(phase * 4.4) * 0.24;
 
-      ctx.beginPath();
-      ctx.ellipse(x2, moundY, 12 * splashPulse, 4.2 * splashPulse, 0, 0, Math.PI * 2);
-      ctx.fillStyle = `${mainHex}aa`;
-      ctx.fill();
-
-      ctx.beginPath();
-      ctx.ellipse(x2 + 3, moundY - 2, 7.5 * splashPulse, 2.8 * splashPulse, 0, 0, Math.PI * 2);
-      ctx.fillStyle = topHex;
-      ctx.fill();
-
-      for (let i = 0; i < 6; i += 1) {
-        const drift = ((phase * 18 + i * 11) % 30) - 15;
-        const dropletX = x2 + drift * 0.35;
-        const dropletY = moundY - 2 + (i % 2 === 0 ? 0 : 4) + Math.sin(phase * 5 + i) * 3;
         ctx.beginPath();
-        ctx.ellipse(dropletX, dropletY, 1.8 + (i % 3), 3.2 + (i % 3), 0, 0, Math.PI * 2);
-        ctx.fillStyle = i % 2 === 0 ? '#ffffff' : topHex;
-        ctx.globalAlpha = 0.6;
+        ctx.ellipse(x2, moundY, 8 * splashPulse, 2.8 * splashPulse, 0, 0, Math.PI * 2);
+        ctx.fillStyle = `${mainHex}aa`;
         ctx.fill();
+
+        ctx.beginPath();
+        ctx.ellipse(x2 + 2, moundY - 1.5, 5 * splashPulse, 1.8 * splashPulse, 0, 0, Math.PI * 2);
+        ctx.fillStyle = topHex;
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.ellipse(x2, moundY + 1, 10 * splashPulse, 3 * splashPulse, 0, 0, Math.PI * 2);
+        ctx.strokeStyle = `${topHex}b8`;
+        ctx.lineWidth = 1.1;
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(x2 - 12, moundY + 1);
+        ctx.quadraticCurveTo(x2 - 9, moundY - 8 * splashPulse, x2 - 5, moundY - 3);
+        ctx.quadraticCurveTo(x2 - 1, moundY + 1, x2 + 2, moundY - 4);
+        ctx.quadraticCurveTo(x2 + 7, moundY - 10 * splashPulse, x2 + 12, moundY + 1);
+        ctx.strokeStyle = `${topHex}dc`;
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        for (let i = 0; i < 7; i += 1) {
+          const cycle = (phase * 0.045 + i / 7) % 1;
+          const angle = -Math.PI * 0.92 + (i / 6) * Math.PI * 0.84;
+          const spread = 4 + cycle * 15;
+          const arcHeight = Math.sin(cycle * Math.PI) * (8 + (i % 3) * 2);
+          const dropletX = x2 + Math.cos(angle) * spread;
+          const dropletY = moundY - arcHeight + cycle * 3;
+          ctx.beginPath();
+          ctx.ellipse(dropletX, dropletY, 1.1 + (i % 3) * 0.25, 2 + (i % 2) * 0.7, -0.2, 0, Math.PI * 2);
+          ctx.fillStyle = i % 2 === 0 ? '#ffffff' : topHex;
+          ctx.globalAlpha = 0.72 - cycle * 0.3;
+          ctx.fill();
+        }
       }
 
       ctx.restore();

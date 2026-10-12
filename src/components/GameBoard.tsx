@@ -1,9 +1,16 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Bottle } from '../types/game';
-import { TestTube, TestTubeRef } from './TestTube';
+import {
+  BOTTLE_CHAMBER_BOTTOM,
+  BOTTLE_MOUTH_CENTER,
+  TestTube,
+  TestTubeRef,
+  getBottleLiquidSurfaceY,
+  getBottlePourSpoutPoint,
+} from './TestTube';
 import { WaterStream } from './WaterStream';
 import { getColor, COLOR_PALETTE } from '../utils/colors';
-import { TUBE_CAPACITY, isBottleComplete } from '../solver/waterSortSolver';
+import { TUBE_CAPACITY, isBottleReadyToCollect } from '../solver/waterSortSolver';
 import { soundManager } from '../utils/audio';
 
 
@@ -139,30 +146,15 @@ export const GameBoard: React.FC<GameBoardProps> = ({
     const targetMatrix = targetSvg?.getScreenCTM() ?? null;
 
     if (sourceMatrix && targetMatrix) {
-      const sourceIsTiltRight = pourAnimation.tiltAngle > 0;
+      const spoutPoint = getBottlePourSpoutPoint(pourAnimation.tiltAngle);
       const sourceLip = sourceSvg!.createSVGPoint();
-      sourceLip.x = sourceIsTiltRight ? 43 : 17;
-      sourceLip.y = 9;
+      sourceLip.x = spoutPoint.x;
+      sourceLip.y = spoutPoint.y;
       const sourceLipScreen = sourceLip.matrixTransform(sourceMatrix);
 
-      const targetTube = bottles[pourAnimation.targetIndex];
-      const currentLiquidUnits = targetTube
-        ? targetTube.layers.length + (pourAnimation.riseCount || 0)
-        : 0;
-
-      // Exact vertical surface level matching target tube liquid geometry
-      const getTargetSurfaceSvgY = (units: number) => {
-        const boundaries = [138, 105, 79.33, 53.67, 28];
-        const uClamped = Math.max(0, Math.min(4, units));
-        const base = Math.min(3, Math.floor(uClamped));
-        const frac = uClamped - base;
-        return boundaries[base] + frac * (boundaries[base + 1] - boundaries[base]);
-      };
-
-      const surfaceSvgY = getTargetSurfaceSvgY(currentLiquidUnits);
       const targetSurface = targetSvg!.createSVGPoint();
-      targetSurface.x = 30;
-      targetSurface.y = surfaceSvgY;
+      targetSurface.x = BOTTLE_MOUTH_CENTER.x;
+      targetSurface.y = BOTTLE_MOUTH_CENTER.y;
       const targetSurfaceScreen = targetSurface.matrixTransform(targetMatrix);
 
       setStreamFrom({ x: sourceLipScreen.x, y: sourceLipScreen.y });
@@ -186,16 +178,16 @@ export const GameBoard: React.FC<GameBoardProps> = ({
     const targetMatrix = targetSvg?.getScreenCTM() ?? null;
     if (sourceMatrix && targetMatrix) {
       const sourceBottom = sourceSvg!.createSVGPoint();
-      sourceBottom.x = 30;
-      sourceBottom.y = 140;
+      sourceBottom.x = BOTTLE_MOUTH_CENTER.x;
+      sourceBottom.y = BOTTLE_CHAMBER_BOTTOM;
       const sourceBottomScreen = sourceBottom.matrixTransform(sourceMatrix);
 
-      // The leak should visually enter the target bottle itself, not stop at the mouth.
-      // Place the impact point in the lower interior of the target bottle so the stream
-      // appears to drain into the liquid and splash against the base.
-      const targetBottomY = bottles[leakAnimation.targetIndex].layers.length === 0 ? 115 : 100;
+      const targetBottomY = getBottleLiquidSurfaceY(
+        bottles[leakAnimation.targetIndex].layers.length,
+        TUBE_CAPACITY
+      );
       const targetImpact = targetSvg!.createSVGPoint();
-      targetImpact.x = 30;
+      targetImpact.x = BOTTLE_MOUTH_CENTER.x;
       targetImpact.y = targetBottomY;
       const targetImpactScreen = targetImpact.matrixTransform(targetMatrix);
 
@@ -264,7 +256,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
           isHintTarget={isHintTarget}
           isLeakTarget={isLeakTarget}
           isPouringSource={isPouringSource}
-          isPouringFluid={isPouringSource && pourAnimation?.phase === 'pouring'}
+          isPouringFluid={pourAnimation?.phase === 'pouring' && (isPouringSource || isPouringTarget)}
           isPouringTarget={isPouringTarget}
           isShaking={shakingTubeIndex === globalIdx}
           tiltAngle={pourTransforms.tiltAngle}
@@ -277,7 +269,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
           completionPhase={completionAnimation?.tubeIndex === globalIdx ? completionAnimation?.phase ?? null : null}
           flyX={completionAnimation?.tubeIndex === globalIdx ? completionAnimation?.flyX ?? 0 : 0}
           flyY={completionAnimation?.tubeIndex === globalIdx ? completionAnimation?.flyY ?? 0 : 0}
-          hasCork={collectedTubeIndices.includes(globalIdx) || (isBottleComplete(bottle, TUBE_CAPACITY) && completionAnimation?.tubeIndex !== globalIdx)}
+          hasCork={collectedTubeIndices.includes(globalIdx) || (isBottleReadyToCollect(bottle, TUBE_CAPACITY) && completionAnimation?.tubeIndex !== globalIdx)}
           isCollected={collectedTubeIndices.includes(globalIdx)}
           onClick={onTubeClick}
           disabled={disabled || !!pourAnimation || !!completionAnimation}
@@ -332,6 +324,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
           toPos={streamTo}
           colorId={pourAnimation?.colorId || 'red'}
           active={!!pourAnimation && pourAnimation.phase === 'pouring'}
+          showSplash={false}
         />
         {/* Bottom-leak drip stream: source bottle base → target bottle mouth */}
         <WaterStream

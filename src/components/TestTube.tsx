@@ -9,6 +9,23 @@ export interface TestTubeRef {
   getBoundingBox: () => DOMRect | null;
 }
 
+export const BOTTLE_VIEWBOX_WIDTH = 77;
+export const BOTTLE_VIEWBOX_HEIGHT = 223;
+export const BOTTLE_MOUTH_CENTER = { x: 38.5, y: 14 };
+export const BOTTLE_CHAMBER_TOP = 47.5;
+export const BOTTLE_CHAMBER_BOTTOM = 210.5;
+
+export const getBottleMouthPoint = () => BOTTLE_MOUTH_CENTER;
+
+export const getBottlePourSpoutPoint = (tiltAngle: number) => ({
+  x: tiltAngle >= 0 ? 53 : 24,
+  y: 14,
+});
+
+export const getBottleLiquidSurfaceY = (units: number, capacity = TUBE_CAPACITY) =>
+  BOTTLE_CHAMBER_BOTTOM -
+  (Math.max(0, Math.min(capacity, units)) / capacity) * (BOTTLE_CHAMBER_BOTTOM - BOTTLE_CHAMBER_TOP);
+
 interface TestTubeProps {
   index: number;
   bottle: Bottle;
@@ -79,20 +96,19 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
     getSpoutPos: () => {
       if (!containerRef.current) return null;
       const rect = containerRef.current.getBoundingClientRect();
-      // When tilted, spout is the lower mouth lip.
-      // Scale viewBox units (77x223) to the rendered CSS pixels.
-      const scale = rect.width / 77;
-      const mouthY = rect.top + 14 * (rect.height / 223);
-      const cx = rect.left + rect.width * 0.5;
-      // Neck half-width is 16 in viewBox units (x 22.5..54.5).
-      const spoutX = tiltAngle > 0 ? cx + 16 * scale : tiltAngle < 0 ? cx - 16 * scale : cx;
-      const spoutY = mouthY + 5 * (rect.height / 223);
-      return { x: spoutX, y: spoutY };
+      const spout = getBottlePourSpoutPoint(tiltAngle);
+      return {
+        x: rect.left + (spout.x / BOTTLE_VIEWBOX_WIDTH) * rect.width,
+        y: rect.top + (spout.y / BOTTLE_VIEWBOX_HEIGHT) * rect.height,
+      };
     },
     getMouthPos: () => {
       if (!containerRef.current) return null;
       const rect = containerRef.current.getBoundingClientRect();
-      return { x: rect.left + rect.width * 0.5, y: rect.top + 14 * (rect.height / 223) };
+      return {
+        x: rect.left + (BOTTLE_MOUTH_CENTER.x / BOTTLE_VIEWBOX_WIDTH) * rect.width,
+        y: rect.top + (BOTTLE_MOUTH_CENTER.y / BOTTLE_VIEWBOX_HEIGHT) * rect.height,
+      };
     },
     getBoundingBox: () => {
       if (!containerRef.current) return null;
@@ -254,6 +270,9 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
     currentY = yTop;
     return { ...layer, yBottom, yTop };
   });
+  const targetSurfaceY = calculatedLayers.length > 0
+    ? calculatedLayers[calculatedLayers.length - 1].yTop
+    : BOTTLE_CHAMBER_BOTTOM;
 
   const transformStyle: React.CSSProperties = {
     transform: isFlying
@@ -266,11 +285,15 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
     transition: isFlying
       ? 'transform 0.65s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.65s ease-in'
       : isPouringSource
-      ? 'transform 0.45s cubic-bezier(0.25, 1, 0.5, 1)'
+      ? isPouringFluid
+        ? 'transform 0s'
+        : 'transform 0.45s cubic-bezier(0.25, 1, 0.5, 1)'
       : 'transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1)',
     opacity: isFlying ? 0.05 : 1,
     zIndex: isFlying ? 90 : isPouringSource ? 45 : isSelected ? 30 : 10,
-    transformOrigin: isPouringSource ? '50% 9px' : 'center bottom',
+    transformOrigin: isPouringSource
+      ? `50% ${(BOTTLE_MOUTH_CENTER.y / BOTTLE_VIEWBOX_HEIGHT) * 100}%`
+      : 'center bottom',
   };
 
   return (
@@ -387,6 +410,21 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
               </linearGradient>
             ))}
 
+            {Object.values(COLOR_PALETTE).map((c: ColorDef) => (
+              <linearGradient
+                key={`tilted-grad-${c.id}-${index}`}
+                id={`tilted-grad-${c.id}-${index}`}
+                x1="0%"
+                y1="0%"
+                x2="100%"
+                y2="0%"
+              >
+                <stop offset="0%" stopColor={c.topHex || c.hex} />
+                <stop offset="16%" stopColor={c.hex} />
+                <stop offset="100%" stopColor={c.hex} />
+              </linearGradient>
+            ))}
+
             {/* 3D Top Meniscus Horizontal Depth Shading (matches side wall lighting) */}
             {Object.values(COLOR_PALETTE).map((c: ColorDef) => (
               <linearGradient
@@ -465,14 +503,14 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
               {(() => {
                 if (clampedLayers.length === 0) return null;
 
-                const isTiltRight = tiltAngle > 0;
-                const rad = (tiltAngle * Math.PI) / 180;
-                // In SVG coords (+Y is down), tiltAngle > 0 tilts clockwise so surface slopes with m = -tan(tiltAngle)
+                const fluidSurfaceAngle = tiltAngle;
+                const rad = (fluidSurfaceAngle * Math.PI) / 180;
+                // Keep the layered color bands readable while preserving a volume-based sloped surface.
                 const slope = -Math.tan(rad);
 
                 const W = 32;
                 const CX = 38.5;
-                const Y_MIN = 14;
+                const Y_MIN = BOTTLE_CHAMBER_TOP;
                 const Y_MAX = 210.5;
                 const totalH = Y_MAX - Y_MIN;
 
@@ -485,10 +523,10 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
                   let low = Y_MIN - Math.abs(slope) * W - totalH;
                   let high = Y_MAX + Math.abs(slope) * W + totalH;
 
-                  const steps = 16;
+                  const steps = 32;
                   const dx = (2 * W) / steps;
 
-                  for (let iter = 0; iter < 16; iter++) {
+                  for (let iter = 0; iter < 24; iter++) {
                     const mid = (low + high) * 0.5;
                     let area = 0;
                     for (let s = 0; s < steps; s++) {
@@ -515,7 +553,7 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
                   cumulativeHeights.push(runningH);
                 }
 
-                const sampleCount = 18;
+                const sampleCount = 48;
                 const dx = (2 * W) / sampleCount;
 
                 return (
@@ -524,7 +562,7 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
                       const cDef = getColor(layer.colorId);
                       const isHiddenLayer = hiddenCount > 0 && lIdx < hiddenCount;
                       const isDimmed = maskHidden && lIdx === 0;
-                      const liquidFill = isHiddenLayer ? `url(#fog-grad-${index})` : `url(#grad-${cDef.id}-${index})`;
+                      const liquidFill = isHiddenLayer ? `url(#fog-grad-${index})` : `url(#tilted-grad-${cDef.id}-${index})`;
 
                       const hPrev = cumulativeHeights[lIdx];
                       const hCurr = cumulativeHeights[lIdx + 1];
@@ -546,9 +584,9 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
                           if (distFromEdge < 14) {
                             const cornerDelta = 14 - distFromEdge;
                             const cornerLift = 14 - Math.sqrt(Math.max(0, 14 * 14 - cornerDelta * cornerDelta));
-                            yBot = Math.min(yTop, 210.5 - cornerLift);
+                            yBot = Math.min(yTop, Y_MAX - cornerLift);
                           } else {
-                            yBot = Math.min(yTop, 210.5);
+                            yBot = Math.min(yTop, Y_MAX);
                           }
                         } else {
                           yBot = Math.max(Y_MIN, Math.min(Y_MAX, slope * (x - CX) + cBot));
@@ -594,21 +632,6 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
                       );
                     })}
 
-                    {/* Smooth fluid guide filament along the lip when pouring stream is active */}
-                    {isPouringSource && isPouringFluid && (
-                      <path
-                        d={
-                          isTiltRight
-                            ? 'M 70.3 47.5 L 70.3 35 C 70.3 28, 53 28, 53 14'
-                            : 'M 6.3 47.5 L 6.3 35 C 6.3 28, 24 28, 24 14'
-                        }
-                        stroke={`url(#grad-${getColor(clampedLayers[clampedLayers.length - 1]?.colorId || 'blue').id}-${index})`}
-                        strokeWidth="3.2"
-                        strokeLinecap="round"
-                        fill="none"
-                        opacity={0.88}
-                      />
-                    )}
                   </>
                 );
               })()}
@@ -742,6 +765,100 @@ export const TestTube = forwardRef<TestTubeRef, TestTubeProps>(({
             </g>
           )}
           </g>
+
+          {isPouringSource && isPouringFluid && (
+            <g clipPath={`url(#outer-clip-${index})`} pointerEvents="none">
+              <path
+                d={
+                  tiltAngle > 0
+                    ? 'M 70 48 C 70 39, 66 34, 60 30 C 56 27, 53 22, 53 14'
+                    : 'M 7 48 C 7 39, 11 34, 17 30 C 21 27, 24 22, 24 14'
+                }
+                fill="none"
+                stroke={`url(#grad-${getColor(activePourColor || tube[tube.length - 1] || 'blue').id}-${index})`}
+                strokeWidth="5.5"
+                strokeLinecap="round"
+                filter={`url(#liquid-glow-${index})`}
+                opacity="0.96"
+              />
+              <ellipse
+                cx={tiltAngle > 0 ? 53 : 24}
+                cy="14"
+                rx="3.2"
+                ry="2.4"
+                fill={`url(#meniscus-grad-${getColor(activePourColor || tube[tube.length - 1] || 'blue').id}-${index})`}
+              />
+            </g>
+          )}
+
+          {isPouringTarget && isPouringFluid && activePourColor && (
+            <g pointerEvents="none">
+              <g clipPath={`url(#outer-clip-${index})`}>
+                <path
+                  d={`M ${BOTTLE_MOUTH_CENTER.x} ${BOTTLE_MOUTH_CENTER.y} L ${BOTTLE_MOUTH_CENTER.x} ${BOTTLE_CHAMBER_TOP}`}
+                  fill="none"
+                  stroke={`url(#grad-${getColor(activePourColor).id}-${index})`}
+                  strokeWidth="5.5"
+                  strokeLinecap="round"
+                  filter={`url(#liquid-glow-${index})`}
+                  opacity="0.96"
+                />
+              </g>
+              <g clipPath={`url(#inner-clip-${index})`}>
+                <path
+                  d={`M ${BOTTLE_MOUTH_CENTER.x} ${BOTTLE_CHAMBER_TOP} L ${BOTTLE_MOUTH_CENTER.x} ${targetSurfaceY}`}
+                  fill="none"
+                  stroke={`url(#grad-${getColor(activePourColor).id}-${index})`}
+                  strokeWidth="4.5"
+                  strokeLinecap="round"
+                  opacity="0.98"
+                />
+                <g className="anim-pour-impact" style={{ transformOrigin: `${BOTTLE_MOUTH_CENTER.x}px ${targetSurfaceY}px` }}>
+                  <ellipse
+                    cx={BOTTLE_MOUTH_CENTER.x}
+                    cy={targetSurfaceY}
+                    rx="8"
+                    ry="2.8"
+                    fill={`url(#meniscus-grad-${getColor(activePourColor).id}-${index})`}
+                    opacity="0.9"
+                  />
+                  <path
+                    d={`M ${BOTTLE_MOUTH_CENTER.x - 11} ${targetSurfaceY + 1} Q ${BOTTLE_MOUTH_CENTER.x - 6} ${targetSurfaceY - 7} ${BOTTLE_MOUTH_CENTER.x} ${targetSurfaceY - 1} Q ${BOTTLE_MOUTH_CENTER.x + 6} ${targetSurfaceY - 7} ${BOTTLE_MOUTH_CENTER.x + 11} ${targetSurfaceY + 1}`}
+                    fill="none"
+                    stroke={getColor(activePourColor).topHex || getColor(activePourColor).hex}
+                    strokeWidth="1.6"
+                    strokeLinecap="round"
+                  />
+                  <ellipse
+                    className="anim-splash-drop-left"
+                    cx={BOTTLE_MOUTH_CENTER.x - 8}
+                    cy={targetSurfaceY - 4}
+                    rx="1.4"
+                    ry="2.1"
+                    fill="#fff"
+                    opacity="0.85"
+                  />
+                  <ellipse
+                    className="anim-splash-drop-right"
+                    cx={BOTTLE_MOUTH_CENTER.x + 8}
+                    cy={targetSurfaceY - 4}
+                    rx="1.2"
+                    ry="1.8"
+                    fill={getColor(activePourColor).topHex || getColor(activePourColor).hex}
+                    opacity="0.9"
+                  />
+                  <circle
+                    className="anim-splash-drop-center"
+                    cx={BOTTLE_MOUTH_CENTER.x + 2}
+                    cy={targetSurfaceY - 7}
+                    r="1.1"
+                    fill="#fff"
+                    opacity="0.9"
+                  />
+                </g>
+              </g>
+            </g>
+          )}
 
           {/* 3. High-Gloss Specular Glass Reflections Overlay (True Alpha Transparency) */}
           <image

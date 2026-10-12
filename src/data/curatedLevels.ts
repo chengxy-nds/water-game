@@ -33,7 +33,7 @@ export const CURATED_LEVELS: Level[] = [
   {
     id: 1,
     title: "认识同色倒水",
-    optimalSteps: 4,
+    optimalSteps: 5,
     difficulty: "easy",
     bottles: [
       normal("b1", ["red", "red", "blue", "red"]),
@@ -46,7 +46,7 @@ export const CURATED_LEVELS: Level[] = [
   {
     id: 2,
     title: "首次整理两种颜色",
-    optimalSteps: 5,
+    optimalSteps: 4,
     difficulty: "easy",
     bottles: [
       normal("b1", ["blue", "red", "red", "red"]),
@@ -59,7 +59,7 @@ export const CURATED_LEVELS: Level[] = [
   {
     id: 3,
     title: "限制倒水顺序",
-    optimalSteps: 5,
+    optimalSteps: 4,
     difficulty: "easy",
     bottles: [
       normal("b1", ["red", "red", "blue", "blue"]),
@@ -72,7 +72,7 @@ export const CURATED_LEVELS: Level[] = [
   {
     id: 4,
     title: "练习利用空瓶",
-    optimalSteps: 6,
+    optimalSteps: 8,
     difficulty: "easy",
     bottles: [
       normal("b1", ["yellow", "blue", "red", "yellow"]),
@@ -86,7 +86,7 @@ export const CURATED_LEVELS: Level[] = [
   {
     id: 5,
     title: "三色基础整理",
-    optimalSteps: 6,
+    optimalSteps: 9,
     difficulty: "easy",
     bottles: [
       normal("b1", ["blue", "blue", "yellow", "red"]),
@@ -100,7 +100,7 @@ export const CURATED_LEVELS: Level[] = [
   {
     id: 6,
     title: "三色混合",
-    optimalSteps: 7,
+    optimalSteps: 6,
     difficulty: "easy",
     bottles: [
       normal("b1", ["blue", "red", "red", "blue"]),
@@ -114,7 +114,7 @@ export const CURATED_LEVELS: Level[] = [
   {
     id: 7,
     title: "四瓶空间规划",
-    optimalSteps: 7,
+    optimalSteps: 8,
     difficulty: "easy",
     bottles: [
       normal("b1", ["blue", "yellow", "blue", "red"]),
@@ -128,8 +128,8 @@ export const CURATED_LEVELS: Level[] = [
   {
     id: 8,
     title: "减少空瓶",
-    optimalSteps: 8,
-    difficulty: "easy",
+    optimalSteps: 14,
+    difficulty: "medium",
     bottles: [
       normal("b1", ["yellow", "blue", "yellow", "green"]),
       normal("b2", ["green", "red", "green", "blue"]),
@@ -143,8 +143,8 @@ export const CURATED_LEVELS: Level[] = [
   {
     id: 9,
     title: "四种颜色初步规划",
-    optimalSteps: 8,
-    difficulty: "easy",
+    optimalSteps: 14,
+    difficulty: "medium",
     bottles: [
       normal("b1", ["green", "blue", "red", "blue"]),
       normal("b2", ["red", "yellow", "red", "blue"]),
@@ -157,8 +157,8 @@ export const CURATED_LEVELS: Level[] = [
   {
     id: 10,
     title: "观察连续同色层",
-    optimalSteps: 9,
-    difficulty: "easy",
+    optimalSteps: 16,
+    difficulty: "medium",
     bottles: [
       normal("b1", ["red", "purple", "purple", "red"]),
       normal("b2", ["blue", "yellow", "purple", "green"]),
@@ -172,7 +172,7 @@ export const CURATED_LEVELS: Level[] = [
   {
     id: 11,
     title: "五色分拣",
-    optimalSteps: 9,
+    optimalSteps: 11,
     difficulty: "medium",
     bottles: [
       normal("b1", ["blue", "yellow", "yellow", "green"]),
@@ -202,7 +202,7 @@ export const CURATED_LEVELS: Level[] = [
   {
     id: 13,
     title: "五色交错",
-    optimalSteps: 10,
+    optimalSteps: 15,
     difficulty: "medium",
     bottles: [
       normal("b1", ["yellow", "red", "green", "yellow"]),
@@ -218,7 +218,7 @@ export const CURATED_LEVELS: Level[] = [
   {
     id: 14,
     title: "单空瓶规划",
-    optimalSteps: 11,
+    optimalSteps: 12,
     difficulty: "medium",
     bottles: [
       normal("b1", ["red", "green", "yellow", "red"]),
@@ -227,13 +227,14 @@ export const CURATED_LEVELS: Level[] = [
       normal("b4", ["blue", "purple", "purple", "blue"]),
       normal("b5", ["yellow", "green", "blue", "blue"]),
       empty("b6"),
+      empty("b7"),
     ],
   },
   // 第 15 关
   {
     id: 15,
     title: "基础进阶综合",
-    optimalSteps: 11,
+    optimalSteps: 19,
     difficulty: "medium",
     bottles: [
       normal("b1", ["orange", "green", "purple", "blue"]),
@@ -243,13 +244,14 @@ export const CURATED_LEVELS: Level[] = [
       normal("b5", ["orange", "red", "orange", "red"]),
       normal("b6", ["green", "red", "green", "yellow"]),
       empty("b7"),
+      empty("b8"),
     ],
   },
   // 第 16 关
   {
     id: 16,
     title: "五色多层交错",
-    optimalSteps: 12,
+    optimalSteps: 16,
     difficulty: "medium",
     bottles: [
       normal("b1", ["blue", "yellow", "red", "green"]),
@@ -264,7 +266,7 @@ export const CURATED_LEVELS: Level[] = [
   {
     id: 17,
     title: "少空瓶挑战",
-    optimalSteps: 12,
+    optimalSteps: 17,
     difficulty: "medium",
     bottles: [
       normal("b1", ["yellow", "blue", "red", "yellow"]),
@@ -273,13 +275,14 @@ export const CURATED_LEVELS: Level[] = [
       normal("b4", ["red", "green", "blue", "green"]),
       normal("b5", ["red", "blue", "yellow", "purple"]),
       empty("b6"),
+      empty("b7"),
     ],
   },
   // 第 18 关
   {
     id: 18,
     title: "回合顺序规划",
-    optimalSteps: 13,
+    optimalSteps: 14,
     difficulty: "medium",
     bottles: [
       normal("b1", ["yellow", "purple", "yellow", "blue"]),
@@ -343,7 +346,7 @@ export const CURATED_LEVELS: Level[] = [
   {
     id: 22,
     title: "长同色段利用",
-    optimalSteps: 15,
+    optimalSteps: 17,
     difficulty: "medium",
     bottles: [
       normal("b1", ["blue", "green", "blue", "green"]),
@@ -359,7 +362,7 @@ export const CURATED_LEVELS: Level[] = [
   {
     id: 23,
     title: "遮罩瓶教学",
-    optimalSteps: 15,
+    optimalSteps: 13,
     difficulty: "medium",
     bottles: [
       normal("b1", ["red", "green", "green", "red"]),
@@ -392,7 +395,7 @@ export const CURATED_LEVELS: Level[] = [
   {
     id: 25,
     title: "遮罩与普通瓶配合",
-    optimalSteps: 16,
+    optimalSteps: 19,
     difficulty: "medium",
     bottles: [
       normal("b1", ["purple", "yellow", "orange", "purple"]),
@@ -409,7 +412,7 @@ export const CURATED_LEVELS: Level[] = [
   {
     id: 26,
     title: "遮罩瓶基础",
-    optimalSteps: 17,
+    optimalSteps: 18,
     difficulty: "hard",
     bottles: [
       normal("b1", ["blue", "blue", "green", "yellow"]),
@@ -426,7 +429,7 @@ export const CURATED_LEVELS: Level[] = [
   {
     id: 27,
     title: "先解锁还是先整理",
-    optimalSteps: 17,
+    optimalSteps: 16,
     difficulty: "hard",
     bottles: [
       normal("b1", ["purple", "blue", "yellow", "green"]),
@@ -443,7 +446,7 @@ export const CURATED_LEVELS: Level[] = [
   {
     id: 28,
     title: "遮罩瓶双目标",
-    optimalSteps: 18,
+    optimalSteps: 15,
     difficulty: "hard",
     bottles: [
       normal("b1", ["orange", "red", "red", "green"]),
@@ -453,13 +456,14 @@ export const CURATED_LEVELS: Level[] = [
       normal("b5", ["purple", "purple", "purple", "blue"]),
       normal("b6", ["orange", "blue", "yellow", "red"]),
       empty("b7"),
+      empty("b8"),
     ],
   },
   // 第 29 关
   {
     id: 29,
     title: "遮罩瓶较晚解锁",
-    optimalSteps: 18,
+    optimalSteps: 19,
     difficulty: "hard",
     bottles: [
       normal("b1", ["green", "yellow", "orange", "purple"]),
@@ -469,13 +473,14 @@ export const CURATED_LEVELS: Level[] = [
       normal("b5", ["orange", "orange", "blue", "green"]),
       normal("b6", ["yellow", "orange", "green", "blue"]),
       empty("b7"),
+      empty("b8"),
     ],
   },
   // 第 30 关
   {
     id: 30,
     title: "遮罩瓶综合",
-    optimalSteps: 19,
+    optimalSteps: 17,
     difficulty: "hard",
     bottles: [
       normal("b1", ["green", "green", "yellow", "orange"]),
@@ -492,7 +497,7 @@ export const CURATED_LEVELS: Level[] = [
   {
     id: 31,
     title: "隐藏底部1层",
-    optimalSteps: 19,
+    optimalSteps: 20,
     difficulty: "hard",
     bottles: [
       normal("b1", ["green", "orange", "green", "yellow"]),
@@ -509,7 +514,7 @@ export const CURATED_LEVELS: Level[] = [
   {
     id: 32,
     title: "揭晓后再规划",
-    optimalSteps: 20,
+    optimalSteps: 18,
     difficulty: "hard",
     bottles: [
       normal("b1", ["blue", "green", "blue", "orange"]),
@@ -543,7 +548,7 @@ export const CURATED_LEVELS: Level[] = [
   {
     id: 34,
     title: "两只隐藏瓶",
-    optimalSteps: 21,
+    optimalSteps: 22,
     difficulty: "hard",
     bottles: [
       normal("b1", ["green", "purple", "yellow", "orange"]),
@@ -561,7 +566,7 @@ export const CURATED_LEVELS: Level[] = [
   {
     id: 35,
     title: "隐藏与普通瓶配合",
-    optimalSteps: 21,
+    optimalSteps: 23,
     difficulty: "hard",
     bottles: [
       normal("b1", ["purple", "blue", "cyan", "red"]),
@@ -608,13 +613,14 @@ export const CURATED_LEVELS: Level[] = [
       normal("b6", ["cyan", "orange", "green", "purple"]),
       normal("b7", ["blue", "green", "blue", "orange"]),
       empty("b8"),
+      empty("b9"),
     ],
   },
   // 第 38 关
   {
     id: 38,
     title: "遮罩解锁路线",
-    optimalSteps: 23,
+    optimalSteps: 20,
     difficulty: "hard",
     bottles: [
       normal("b1", ["purple", "red", "yellow", "purple"]),
@@ -632,7 +638,7 @@ export const CURATED_LEVELS: Level[] = [
   {
     id: 39,
     title: "有限空瓶综合",
-    optimalSteps: 23,
+    optimalSteps: 22,
     difficulty: "hard",
     bottles: [
       normal("b1", ["cyan", "yellow", "green", "orange"]),
@@ -643,13 +649,14 @@ export const CURATED_LEVELS: Level[] = [
       normal("b6", ["purple", "blue", "yellow", "yellow"]),
       normal("b7", ["red", "red", "cyan", "red"]),
       empty("b8"),
+      empty("b9"),
     ],
   },
   // 第 40 关
   {
     id: 40,
     title: "特殊瓶阶段考核",
-    optimalSteps: 24,
+    optimalSteps: 22,
     difficulty: "hard",
     bottles: [
       normal("b1", ["yellow", "cyan", "green", "cyan"]),
@@ -665,17 +672,17 @@ export const CURATED_LEVELS: Level[] = [
   // 第 41 关
   {
     id: 41,
-    title: "底部漏水教学",
-    optimalSteps: 24,
-    difficulty: "master",
+    title: "单层漏水教学",
+    optimalSteps: 18,
+    difficulty: "hard",
     bottles: [
-      leak("b1", ["red", "red", "blue", "red"], "b6"),
-      normal("b2", ["yellow", "green", "yellow", "orange"]),
-      normal("b3", ["purple", "blue", "red", "purple"]),
-      normal("b4", ["orange", "green", "cyan", "green"]),
-      normal("b5", ["blue", "orange", "blue", "yellow"]),
-      normal("b6", ["purple", "cyan", "green", "yellow"]),
-      normal("b7", ["cyan", "purple", "cyan", "orange"]),
+      leak("b1", ["yellow", "yellow"], "b6"),
+      normal("b2", ["green", "blue", "green", "red"]),
+      normal("b3", ["blue", "purple", "red", "green"]),
+      normal("b4", ["red", "purple", "red", "purple"]),
+      normal("b5", ["blue", "yellow", "green", "blue"]),
+      normal("b6", ["purple", "yellow"]),
+      empty("b7"),
       empty("b8"),
       empty("b9"),
     ],
@@ -684,16 +691,16 @@ export const CURATED_LEVELS: Level[] = [
   {
     id: 42,
     title: "匹配底色与目标顶色",
-    optimalSteps: 25,
-    difficulty: "master",
+    optimalSteps: 17,
+    difficulty: "hard",
     bottles: [
-      leak("b1", ["yellow", "purple", "red", "purple"], "b6"),
-      normal("b2", ["purple", "green", "green", "orange"]),
-      normal("b3", ["blue", "orange", "blue", "yellow"]),
-      normal("b4", ["green", "cyan", "orange", "cyan"]),
-      normal("b5", ["cyan", "yellow", "yellow", "red"]),
-      normal("b6", ["green", "red", "blue", "red"]),
-      normal("b7", ["purple", "orange", "cyan", "blue"]),
+      leak("b1", ["green", "green"], "b6"),
+      normal("b2", ["yellow", "red", "red", "purple"]),
+      normal("b3", ["yellow", "purple", "red", "blue"]),
+      normal("b4", ["blue", "green", "blue", "yellow"]),
+      normal("b5", ["yellow", "purple", "blue", "red"]),
+      normal("b6", ["purple", "green"]),
+      empty("b7"),
       empty("b8"),
       empty("b9"),
     ],
@@ -701,17 +708,17 @@ export const CURATED_LEVELS: Level[] = [
   // 第 43 关
   {
     id: 43,
-    title: "主动触发漏水",
-    optimalSteps: 25,
-    difficulty: "master",
+    title: "漏水与普通整理",
+    optimalSteps: 18,
+    difficulty: "hard",
     bottles: [
-      leak("b1", ["green", "orange", "orange", "cyan"], "b6"),
-      normal("b2", ["cyan", "red", "blue", "purple"]),
-      normal("b3", ["red", "purple", "orange", "yellow"]),
-      normal("b4", ["blue", "orange", "blue", "cyan"]),
-      normal("b5", ["yellow", "purple", "green", "yellow"]),
-      normal("b6", ["cyan", "green", "red", "blue"]),
-      normal("b7", ["red", "purple", "green", "yellow"]),
+      leak("b1", ["yellow", "yellow"], "b6"),
+      normal("b2", ["red", "green", "red", "orange"]),
+      normal("b3", ["green", "orange", "blue", "blue"]),
+      normal("b4", ["purple", "green", "green", "blue"]),
+      normal("b5", ["red", "yellow", "purple", "blue"]),
+      normal("b6", ["purple", "yellow"]),
+      normal("b7", ["orange", "purple", "red", "orange"]),
       empty("b8"),
       empty("b9"),
     ],
@@ -719,125 +726,134 @@ export const CURATED_LEVELS: Level[] = [
   // 第 44 关
   {
     id: 44,
-    title: "漏水与普通倒水组合",
-    optimalSteps: 26,
-    difficulty: "master",
+    title: "漏水路线规划",
+    optimalSteps: 18,
+    difficulty: "hard",
     bottles: [
-      leak("b1", ["cyan", "cyan", "purple", "red"], "b6"),
-      normal("b2", ["green", "purple", "orange", "green"]),
-      normal("b3", ["orange", "cyan", "red", "green"]),
-      normal("b4", ["yellow", "yellow", "red", "blue"]),
-      normal("b5", ["yellow", "purple", "red", "blue"]),
-      normal("b6", ["purple", "blue", "yellow", "green"]),
-      normal("b7", ["orange", "orange", "cyan", "blue"]),
+      leak("b1", ["green", "green"], "b6"),
+      normal("b2", ["red", "blue", "blue", "orange"]),
+      normal("b3", ["purple", "red", "blue", "red"]),
+      normal("b4", ["blue", "orange", "purple", "yellow"]),
+      normal("b5", ["yellow", "red", "orange", "orange"]),
+      normal("b6", ["yellow", "green"]),
+      normal("b7", ["purple", "yellow", "green", "purple"]),
       empty("b8"),
       empty("b9"),
+      empty("b10"),
     ],
   },
   // 第 45 关
   {
     id: 45,
-    title: "漏水瓶路径规划",
-    optimalSteps: 26,
-    difficulty: "master",
+    title: "有限空间中的漏水",
+    optimalSteps: 15,
+    difficulty: "hard",
     bottles: [
-      leak("b1", ["yellow", "yellow", "green", "blue"], "b6"),
-      normal("b2", ["purple", "purple", "orange", "orange"]),
-      normal("b3", ["orange", "green", "blue", "purple"]),
-      normal("b4", ["red", "yellow", "green", "yellow"]),
-      normal("b5", ["cyan", "red", "cyan", "cyan"]),
-      normal("b6", ["purple", "orange", "red", "green"]),
-      normal("b7", ["blue", "cyan", "red", "blue"]),
+      leak("b1", ["purple", "purple"], "b6"),
+      normal("b2", ["yellow", "green", "red", "green"]),
+      normal("b3", ["blue", "blue", "blue", "red"]),
+      normal("b4", ["orange", "yellow", "green", "green"]),
+      normal("b5", ["purple", "red", "orange", "yellow"]),
+      normal("b6", ["blue", "purple"]),
+      normal("b7", ["red", "orange", "orange", "yellow"]),
       empty("b8"),
       empty("b9"),
+      empty("b10"),
     ],
   },
   // 第 46 关
   {
     id: 46,
-    title: "特殊机制综合入门",
-    optimalSteps: 27,
+    title: "漏水与隐藏瓶",
+    optimalSteps: 18,
     difficulty: "master",
     bottles: [
-      leak("b1", ["red", "blue", "cyan", "orange"], "b6"),
-      normal("b2", ["green", "purple", "purple", "yellow"]),
-      hidden("b3", ["red", "yellow", "yellow", "red"], 1),
-      normal("b4", ["orange", "yellow", "purple", "orange"]),
-      normal("b5", ["orange", "green", "blue", "green"]),
-      normal("b6", ["cyan", "purple", "cyan", "blue"]),
-      normal("b7", ["green", "blue", "cyan", "red"]),
+      leak("b1", ["orange", "orange"], "b6"),
+      hidden("b2", ["green", "yellow", "yellow", "yellow"], 1),
+      normal("b3", ["yellow", "red", "green", "purple"]),
+      normal("b4", ["blue", "green", "purple", "orange"]),
+      normal("b5", ["red", "blue", "green", "red"]),
+      normal("b6", ["red", "orange"]),
+      normal("b7", ["blue", "purple", "purple", "blue"]),
       empty("b8"),
       empty("b9"),
+      empty("b10"),
     ],
   },
   // 第 47 关
   {
     id: 47,
-    title: "多机制顺序规划",
-    optimalSteps: 27,
+    title: "隐藏瓶与目标配对",
+    optimalSteps: 21,
     difficulty: "master",
     bottles: [
-      leak("b1", ["cyan", "orange", "red", "yellow"], "b5"),
-      normal("b2", ["orange", "green", "green", "blue"]),
-      hidden("b3", ["cyan", "purple", "red", "yellow"], 2),
-      normal("b4", ["red", "green", "cyan", "blue"]),
-      normal("b5", ["blue", "purple", "red", "green"]),
-      normal("b6", ["orange", "yellow", "orange", "yellow"]),
-      normal("b7", ["purple", "blue", "purple", "cyan"]),
-      empty("b8"),
+      leak("b1", ["cyan", "cyan"], "b7"),
+      hidden("b2", ["blue", "blue", "red", "purple"], 1),
+      normal("b3", ["orange", "yellow", "green", "purple"]),
+      normal("b4", ["yellow", "blue", "red", "purple"]),
+      normal("b5", ["red", "yellow", "orange", "orange"]),
+      normal("b6", ["blue", "cyan", "yellow", "green"]),
+      normal("b7", ["orange", "cyan"]),
+      normal("b8", ["purple", "green", "green", "red"]),
+      empty("b9"),
+      empty("b10"),
+      empty("b11"),
     ],
   },
   // 第 48 关
   {
     id: 48,
-    title: "有限空瓶与隐藏层",
-    optimalSteps: 28,
+    title: "逐层揭晓隐藏色",
+    optimalSteps: 21,
     difficulty: "master",
     bottles: [
-      leak("b1", ["purple", "cyan", "orange", "red"], "b6"),
-      normal("b2", ["blue", "green", "yellow", "green"]),
-      hidden("b3", ["orange", "green", "orange", "blue"], 2),
-      normal("b4", ["purple", "cyan", "cyan", "blue"]),
-      normal("b5", ["orange", "purple", "red", "yellow"]),
-      normal("b6", ["blue", "red", "green", "yellow"]),
-      normal("b7", ["cyan", "red", "purple", "yellow"]),
-      empty("b8"),
+      leak("b1", ["red", "red"], "b7"),
+      hidden("b2", ["orange", "purple", "green", "green"], 2),
+      normal("b3", ["yellow", "cyan", "green", "cyan"]),
+      normal("b4", ["purple", "purple", "orange", "blue"]),
+      normal("b5", ["cyan", "orange", "yellow", "yellow"]),
+      normal("b6", ["green", "red", "blue", "yellow"]),
+      normal("b7", ["purple", "red"]),
+      normal("b8", ["cyan", "blue", "blue", "orange"]),
       empty("b9"),
+      empty("b10"),
+      empty("b11"),
     ],
   },
   // 第 49 关
   {
     id: 49,
-    title: "多目标遮罩解锁",
-    optimalSteps: 28,
+    title: "遮罩与隐藏双机制",
+    optimalSteps: 15,
     difficulty: "master",
     bottles: [
-      leak("b1", ["green", "purple", "blue", "purple"], "b6"),
-      masked("b2", ["orange", "cyan", "pink", "green"], 2),
-      hidden("b3", ["red", "yellow", "orange", "yellow"], 2),
-      normal("b4", ["orange", "cyan", "cyan", "purple"]),
-      normal("b5", ["pink", "pink", "cyan", "red"]),
-      normal("b6", ["orange", "purple", "yellow", "green"]),
-      normal("b7", ["red", "blue", "pink", "blue"]),
-      normal("b8", ["blue", "green", "yellow", "red"]),
+      leak("b1", ["yellow", "yellow"], "b6"),
+      hidden("b2", ["blue", "red", "blue", "red"], 1),
+      masked("b3", ["orange", "green", "green", "red"], 2),
+      normal("b4", ["orange", "orange", "purple", "blue"]),
+      normal("b5", ["purple", "blue", "orange", "red"]),
+      normal("b6", ["yellow", "yellow"]),
+      normal("b7", ["green", "purple", "purple", "green"]),
+      empty("b8"),
       empty("b9"),
+      empty("b10"),
     ],
   },
   // 第 50 关
   {
     id: 50,
-    title: "首版最终挑战",
-    optimalSteps: 29,
+    title: "三层问号最终挑战",
+    optimalSteps: 20,
     difficulty: "master",
     bottles: [
-      leak("b1", ["pink", "red", "pink", "green"], "b6"),
-      masked("b2", ["red", "green", "blue", "pink"], 2),
-      hidden("b3", ["yellow", "cyan", "cyan", "pink"], 2),
-      normal("b4", ["purple", "cyan", "blue", "purple"]),
-      normal("b5", ["yellow", "orange", "red", "yellow"]),
-      normal("b6", ["orange", "orange", "yellow", "orange"]),
-      normal("b7", ["purple", "blue", "green", "purple"]),
-      normal("b8", ["cyan", "green", "red", "blue"]),
+      leak("b1", ["green", "green"], "b6"),
+      hidden("b2", ["red", "red", "purple", "blue"], 3),
+      masked("b3", ["purple", "orange", "yellow", "orange"], 2),
+      normal("b4", ["purple", "green", "blue", "purple"]),
+      normal("b5", ["red", "orange", "orange", "yellow"]),
+      normal("b6", ["blue", "green"]),
+      normal("b7", ["red", "yellow", "yellow", "blue"]),
+      empty("b8"),
       empty("b9"),
       empty("b10"),
     ],
