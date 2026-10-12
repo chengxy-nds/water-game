@@ -383,6 +383,34 @@ export const TestTube = React.memo(forwardRef<TestTubeRef, TestTubeProps>(({
             : ''
         }`}
       >
+        {/* 瓶口中心物理定位锚点（跨平台兼容，消除移动端WebKit矩阵解析Bug） */}
+        <div
+          id={`tube-mouth-anchor-${index}`}
+          className="pointer-events-none absolute"
+          style={{
+            left: `${(BOTTLE_MOUTH_CENTER.x / BOTTLE_VIEWBOX_WIDTH) * 100}%`,
+            top: `${(BOTTLE_MOUTH_CENTER.y / BOTTLE_VIEWBOX_HEIGHT) * 100}%`,
+            width: '0px',
+            height: '0px',
+            visibility: 'hidden',
+          }}
+        />
+
+        {/* 倒水时的出水嘴物理定位锚点（随试管平移与旋转，零误差咬合瓶口） */}
+        {isPouringSource && (
+          <div
+            id="active-pour-spout-anchor"
+            className="pointer-events-none absolute"
+            style={{
+              left: `${((tiltAngle >= 0 ? 53 : 24) / BOTTLE_VIEWBOX_WIDTH) * 100}%`,
+              top: `${(14 / BOTTLE_VIEWBOX_HEIGHT) * 100}%`,
+              width: '0px',
+              height: '0px',
+              visibility: 'hidden',
+            }}
+          />
+        )}
+
         <svg
           viewBox="0 0 77 223"
           className={`overflow-visible select-none ${

@@ -94,8 +94,18 @@ export const WaterStream: React.FC<WaterStreamProps> = ({
         return;
       }
 
-      const x1 = pts.from.x;
-      const y1 = pts.from.y;
+      // 实时优先从真实DOM物理锚点读取视口坐标，彻底解决微信端矩阵解析延迟与脱节Bug
+      const spoutAnchor = document.getElementById('active-pour-spout-anchor');
+      let x1 = pts.from.x;
+      let y1 = pts.from.y;
+      if (spoutAnchor) {
+        const sRect = spoutAnchor.getBoundingClientRect();
+        if (sRect.top !== 0 || sRect.left !== 0) {
+          x1 = sRect.left + sRect.width / 2;
+          y1 = sRect.top + sRect.height / 2;
+        }
+      }
+
       const xm = pts.mouth.x;
       const ym = pts.mouth.y;
       const xImp = pts.impact.x;

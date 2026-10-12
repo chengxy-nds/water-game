@@ -3,6 +3,8 @@ import { Bottle } from '../types/game';
 import {
   BOTTLE_CHAMBER_BOTTOM,
   BOTTLE_MOUTH_CENTER,
+  BOTTLE_VIEWBOX_WIDTH,
+  BOTTLE_VIEWBOX_HEIGHT,
   TestTube,
   getBottleLiquidSurfaceY,
   getBottlePourSpoutPoint,
@@ -124,39 +126,50 @@ export const GameBoard: React.FC<GameBoardProps> = ({
   // Live coordinates of water stream: tilted spout lip → target mouth entry → surface impact
   const pourStreamPositions = useMemo((): WaterStreamTargetPoints | null => {
     if (!pourAnimation || pourAnimation.phase !== 'pouring') return null;
-    const sourceSvg = document.querySelector<SVGSVGElement>(`#tube-slot-${pourAnimation.sourceIndex} svg`);
-    const targetSvg = document.querySelector<SVGSVGElement>(`#tube-slot-${pourAnimation.targetIndex} svg`);
-    const sourceMatrix = sourceSvg?.getScreenCTM() ?? null;
-    const targetMatrix = targetSvg?.getScreenCTM() ?? null;
-    if (!sourceSvg || !targetSvg || !sourceMatrix || !targetMatrix) return null;
 
-    // 1. Spout lower lip screen coordinates
-    const sourceLip = sourceSvg.createSVGPoint();
-    const spoutPoint = getBottlePourSpoutPoint(pourAnimation.tiltAngle);
-    sourceLip.x = spoutPoint.x;
-    sourceLip.y = spoutPoint.y;
-    const fromScreen = sourceLip.matrixTransform(sourceMatrix);
+    // 1. Spout & Mouth physical anchors (100% immune to mobile WebKit transform matrix bugs)
+    const spoutAnchor = document.getElementById('active-pour-spout-anchor');
+    const targetMouthAnchor = document.getElementById(`tube-mouth-anchor-${pourAnimation.targetIndex}`);
+    const targetSlot = document.getElementById(`tube-slot-${pourAnimation.targetIndex}`);
+    const targetSvg = targetSlot?.querySelector<SVGSVGElement>('svg');
 
-    // 2. Target mouth center screen coordinates (entry hole)
-    const targetMouth = targetSvg.createSVGPoint();
-    targetMouth.x = BOTTLE_MOUTH_CENTER.x;
-    targetMouth.y = BOTTLE_MOUTH_CENTER.y;
-    const mouthScreen = targetMouth.matrixTransform(targetMatrix);
+    let fromX = 0;
+    let fromY = 0;
+    let mouthX = 0;
+    let mouthY = 0;
 
-    // 3. Target liquid surface screen coordinates (impact point)
+    if (spoutAnchor && targetMouthAnchor) {
+      const sRect = spoutAnchor.getBoundingClientRect();
+      const mRect = targetMouthAnchor.getBoundingClientRect();
+      fromX = sRect.left + sRect.width / 2;
+      fromY = sRect.top + sRect.height / 2;
+      mouthX = mRect.left + mRect.width / 2;
+      mouthY = mRect.top + mRect.height / 2;
+    } else {
+      const tRect = targetSlot?.getBoundingClientRect();
+      if (!tRect) return null;
+      mouthX = tRect.left + tRect.width * (BOTTLE_MOUTH_CENTER.x / BOTTLE_VIEWBOX_WIDTH);
+      mouthY = tRect.top + tRect.height * (BOTTLE_MOUTH_CENTER.y / BOTTLE_VIEWBOX_HEIGHT);
+      fromX = mouthX + (pourAnimation.tiltAngle >= 0 ? -16 : 16);
+      fromY = mouthY - 14;
+    }
+
+    // 2. Target liquid surface screen coordinates (impact point)
     const targetBottle = bottles[pourAnimation.targetIndex];
     const initialUnits = targetBottle ? targetBottle.layers.length : 0;
     const currentUnits = Math.min(TUBE_CAPACITY, initialUnits + pourAnimation.riseCount);
     const surfaceSvgY = getBottleLiquidSurfaceY(currentUnits, TUBE_CAPACITY);
-    const targetImpact = targetSvg.createSVGPoint();
-    targetImpact.x = BOTTLE_MOUTH_CENTER.x;
-    targetImpact.y = surfaceSvgY;
-    const impactScreen = targetImpact.matrixTransform(targetMatrix);
+
+    let impactY = mouthY + 50;
+    if (targetSvg) {
+      const tRect = targetSvg.getBoundingClientRect();
+      impactY = tRect.top + (surfaceSvgY / BOTTLE_VIEWBOX_HEIGHT) * tRect.height;
+    }
 
     return {
-      from: { x: fromScreen.x, y: fromScreen.y },
-      mouth: { x: mouthScreen.x, y: mouthScreen.y },
-      impact: { x: impactScreen.x, y: impactScreen.y },
+      from: { x: fromX, y: fromY },
+      mouth: { x: mouthX, y: mouthY },
+      impact: { x: mouthX, y: impactY },
       tiltAngle: pourAnimation.tiltAngle,
     };
   }, [pourAnimation, bottles]);
@@ -171,29 +184,25 @@ export const GameBoard: React.FC<GameBoardProps> = ({
       setLeakTo(null);
       return;
     }
-    const sourceSvg = document.querySelector<SVGSVGElement>(`#tube-slot-${leakAnimation.sourceIndex} svg`);
-    const targetSvg = document.querySelector<SVGSVGElement>(`#tube-slot-${leakAnimation.targetIndex} svg`);
-    const sourceMatrix = sourceSvg?.getScreenCTM() ?? null;
-    const targetMatrix = targetSvg?.getScreenCTM() ?? null;
-    if (sourceMatrix && targetMatrix) {
-      const sourceBottom = sourceSvg!.createSVGPoint();
-      sourceBottom.x = BOTTLE_MOUTH_CENTER.x;
-      sourceBottom.y = BOTTLE_CHAMBER_BOTTOM;
-      const sourceBottomScreen = sourceBottom.matrixTransform(sourceMatrix);
+    const sourceSlot = document.querySelector<HTMLDivElement>(`#tube-slot-${leakAnimation.sourceIndex}`);
+    const targetSlot = document.querySelector<HTMLDivElement>(`#tube-slot-${leakAnimation.targetIndex}`);
+    if (sourceSlot && targetSlot) {
+      const sRect = sourceSlot.getBoundingClientRect();
+      const tRect = targetSlot.getBoundingClientRect();
 
-      const targetBottomY = getBottleLiquidSurfaceY(
-        bottles[leakAnimation.targetIndex].layers.length,
-        TUBE_CAPACITY
-      );
-      const targetImpact = targetSvg!.createSVGPoint();
-      targetImpact.x = BOTTLE_MOUTH_CENTER.x;
-      targetImpact.y = targetBottomY;
-      const targetImpactScreen = targetImpact.matrixTransform(targetMatrix);
+      const sourceBottomX = sRect.left + sRect.width * 0.5;
+      const sourceBottomY = sRect.top + sRect.height * (BOTTLE_CHAMBER_BOTTOM / BOTTLE_VIEWBOX_HEIGHT);
 
-      setLeakFrom({ x: sourceBottomScreen.x, y: sourceBottomScreen.y });
-      setLeakTo({ x: targetImpactScreen.x, y: targetImpactScreen.y });
+      const targetBottle = bottles[leakAnimation.targetIndex];
+      const targetUnits = targetBottle ? targetBottle.layers.length : 0;
+      const targetBottomY = getBottleLiquidSurfaceY(targetUnits, TUBE_CAPACITY);
+      const targetImpactX = tRect.left + tRect.width * 0.5;
+      const targetImpactY = tRect.top + tRect.height * (targetBottomY / BOTTLE_VIEWBOX_HEIGHT);
+
+      setLeakFrom({ x: sourceBottomX, y: sourceBottomY });
+      setLeakTo({ x: targetImpactX, y: targetImpactY });
     }
-  }, [leakAnimation]);
+  }, [leakAnimation, bottles]);
 
   // Helper: compute exact physical transform for pouring bottle
   const getPourTransforms = (isPouringSource: boolean) => {

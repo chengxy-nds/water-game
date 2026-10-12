@@ -18,7 +18,13 @@ import { soundManager } from './utils/audio';
 import { GameHeader } from './components/GameHeader';
 import { ShoppingBags } from './components/ShoppingBags';
 import { GameBoard, CompletionAnimationState, LeakAnimationState, getRowDistribution } from './components/GameBoard';
-import { getBottleMouthPoint, getBottlePourSpoutPoint } from './components/TestTube';
+import {
+  getBottleMouthPoint,
+  getBottlePourSpoutPoint,
+  BOTTLE_MOUTH_CENTER,
+  BOTTLE_VIEWBOX_WIDTH,
+  BOTTLE_VIEWBOX_HEIGHT,
+} from './components/TestTube';
 import { ControlBar } from './components/ControlBar';
 import { WinModal } from './components/WinModal';
 import { LevelSelectorModal } from './components/LevelSelectorModal';
@@ -603,39 +609,42 @@ export default function App() {
       let tiltAngle = (isTargetRight ? 1 : -1) * tiltForUnits(sourceUnits);
 
       if (sSlot && tSlot) {
-        const sourceSvg = sSlot.querySelector<SVGSVGElement>('svg');
-        const targetSvg = tSlot.querySelector<SVGSVGElement>('svg');
-        const sourceMatrix = sourceSvg?.getScreenCTM();
-        const targetMatrix = targetSvg?.getScreenCTM();
-        const mouth = getBottleMouthPoint();
-        if (sourceSvg && targetSvg && sourceMatrix && targetMatrix) {
-          const toScreen = (svg: SVGSVGElement, x: number, y: number, matrix: DOMMatrix) => {
-            const point = svg.createSVGPoint();
-            point.x = x;
-            point.y = y;
-            return point.matrixTransform(matrix);
+        const sRect = sSlot.getBoundingClientRect();
+        const tRect = tSlot.getBoundingClientRect();
+        const W = sRect.width;
+        const H = sRect.height;
+        const mouthRatioX = BOTTLE_MOUTH_CENTER.x / BOTTLE_VIEWBOX_WIDTH;
+        const mouthRatioY = BOTTLE_MOUTH_CENTER.y / BOTTLE_VIEWBOX_HEIGHT;
+
+        const sourcePivotX = sRect.left + W * mouthRatioX;
+        const sourcePivotY = sRect.top + H * mouthRatioY;
+        const targetMouthX = tRect.left + tRect.width * mouthRatioX;
+        const targetMouthY = tRect.top + tRect.height * mouthRatioY;
+
+        isTargetRight = targetMouthX >= sourcePivotX;
+        tiltAngle = (isTargetRight ? 1 : -1) * tiltForUnits(sourceUnits);
+
+        alignForTilt = (angleDegrees: number) => {
+          const isRight = angleDegrees >= 0;
+          const spoutSvgX = isRight ? 53 : 24;
+          const spoutSvgY = 14;
+
+          const vectorX = ((spoutSvgX - BOTTLE_MOUTH_CENTER.x) / BOTTLE_VIEWBOX_WIDTH) * W;
+          const vectorY = ((spoutSvgY - BOTTLE_MOUTH_CENTER.y) / BOTTLE_VIEWBOX_HEIGHT) * H;
+          const angleRad = (angleDegrees * Math.PI) / 180;
+          const rotatedX = vectorX * Math.cos(angleRad) - vectorY * Math.sin(angleRad);
+          const rotatedY = vectorX * Math.sin(angleRad) + vectorY * Math.cos(angleRad);
+
+          const targetSpoutTargetX = targetMouthX + (isRight ? -POUR_MOUTH_OFFSET_X : POUR_MOUTH_OFFSET_X);
+          const targetSpoutTargetY = targetMouthY - POUR_MOUTH_GAP_Y;
+
+          return {
+            x: targetSpoutTargetX - sourcePivotX - rotatedX,
+            y: targetSpoutTargetY - sourcePivotY - rotatedY,
           };
-          const sourcePivot = toScreen(sourceSvg, mouth.x, mouth.y, sourceMatrix);
-          const targetMouth = toScreen(targetSvg, mouth.x, mouth.y, targetMatrix);
-          isTargetRight = targetMouth.x >= sourcePivot.x;
-          tiltAngle = (isTargetRight ? 1 : -1) * tiltForUnits(sourceUnits);
-          alignForTilt = (angleDegrees: number) => {
-            const spout = getBottlePourSpoutPoint(angleDegrees);
-            const spoutScreen = toScreen(sourceSvg, spout.x, spout.y, sourceMatrix);
-            const vectorX = spoutScreen.x - sourcePivot.x;
-            const vectorY = spoutScreen.y - sourcePivot.y;
-            const angle = (angleDegrees * Math.PI) / 180;
-            const rotatedX = vectorX * Math.cos(angle) - vectorY * Math.sin(angle);
-            const rotatedY = vectorX * Math.sin(angle) + vectorY * Math.cos(angle);
-            const targetSpoutTargetX = targetMouth.x + (isTargetRight ? -POUR_MOUTH_OFFSET_X : POUR_MOUTH_OFFSET_X);
-            const targetSpoutTargetY = targetMouth.y - POUR_MOUTH_GAP_Y;
-            return {
-              x: targetSpoutTargetX - sourcePivot.x - rotatedX,
-              y: targetSpoutTargetY - sourcePivot.y - rotatedY,
-            };
-          };
-          ({ x: exactX, y: exactY } = alignForTilt(tiltAngle));
-        }
+        };
+
+        ({ x: exactX, y: exactY } = alignForTilt(tiltAngle));
       }
 
       // Phase 1: Fly and align above target tube lip
@@ -716,7 +725,7 @@ export default function App() {
           // Keep tipping the bottle up as it drains (less water → higher tilt).
           const remainingUnits = sourceUnits - currentAmount;
           const currentTilt = (isTargetRight ? 1 : -1) * tiltForUnits(remainingUnits);
-
+          const { x: curX, y: curY } = alignForTilt(currentTilt);
 
           setPourAnimation((prev) => {
             if (!prev || prev.phase !== 'pouring') return prev;
@@ -725,8 +734,8 @@ export default function App() {
               drainCount: currentAmount,
               riseCount: currentAmount,
               tiltAngle: currentTilt,
-              translateX: exactX,
-              translateY: exactY,
+              translateX: curX,
+              translateY: curY,
             };
           });
 
