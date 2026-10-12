@@ -641,9 +641,9 @@ export default function App() {
         colorId: check.color,
         count: check.count,
         phase: 'flying',
-        tiltAngle: tiltAngle * 0.25,
-        translateX: exactX * 0.85,
-        translateY: exactY - 24,
+        tiltAngle,
+        translateX: exactX,
+        translateY: exactY,
         drainCount: 0,
         riseCount: 0,
       });
@@ -712,11 +712,7 @@ export default function App() {
           // Keep tipping the bottle up as it drains (less water → higher tilt).
           const remainingUnits = sourceUnits - currentAmount;
           const currentTilt = (isTargetRight ? 1 : -1) * tiltForUnits(remainingUnits);
-          const spoutCorrection = measureSpoutCorrection(currentTilt);
-          if (spoutCorrection) {
-            alignedTranslateX += spoutCorrection.x;
-            alignedTranslateY += spoutCorrection.y;
-          }
+
 
           setPourAnimation((prev) => {
             if (!prev || prev.phase !== 'pouring') return prev;
@@ -725,8 +721,8 @@ export default function App() {
               drainCount: currentAmount,
               riseCount: currentAmount,
               tiltAngle: currentTilt,
-              translateX: alignedTranslateX,
-              translateY: alignedTranslateY,
+              translateX: exactX,
+              translateY: exactY,
             };
           });
 
@@ -737,7 +733,7 @@ export default function App() {
         };
 
         pourRafRef.current = requestAnimationFrame(animatePourStream);
-      }, 450);
+      }, 380);
 
       // Phase 3: Finish liquid stream, commit state change and return
       setTimeout(() => {
@@ -786,14 +782,14 @@ export default function App() {
               }
             : null
         );
-      }, 1550);
+      }, 1380);
 
       // Phase 4: Settle tube back to rack
       setTimeout(() => {
         setPourAnimation(null);
         setSelectedIndex(null);
         setHint(null);
-      }, 2150);
+      }, 1800);
 
       return true;
     },

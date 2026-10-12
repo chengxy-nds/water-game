@@ -287,10 +287,11 @@ export const TestTube = React.memo(forwardRef<TestTubeRef, TestTubeProps>(({
       : isPouringSource
       ? isPouringFluid
         ? 'transform 0s'
-        : 'transform 0.45s cubic-bezier(0.25, 1, 0.5, 1)'
+        : 'transform 0.38s cubic-bezier(0.25, 1, 0.5, 1)'
       : 'transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1)',
     opacity: isFlying ? 0.78 : 1,
     zIndex: isFlying ? 90 : isPouringSource ? 45 : isSelected ? 30 : 10,
+    willChange: isPouringSource || isFlying ? 'transform' : 'auto',
     transformOrigin: isPouringSource
       ? `50% ${(BOTTLE_MOUTH_CENTER.y / BOTTLE_VIEWBOX_HEIGHT) * 100}%`
       : 'center bottom',
@@ -514,27 +515,42 @@ export const TestTube = React.memo(forwardRef<TestTubeRef, TestTubeProps>(({
                 const Y_MAX = 210.5;
                 const totalH = Y_MAX - Y_MIN;
 
-                // Function to find C such that area under y = m*(x-CX) + C equals target volume
-                const findC_SVG = (targetH: number) => {
-                  const targetArea = 2 * W * targetH;
-                  if (targetArea <= 0.05) return Y_MAX + Math.abs(slope) * W + 10;
-                  if (targetArea >= 2 * W * totalH) return Y_MIN - Math.abs(slope) * W - 10;
+                const sampleCount = 48;
+                const dx = (2 * W) / sampleCount;
+                const crossSections = Array.from({ length: sampleCount }, (_, sampleIndex) => {
+                  const x = CX - W + (sampleIndex + 0.5) * dx;
+                  const leftBaseY = x < 30.3
+                    ? 186.5 + Math.sqrt(Math.max(0, 24 * 24 - (x - 30.3) ** 2))
+                    : 210.5;
+                  const bottomY = x > 46.3
+                    ? 186.5 + Math.sqrt(Math.max(0, 24 * 24 - (x - 46.3) ** 2))
+                    : leftBaseY;
+                  return { x, bottomY };
+                });
 
+                const totalArea = crossSections.reduce(
+                  (area, section) => area + (section.bottomY - Y_MIN) * dx,
+                  0
+                );
+                const getFilledArea = (lineOffset: number) =>
+                  crossSections.reduce((area, section) => {
+                    const freeSurfaceY = slope * (section.x - CX) + lineOffset;
+                    const filledHeight = Math.max(
+                      0,
+                      Math.min(section.bottomY - Y_MIN, section.bottomY - Math.max(Y_MIN, freeSurfaceY))
+                    );
+                    return area + filledHeight * dx;
+                  }, 0);
+
+                // Solve each liquid boundary against the bottle's rounded interior, not a rectangular approximation.
+                const findC_SVG = (targetH: number) => {
+                  const targetArea = totalArea * Math.max(0, Math.min(1, targetH / totalH));
                   let low = Y_MIN - Math.abs(slope) * W - totalH;
                   let high = Y_MAX + Math.abs(slope) * W + totalH;
 
-                  const steps = 16;
-                  const dx = (2 * W) / steps;
-
-                  for (let iter = 0; iter < 14; iter++) {
+                  for (let iter = 0; iter < 18; iter++) {
                     const mid = (low + high) * 0.5;
-                    let area = 0;
-                    for (let s = 0; s < steps; s++) {
-                      const x = (CX - W) + (s + 0.5) * dx;
-                      const yLine = Math.max(Y_MIN, Math.min(Y_MAX, slope * (x - CX) + mid));
-                      area += (Y_MAX - yLine) * dx;
-                    }
-                    if (area > targetArea) {
+                    if (getFilledArea(mid) > targetArea) {
                       low = mid;
                     } else {
                       high = mid;

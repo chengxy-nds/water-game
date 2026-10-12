@@ -5,10 +5,29 @@ class SoundManager {
   public enabled: boolean = true;
   public musicEnabled: boolean = false;
 
-  // Background music loop state
   private musicTimer: number | null = null;
   private musicGain: GainNode | null = null;
   private musicStep = 0;
+  private cachedNoiseBuffer: AudioBuffer | null = null;
+
+  private getOrCreateNoiseBuffer(): AudioBuffer | null {
+    if (!this.ctx) return null;
+    if (this.cachedNoiseBuffer && this.cachedNoiseBuffer.sampleRate === this.ctx.sampleRate) {
+      return this.cachedNoiseBuffer;
+    }
+    const sampleRate = this.ctx.sampleRate;
+    const bufferSize = Math.floor(sampleRate * 1.5);
+    const buffer = this.ctx.createBuffer(1, bufferSize, sampleRate);
+    const data = buffer.getChannelData(0);
+    let lastVal = 0;
+    for (let i = 0; i < bufferSize; i++) {
+      const white = Math.random() * 2 - 1;
+      lastVal = lastVal * 0.45 + white * 0.55;
+      data[i] = lastVal;
+    }
+    this.cachedNoiseBuffer = buffer;
+    return buffer;
+  }
 
   private initContext() {
     if (!this.ctx && typeof window !== 'undefined') {
@@ -88,19 +107,11 @@ class SoundManager {
       const now = this.ctx.currentTime;
 
       // 1. Hydrodynamic Fluid Stream Noise with Upward Sweeping Bandpass Filter
-      const bufferSize = Math.floor(this.ctx.sampleRate * duration);
-      const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
-      const data = buffer.getChannelData(0);
-      let lastVal = 0;
-      for (let i = 0; i < bufferSize; i++) {
-        // Pink-filtered noise for smooth, natural rushing water stream
-        const white = Math.random() * 2 - 1;
-        lastVal = lastVal * 0.45 + white * 0.55;
-        data[i] = lastVal;
-      }
+      const noiseBuffer = this.getOrCreateNoiseBuffer();
+      if (!noiseBuffer) return;
 
       const noiseSource = this.ctx.createBufferSource();
-      noiseSource.buffer = buffer;
+      noiseSource.buffer = noiseBuffer;
 
       // Sweeping bandpass filter: resonant air column acoustics rising with liquid level
       const filter = this.ctx.createBiquadFilter();

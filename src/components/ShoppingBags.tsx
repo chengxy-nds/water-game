@@ -16,6 +16,26 @@ export const COLOR_BAG_MAP: Record<string, string> = {
   amber: '/assets_figma/bag_yellow.png',
 };
 
+// Global background preloading & memory decode to eliminate lag when bags appear
+if (typeof window !== 'undefined') {
+  const preloadBags = () => {
+    const urls = Array.from(new Set(Object.values(COLOR_BAG_MAP))).concat([
+      '/assets_figma/bag_camera.png',
+      '/assets_figma/deco_star.png',
+    ]);
+    urls.forEach((src) => {
+      const img = new Image();
+      img.src = src;
+      img.decode?.().catch(() => {});
+    });
+  };
+  if ('requestIdleCallback' in window) {
+    (window as unknown as { requestIdleCallback: (cb: () => void) => void }).requestIdleCallback(preloadBags);
+  } else {
+    setTimeout(preloadBags, 60);
+  }
+}
+
 const RiderHand: React.FC = () => (
   <div className="rider-hand-grab absolute left-1/2 top-0 z-20 pointer-events-none" aria-hidden="true">
     <svg width="44" height="48" viewBox="0 0 44 48" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -127,13 +147,15 @@ export const ShoppingBags: React.FC<ShoppingBagsProps> = ({
           >
             {isLifting && <RiderHand />}
 
-            <div className="relative w-[68px] sm:w-[74px] h-[132px] sm:h-[144px]">
+            <div className="relative w-[68px] sm:w-[74px] h-[132px] sm:h-[144px]" style={{ willChange: 'transform' }}>
               <img
                 src={bagImg}
                 alt={`购物袋-${colorId}`}
                 className="w-full h-full object-contain pointer-events-none"
                 data-bag-art
                 draggable={false}
+                loading="eager"
+                decoding="async"
               />
 
               {/* 完成闪烁星星 */}
@@ -173,7 +195,7 @@ export const ShoppingBags: React.FC<ShoppingBagsProps> = ({
       >
         {isBonusLifting && <RiderHand />}
 
-        <div className="relative w-[68px] sm:w-[74px] h-[132px] sm:h-[144px]">
+        <div className="relative w-[68px] sm:w-[74px] h-[132px] sm:h-[144px]" style={{ willChange: 'transform' }}>
           <img
             src={bonusBagImg}
             alt={unlockedBonusColor ? `已解锁购物袋-${unlockedBonusColor}` : '看视频解锁购物袋'}
@@ -182,6 +204,8 @@ export const ShoppingBags: React.FC<ShoppingBagsProps> = ({
               bonusUnlocked && unlockedBonusColor ? 'anim-bag-drop-in' : ''
             }`}
             draggable={false}
+            loading="eager"
+            decoding="async"
           />
 
           {/* 解锁标记徽章 */}
