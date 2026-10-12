@@ -12,9 +12,37 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- 核心静态贴图内存预加载，避免切关时瓶子和购物袋重新解码闪烁 -->
+    <link rel="preload" as="image" href="/figma/bottle_empty_clean.png" />
+    <link rel="preload" as="image" href="/figma/bottle_specular_clean.png" />
+    <link rel="preload" as="image" href="/figma/shelf_base.png" />
+    <link rel="preload" as="image" href="/assets_figma/bag_red.png" />
+    <link rel="preload" as="image" href="/assets_figma/bag_blue.png" />
+    <link rel="preload" as="image" href="/assets_figma/bag_yellow.png" />
+    <link rel="preload" as="image" href="/assets_figma/bag_green.png" />
+    <link rel="preload" as="image" href="/assets_figma/bag_purple.png" />
+    <link rel="preload" as="image" href="/assets_figma/bag_orange.png" />
+    <link rel="preload" as="image" href="/assets_figma/bag_pink.png" />
+    <link rel="preload" as="image" href="/assets_figma/bag_cyan.png" />
+    <link rel="preload" as="image" href="/assets_figma/bag_camera.png" />
   </head>
   <body class="bg-[#0b101b] text-slate-100 select-none antialiased overflow-x-hidden">
     <div id="root"></div>
+    <!-- 常驻隐藏离屏容器，保持核心纹理在GPU纹理缓存中解码常驻 -->
+    <div id="preloaded-textures" style="display:none;position:absolute;width:0;height:0;overflow:hidden;" aria-hidden="true">
+      <img src="/figma/bottle_empty_clean.png" alt="" />
+      <img src="/figma/bottle_specular_clean.png" alt="" />
+      <img src="/figma/shelf_base.png" alt="" />
+      <img src="/assets_figma/bag_red.png" alt="" />
+      <img src="/assets_figma/bag_blue.png" alt="" />
+      <img src="/assets_figma/bag_yellow.png" alt="" />
+      <img src="/assets_figma/bag_green.png" alt="" />
+      <img src="/assets_figma/bag_purple.png" alt="" />
+      <img src="/assets_figma/bag_orange.png" alt="" />
+      <img src="/assets_figma/bag_pink.png" alt="" />
+      <img src="/assets_figma/bag_cyan.png" alt="" />
+      <img src="/assets_figma/bag_camera.png" alt="" />
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

@@ -16,12 +16,15 @@ export const COLOR_BAG_MAP: Record<string, string> = {
   amber: '/assets_figma/bag_yellow.png',
 };
 
-// Global background preloading & memory decode to eliminate lag when bags appear
+// Global background preloading & memory decode to eliminate lag when assets appear
 if (typeof window !== 'undefined') {
-  const preloadBags = () => {
+  const preloadAssets = () => {
     const urls = Array.from(new Set(Object.values(COLOR_BAG_MAP))).concat([
       '/assets_figma/bag_camera.png',
       '/assets_figma/deco_star.png',
+      '/figma/bottle_empty_clean.png',
+      '/figma/bottle_specular_clean.png',
+      '/figma/shelf_base.png',
     ]);
     urls.forEach((src) => {
       const img = new Image();
@@ -29,11 +32,7 @@ if (typeof window !== 'undefined') {
       img.decode?.().catch(() => {});
     });
   };
-  if ('requestIdleCallback' in window) {
-    (window as unknown as { requestIdleCallback: (cb: () => void) => void }).requestIdleCallback(preloadBags);
-  } else {
-    setTimeout(preloadBags, 60);
-  }
+  preloadAssets();
 }
 
 const RiderHand: React.FC = () => (
@@ -130,7 +129,7 @@ export const ShoppingBags: React.FC<ShoppingBagsProps> = ({
 
         return (
           <div
-            key={`bag-slot-${slotIdx}-${colorId || 'none'}`}
+            key={`bag-slot-${slotIdx}`}
             id={colorId ? `shopping-bag-${colorId}` : undefined}
             data-slot={slotIdx}
             className={`relative flex flex-col items-center transition-all ${
@@ -155,7 +154,7 @@ export const ShoppingBags: React.FC<ShoppingBagsProps> = ({
                 data-bag-art
                 draggable={false}
                 loading="eager"
-                decoding="async"
+                decoding="sync"
               />
 
               {/* 完成闪烁星星 */}

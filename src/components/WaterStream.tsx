@@ -129,56 +129,30 @@ export const WaterStream: React.FC<WaterStreamProps> = ({
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
 
-      // Layer 1: Ambient outer liquid halo / soft glow
-      ctx.shadowBlur = 10;
-      ctx.shadowColor = mainHex;
-      ctx.lineWidth = 14;
-      ctx.strokeStyle = `${mainHex}66`;
-      ctx.stroke(streamPath);
-
-      // Layer 2: Solid viscous fluid body (Pure high-saturation fluid color matching Fig 2)
+      // 1. Solid Pure Liquid Stream Body (Natural viscous fluid color, no radioactive glow)
       ctx.shadowBlur = 0;
-      ctx.lineWidth = 10.5;
+      ctx.lineWidth = 9.2;
       ctx.strokeStyle = mainHex;
       ctx.stroke(streamPath);
 
-      // Layer 3: Cylindrical front volume highlight
-      ctx.lineWidth = 5.2;
+      // 2. Subtle internal cylindrical depth (gentle tone transition, no harsh white glare)
+      ctx.lineWidth = 4.0;
       ctx.strokeStyle = topHex;
+      ctx.globalAlpha = 0.45;
       ctx.stroke(streamPath);
-
-      // Layer 4: Specular reflection highlight streak (Offset leftwards toward light source)
-      // Gives the stream an authentic glass-like / viscous syrup 3D cylindrical sheen.
-      const specularPath = new Path2D();
-      const specOffset = -2.2;
-      specularPath.moveTo(x1 + specOffset * 0.6, y1);
-      if (Math.abs(dyAir) > 3) {
-        specularPath.bezierCurveTo(
-          cp1x + specOffset,
-          cp1y,
-          cp2x + specOffset,
-          cp2y,
-          xm + specOffset,
-          ym
-        );
-      }
-      specularPath.lineTo(xImp + specOffset, Math.max(ym, yImp - 2));
-
-      ctx.lineWidth = 1.8;
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.72)';
-      ctx.stroke(specularPath);
+      ctx.globalAlpha = 1.0;
 
       // Spout root meniscus: Smooth teardrop joint anchoring stream firmly onto bottle lip
       ctx.beginPath();
-      ctx.ellipse(x1, y1, 5.5, 3.8, (pts.tiltAngle * Math.PI) / 180, 0, Math.PI * 2);
+      ctx.ellipse(x1, y1, 5.0, 3.4, (pts.tiltAngle * Math.PI) / 180, 0, Math.PI * 2);
       ctx.fillStyle = mainHex;
       ctx.fill();
 
-      // Liquid Surface Impact Interaction (Matching Reference Fig 2)
+      // Liquid Surface Impact Interaction
       if (showSplash && yImp >= ym) {
         const pulse = 1 + Math.sin(phase * 4.5) * 0.12;
-        const moundW = 11 * pulse;
-        const moundH = 5 * pulse;
+        const moundW = 10 * pulse;
+        const moundH = 4.5 * pulse;
 
         // A. Surging Impact Dome (Rising liquid mound where stream hits surface)
         ctx.beginPath();
@@ -186,38 +160,21 @@ export const WaterStream: React.FC<WaterStreamProps> = ({
         ctx.fillStyle = mainHex;
         ctx.fill();
 
-        // B. Top rim highlight of the impact mound
-        ctx.beginPath();
-        ctx.ellipse(xImp, yImp - 2.5, moundW * 0.72, moundH * 0.55, 0, 0, Math.PI);
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.65)';
-        ctx.lineWidth = 1.4;
-        ctx.stroke();
-
-        // C. Left & Right bouncing liquid pearls (authentic droplet pearls with specular glint)
+        // B. Left & Right bouncing liquid pearls (soft natural fluid droplets)
         const leftPearlX = xImp - moundW * 0.72;
         const rightPearlX = xImp + moundW * 0.72;
         const waveSway = Math.sin(phase * 3.6) * 1.2;
 
         // Left water droplet pearl
         ctx.beginPath();
-        ctx.arc(leftPearlX, yImp - 2.8 + waveSway, 3.6, 0, Math.PI * 2);
+        ctx.arc(leftPearlX, yImp - 2.6 + waveSway, 3.0, 0, Math.PI * 2);
         ctx.fillStyle = topHex;
-        ctx.fill();
-        // Left pearl specular glint
-        ctx.beginPath();
-        ctx.arc(leftPearlX - 1.0, yImp - 3.8 + waveSway, 0.9, 0, Math.PI * 2);
-        ctx.fillStyle = '#ffffff';
         ctx.fill();
 
         // Right water droplet pearl
         ctx.beginPath();
-        ctx.arc(rightPearlX, yImp - 2.4 - waveSway, 3.0, 0, Math.PI * 2);
+        ctx.arc(rightPearlX, yImp - 2.2 - waveSway, 2.6, 0, Math.PI * 2);
         ctx.fillStyle = topHex;
-        ctx.fill();
-        // Right pearl specular glint
-        ctx.beginPath();
-        ctx.arc(rightPearlX - 0.8, yImp - 3.2 - waveSway, 0.8, 0, Math.PI * 2);
-        ctx.fillStyle = '#ffffff';
         ctx.fill();
 
         // D. Floating frothy micro-bubbles around impact center

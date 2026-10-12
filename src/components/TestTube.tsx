@@ -13,7 +13,7 @@ export const BOTTLE_VIEWBOX_WIDTH = 77;
 export const BOTTLE_VIEWBOX_HEIGHT = 223;
 export const BOTTLE_MOUTH_CENTER = { x: 38.5, y: 14 };
 export const BOTTLE_CHAMBER_TOP = 47.5;
-export const BOTTLE_CHAMBER_BOTTOM = 207.5;
+export const BOTTLE_CHAMBER_BOTTOM = 210.5;
 
 export const getBottleMouthPoint = () => BOTTLE_MOUTH_CENTER;
 
@@ -242,14 +242,14 @@ export const TestTube = React.memo(forwardRef<TestTubeRef, TestTubeProps>(({
   }
 
   // Inner chamber coordinates (viewBox 0 0 77 223, matching Figma's exact glass bottle)
-  // Inner chamber runs from CHAMBER_TOP_Y = 47.5 to CHAMBER_BOTTOM_Y = 207.5.
-  // Total chamber height = 160px.
-  // 4 units capacity: 160 / 4 = 40px per unit.
-  const CHAMBER_BOTTOM_Y = 207.5;
+  // Inner chamber runs from CHAMBER_TOP_Y = 47.5 to CHAMBER_BOTTOM_Y = 210.5.
+  // Total chamber height = 163px.
+  // 4 units capacity: 163 / 4 = 40.75px per unit.
+  const CHAMBER_BOTTOM_Y = 210.5;
   const CHAMBER_TOP_Y = 47.5;
-  const CHAMBER_HEIGHT = CHAMBER_BOTTOM_Y - CHAMBER_TOP_Y; // 160px
+  const CHAMBER_HEIGHT = CHAMBER_BOTTOM_Y - CHAMBER_TOP_Y; // 163px
   const RX = 32;
-  const RY = 8.0;
+  const RY = 3.2; // Natural subtle meniscus curvature (was harsh 8.0)
 
   const getBlockNominalHeight = (_layerIdx: number, totalCapacity: number = 4): number => {
     return CHAMBER_HEIGHT / totalCapacity;
@@ -270,6 +270,49 @@ export const TestTube = React.memo(forwardRef<TestTubeRef, TestTubeProps>(({
     currentY = yTop;
     return { ...layer, yBottom, yTop };
   });
+
+  // Seamlessly merge contiguous blocks of the same color into a unified fluid volume
+  interface FluidSegment {
+    colorId: string;
+    yTop: number;
+    yBottom: number;
+    isBottom: boolean;
+    isTop: boolean;
+    isHidden: boolean;
+    isDimmed: boolean;
+    unitBoundaries: number[];
+  }
+
+  const fluidSegments: FluidSegment[] = [];
+  for (let i = 0; i < calculatedLayers.length; i++) {
+    const layer = calculatedLayers[i];
+    const isHiddenLayer = hiddenCount > 0 && i < hiddenCount;
+    const isDimmed = maskHidden && i === 0;
+
+    const prevSeg = fluidSegments[fluidSegments.length - 1];
+    if (
+      prevSeg &&
+      prevSeg.colorId === layer.colorId &&
+      prevSeg.isHidden === isHiddenLayer &&
+      prevSeg.isDimmed === isDimmed
+    ) {
+      prevSeg.unitBoundaries.push(prevSeg.yTop);
+      prevSeg.yTop = layer.yTop;
+      prevSeg.isTop = layer.isTop || false;
+    } else {
+      fluidSegments.push({
+        colorId: layer.colorId,
+        yBottom: layer.yBottom,
+        yTop: layer.yTop,
+        isBottom: layer.isBottom || false,
+        isTop: layer.isTop || false,
+        isHidden: isHiddenLayer,
+        isDimmed,
+        unitBoundaries: [],
+      });
+    }
+  }
+
   const targetSurfaceY = calculatedLayers.length > 0
     ? calculatedLayers[calculatedLayers.length - 1].yTop
     : BOTTLE_CHAMBER_BOTTOM;
@@ -475,8 +518,7 @@ export const TestTube = React.memo(forwardRef<TestTubeRef, TestTubeProps>(({
                   M 6.3 47.5
                   H 70.3
                   V 196.0
-                  C 70.3 203.0, 57.0 207.5, 38.5 207.5
-                  C 20.0 207.5, 6.3 203.0, 6.3 196.0
+                  A 32 14.5 0 0 1 6.3 196.0
                   Z
                 "
               />
@@ -490,8 +532,7 @@ export const TestTube = React.memo(forwardRef<TestTubeRef, TestTubeProps>(({
                   L 25.5 28
                   C 25.5 38, 6.3 38, 6.3 47.5
                   L 6.3 196.0
-                  C 6.3 203.0, 20.0 207.5, 38.5 207.5
-                  C 57.0 207.5, 70.3 203.0, 70.3 196.0
+                  A 32 14.5 0 0 0 70.3 196.0
                   L 70.3 47.5
                   C 70.3 38, 51.5 38, 51.5 28
                   L 51.5 14
@@ -630,64 +671,57 @@ export const TestTube = React.memo(forwardRef<TestTubeRef, TestTubeProps>(({
               })()}
             </g>
           ) : (
-            /* Standard Rest State: Layered 3D Cylindrical Gel Blocks */
+            /* Standard Rest State: Layered Continuous Fluid Volumes */
             <g clipPath={`url(#inner-clip-${index})`}>
-              {calculatedLayers.map((layer, lIdx) => {
-                const cDef = getColor(layer.colorId);
-                const { yBottom, yTop, isBottom, isTop } = layer;
-                const isHiddenLayer = hiddenCount > 0 && lIdx < hiddenCount;
-                const isDimmed = maskHidden && lIdx === 0;
-                const liquidFill = isHiddenLayer ? `url(#fog-grad-${index})` : `url(#grad-${cDef.id}-${index})`;
+              {fluidSegments.map((seg, sIdx) => {
+                const cDef = getColor(seg.colorId);
+                const liquidFill = seg.isHidden ? `url(#fog-grad-${index})` : `url(#grad-${cDef.id}-${index})`;
 
-                const bodyPath = isBottom
+                const bodyPath = seg.isBottom
                   ? `
-                    M 6.3 ${yTop}
+                    M 6.3 ${seg.yTop}
                     L 6.3 196.0
-                    C 6.3 203.0, 20.0 207.5, 38.5 207.5
-                    C 57.0 207.5, 70.3 203.0, 70.3 196.0
-                    L 70.3 ${yTop}
-                    A ${RX} ${RY} 0 0 1 6.3 ${yTop}
+                    A 32 14.5 0 0 0 70.3 196.0
+                    L 70.3 ${seg.yTop}
+                    A ${RX} ${RY} 0 0 1 6.3 ${seg.yTop}
                     Z
                   `
                   : `
-                    M 6.3 ${yTop}
-                    L 6.3 ${yBottom}
-                    A ${RX} ${RY} 0 0 0 70.3 ${yBottom}
-                    L 70.3 ${yTop}
-                    A ${RX} ${RY} 0 0 1 6.3 ${yTop}
+                    M 6.3 ${seg.yTop}
+                    L 6.3 ${seg.yBottom}
+                    A ${RX} ${RY} 0 0 0 70.3 ${seg.yBottom}
+                    L 70.3 ${seg.yTop}
+                    A ${RX} ${RY} 0 0 1 6.3 ${seg.yTop}
                     Z
                   `;
 
                 return (
-                  <g key={`liquid-block-${layer.colorId}-${lIdx}`} opacity={isDimmed ? 0.4 : 1}>
-                    <ellipse
-                      cx="38.5"
-                      cy={Math.min(yBottom + 2, 207.5)}
-                      rx={24}
-                      ry={Math.max(5, (yBottom - yTop) * 0.22)}
-                      fill={`url(#liquid-bloom-${index})`}
-                      opacity={0.7}
-                      filter={`url(#liquid-glow-${index})`}
-                    />
-
-                    {/* 3D Fluid Cylinder Body */}
+                  <g key={`fluid-seg-${seg.colorId}-${sIdx}`} opacity={seg.isDimmed ? 0.4 : 1}>
+                    {/* Unified 3D Fluid Cylinder Body (Same colors completely seamless) */}
                     <path
                       d={bodyPath}
                       fill={liquidFill}
                     />
 
-                    <path
-                      d={bodyPath}
-                      fill="none"
-                      stroke="rgba(255,255,255,0.18)"
-                      strokeWidth="0.9"
-                    />
+                    {/* Subtle, non-intrusive internal unit guideline within multi-unit same-color liquid */}
+                    {seg.unitBoundaries.map((bY, bIdx) => (
+                      <line
+                        key={`unit-ref-${bIdx}`}
+                        x1="14"
+                        y1={bY}
+                        x2="63"
+                        y2={bY}
+                        stroke="rgba(255, 255, 255, 0.08)"
+                        strokeWidth="0.75"
+                        strokeDasharray="3 4"
+                      />
+                    ))}
 
                     {/* Frosted fog question mark over hidden bottom layers */}
-                    {isHiddenLayer && (
+                    {seg.isHidden && (
                       <text
                         x="38.5"
-                        y={(yTop + yBottom) / 2 + 3}
+                        y={(seg.yTop + seg.yBottom) / 2 + 3}
                         textAnchor="middle"
                         fontSize="14"
                         fontWeight="bold"
@@ -697,18 +731,18 @@ export const TestTube = React.memo(forwardRef<TestTubeRef, TestTubeProps>(({
                       </text>
                     )}
 
-                    {/* Subtle boundary glare between different stacked colors; no harsh black seam */}
-                    {!isBottom && calculatedLayers[lIdx - 1]?.colorId !== layer.colorId && (
+                    {/* Gentle, soft meniscus boundary line between distinct stacked colors (no harsh glare) */}
+                    {!seg.isBottom && (
                       <path
-                        d={`M 6.3 ${yBottom} A ${RX} ${RY} 0 0 0 70.3 ${yBottom}`}
-                        stroke="rgba(255, 255, 255, 0.16)"
-                        strokeWidth="0.8"
+                        d={`M 6.3 ${seg.yBottom} A ${RX} ${RY} 0 0 0 70.3 ${seg.yBottom}`}
+                        stroke="rgba(255, 255, 255, 0.14)"
+                        strokeWidth="0.65"
                         fill="none"
                       />
                     )}
 
-                    {/* Top Meniscus 3D Oval Cap */}
-                    {isTop && layer.heightPercent > 4 && (
+                    {/* Top Free Surface Meniscus Cap (only on topmost fluid layer) */}
+                    {seg.isTop && (seg.yBottom - seg.yTop) > 2 && (
                       <g
                         className={
                           isShaking
@@ -733,24 +767,23 @@ export const TestTube = React.memo(forwardRef<TestTubeRef, TestTubeProps>(({
                       >
                         <ellipse
                           cx="38.5"
-                          cy={yTop}
+                          cy={seg.yTop}
                           rx={RX}
                           ry={RY}
-                          fill={isHiddenLayer ? `url(#fog-grad-${index})` : `url(#meniscus-grad-${cDef.id}-${index})`}
-                          stroke="rgba(255, 255, 255, 0.3)"
-                          strokeWidth="0.65"
+                          fill={seg.isHidden ? `url(#fog-grad-${index})` : `url(#meniscus-grad-${cDef.id}-${index})`}
+                          stroke="rgba(255, 255, 255, 0.22)"
+                          strokeWidth="0.6"
                         />
                         <path
-                          d={`M 14 ${yTop + 1.4} Q 38.5 ${yTop + 5.5} 63 ${yTop + 1.4}`}
+                          d={`M 16 ${seg.yTop + 0.6} Q 38.5 ${seg.yTop + RY * 0.75} 61 ${seg.yTop + 0.6}`}
                           stroke="#ffffff"
-                          strokeWidth="1.1"
+                          strokeWidth="0.8"
                           strokeLinecap="round"
                           fill="none"
-                          opacity="0.42"
+                          opacity="0.32"
                         />
                       </g>
                     )}
-
                   </g>
                 );
               })}
