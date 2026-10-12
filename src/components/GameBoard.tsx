@@ -7,7 +7,7 @@ import {
   getBottleLiquidSurfaceY,
   getBottlePourSpoutPoint,
 } from './TestTube';
-import { WaterStream } from './WaterStream';
+import { WaterStream, WaterStreamTargetPoints } from './WaterStream';
 import { getColor, COLOR_PALETTE } from '../utils/colors';
 import { TUBE_CAPACITY, isBottleReadyToCollect } from '../solver/waterSortSolver';
 import { soundManager } from '../utils/audio';
@@ -121,8 +121,8 @@ export const GameBoard: React.FC<GameBoardProps> = ({
     }
   }, [pourAnimation?.phase, pourAnimation?.targetIndex, pourAnimation?.count, bottles, soundEnabled]);
 
-  // Live coordinates of water stream
-  const pourStreamPositions = useMemo(() => {
+  // Live coordinates of water stream: tilted spout lip → target mouth entry → surface impact
+  const pourStreamPositions = useMemo((): WaterStreamTargetPoints | null => {
     if (!pourAnimation || pourAnimation.phase !== 'pouring') return null;
     const sourceSvg = document.querySelector<SVGSVGElement>(`#tube-slot-${pourAnimation.sourceIndex} svg`);
     const targetSvg = document.querySelector<SVGSVGElement>(`#tube-slot-${pourAnimation.targetIndex} svg`);
@@ -130,18 +130,36 @@ export const GameBoard: React.FC<GameBoardProps> = ({
     const targetMatrix = targetSvg?.getScreenCTM() ?? null;
     if (!sourceSvg || !targetSvg || !sourceMatrix || !targetMatrix) return null;
 
+    // 1. Spout lower lip screen coordinates
     const sourceLip = sourceSvg.createSVGPoint();
     const spoutPoint = getBottlePourSpoutPoint(pourAnimation.tiltAngle);
     sourceLip.x = spoutPoint.x;
     sourceLip.y = spoutPoint.y;
+    const fromScreen = sourceLip.matrixTransform(sourceMatrix);
+
+    // 2. Target mouth center screen coordinates (entry hole)
     const targetMouth = targetSvg.createSVGPoint();
     targetMouth.x = BOTTLE_MOUTH_CENTER.x;
     targetMouth.y = BOTTLE_MOUTH_CENTER.y;
+    const mouthScreen = targetMouth.matrixTransform(targetMatrix);
+
+    // 3. Target liquid surface screen coordinates (impact point)
+    const targetBottle = bottles[pourAnimation.targetIndex];
+    const initialUnits = targetBottle ? targetBottle.layers.length : 0;
+    const currentUnits = Math.min(TUBE_CAPACITY, initialUnits + pourAnimation.riseCount);
+    const surfaceSvgY = getBottleLiquidSurfaceY(currentUnits, TUBE_CAPACITY);
+    const targetImpact = targetSvg.createSVGPoint();
+    targetImpact.x = BOTTLE_MOUTH_CENTER.x;
+    targetImpact.y = surfaceSvgY;
+    const impactScreen = targetImpact.matrixTransform(targetMatrix);
+
     return {
-      from: sourceLip.matrixTransform(sourceMatrix),
-      to: targetMouth.matrixTransform(targetMatrix),
+      from: { x: fromScreen.x, y: fromScreen.y },
+      mouth: { x: mouthScreen.x, y: mouthScreen.y },
+      impact: { x: impactScreen.x, y: impactScreen.y },
+      tiltAngle: pourAnimation.tiltAngle,
     };
-  }, [pourAnimation]);
+  }, [pourAnimation, bottles]);
 
   // Leak stream coordinates: source bottle bottom → target bottle top (screen space)
   const [leakFrom, setLeakFrom] = useState<{ x: number; y: number } | null>(null);
@@ -300,11 +318,10 @@ export const GameBoard: React.FC<GameBoardProps> = ({
       {/* Procedural Viscous Water Stream with gooey filter applied for liquid cohesion */}
       <div className="fixed inset-0 pointer-events-none z-50">
         <WaterStream
-          fromPos={pourStreamPositions?.from ?? null}
-          toPos={pourStreamPositions?.to ?? null}
+          streamPoints={pourStreamPositions}
           colorId={pourAnimation?.colorId || 'red'}
           active={!!pourAnimation && pourAnimation.phase === 'pouring'}
-          showSplash={false}
+          showSplash={true}
         />
         {/* Bottom-leak drip stream: source bottle base → target bottle mouth */}
         <WaterStream

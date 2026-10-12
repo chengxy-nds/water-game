@@ -1,15 +1,24 @@
 import React, { useEffect, useRef } from 'react';
 import { getColor } from '../utils/colors';
 
-interface WaterStreamProps {
-  fromPos: { x: number; y: number } | null;
-  toPos: { x: number; y: number } | null;
+export interface WaterStreamTargetPoints {
+  from: { x: number; y: number };
+  mouth?: { x: number; y: number };
+  impact: { x: number; y: number };
+  tiltAngle?: number;
+}
+
+export interface WaterStreamProps {
+  streamPoints?: WaterStreamTargetPoints | null;
+  fromPos?: { x: number; y: number } | null;
+  toPos?: { x: number; y: number } | null;
   colorId: string;
   active: boolean;
   showSplash?: boolean;
 }
 
 export const WaterStream: React.FC<WaterStreamProps> = ({
+  streamPoints,
   fromPos,
   toPos,
   colorId,
@@ -19,15 +28,34 @@ export const WaterStream: React.FC<WaterStreamProps> = ({
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const animFrameRef = useRef<number | null>(null);
   const phaseRef = useRef<number>(0);
-  const fromPosRef = useRef(fromPos);
-  const toPosRef = useRef(toPos);
+  const pointsRef = useRef<{
+    from: { x: number; y: number };
+    mouth: { x: number; y: number };
+    impact: { x: number; y: number };
+    tiltAngle: number;
+  } | null>(null);
 
   const colorDef = getColor(colorId);
 
   useEffect(() => {
-    fromPosRef.current = fromPos;
-    toPosRef.current = toPos;
-  }, [fromPos, toPos]);
+    if (streamPoints) {
+      pointsRef.current = {
+        from: streamPoints.from,
+        mouth: streamPoints.mouth ?? streamPoints.impact,
+        impact: streamPoints.impact,
+        tiltAngle: streamPoints.tiltAngle ?? 0,
+      };
+    } else if (fromPos && toPos) {
+      pointsRef.current = {
+        from: fromPos,
+        mouth: toPos,
+        impact: toPos,
+        tiltAngle: 0,
+      };
+    } else {
+      pointsRef.current = null;
+    }
+  }, [streamPoints, fromPos, toPos]);
 
   useEffect(() => {
     if (!active) {
@@ -55,130 +83,158 @@ export const WaterStream: React.FC<WaterStreamProps> = ({
 
     const render = () => {
       if (!running) return;
-      phaseRef.current += 0.11;
+      phaseRef.current += 0.12;
       const phase = phaseRef.current;
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      const currentFrom = fromPosRef.current;
-      const currentTo = toPosRef.current;
-      if (!currentFrom || !currentTo) {
+      const pts = pointsRef.current;
+      if (!pts) {
         animFrameRef.current = requestAnimationFrame(render);
         return;
       }
 
-      const x1 = currentFrom.x;
-      const y1 = currentFrom.y;
-      const x2 = currentTo.x;
-      const y2 = currentTo.y;
-      const dx = x2 - x1;
-      const dy = y2 - y1;
-      const curveSide = dx === 0 ? 1 : Math.sign(dx);
-      const curveAmount = Math.max(8, Math.min(20, Math.abs(dy) * 0.1));
-      const sway = Math.sin(phase * 2) * Math.min(8, Math.abs(dx) * 0.05 + 2.8);
-      const gravityBend = Math.max(0, Math.min(18, dy * 0.08));
+      const x1 = pts.from.x;
+      const y1 = pts.from.y;
+      const xm = pts.mouth.x;
+      const ym = pts.mouth.y;
+      const xImp = pts.impact.x;
+      const yImp = Math.max(ym, pts.impact.y);
 
-      const cp1x = x1 + dx * 0.28 + curveSide * curveAmount + sway;
-      const cp1y = y1 + dy * 0.16 + gravityBend * 0.25;
-      const cp2x = x2;
-      const cp2y = y1 + dy * 0.78;
+      const dx = xm - x1;
+      const dyAir = ym - y1;
+      const isPourDown = dyAir > 0;
+      const curveDir = dx >= 0 ? 1 : -1;
 
+      // Natural gravity arc from tilted spout down into target bottle mouth:
+      // Spout velocity launches along tilt slope, then gravity curves straight down into bottle neck.
+      const cp1x = x1 + dx * 0.38 + curveDir * Math.max(3, Math.abs(dx) * 0.08);
+      const cp1y = y1 + (isPourDown ? dyAir * 0.18 : 6);
+      const cp2x = xm;
+      const cp2y = ym - Math.max(6, Math.abs(dyAir) * 0.22);
+
+      // 1. Center streamline path: from tilted lip -> curve into mouth -> straight down to liquid surface
       const streamPath = new Path2D();
       streamPath.moveTo(x1, y1);
-      streamPath.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x2, y2);
+      if (Math.abs(dyAir) > 3) {
+        streamPath.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, xm, ym);
+      }
+      streamPath.lineTo(xImp, yImp);
 
+      // Colors from palette
       const mainHex = colorDef.hex;
       const topHex = colorDef.topHex || mainHex;
-      const glowHex = `${mainHex}aa`;
-
-      const pointOnCurve = (t: number) => {
-        const inverse = 1 - t;
-        return {
-          x: inverse ** 3 * x1 + 3 * inverse ** 2 * t * cp1x + 3 * inverse * t ** 2 * cp2x + t ** 3 * x2,
-          y: inverse ** 3 * y1 + 3 * inverse ** 2 * t * cp1y + 3 * inverse * t ** 2 * cp2y + t ** 3 * y2,
-        };
-      };
 
       ctx.save();
-      ctx.globalCompositeOperation = 'screen';
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
 
-      ctx.shadowBlur = 16;
+      // Layer 1: Ambient outer liquid halo / soft glow
+      ctx.shadowBlur = 10;
       ctx.shadowColor = mainHex;
-      ctx.lineWidth = 8;
-      ctx.strokeStyle = glowHex;
+      ctx.lineWidth = 14;
+      ctx.strokeStyle = `${mainHex}66`;
       ctx.stroke(streamPath);
 
-      ctx.shadowBlur = 8;
-      ctx.lineWidth = 4.2;
+      // Layer 2: Solid viscous fluid body (Pure high-saturation fluid color matching Fig 2)
+      ctx.shadowBlur = 0;
+      ctx.lineWidth = 10.5;
       ctx.strokeStyle = mainHex;
       ctx.stroke(streamPath);
 
-      ctx.shadowBlur = 0;
-      ctx.lineWidth = 1.6;
+      // Layer 3: Cylindrical front volume highlight
+      ctx.lineWidth = 5.2;
       ctx.strokeStyle = topHex;
       ctx.stroke(streamPath);
 
-      const streamLength = Math.hypot(dx, dy);
-      const highlightCount = streamLength < 36 ? 1 : 4;
-      for (let i = 0; i < highlightCount; i += 1) {
-        const t = 0.08 + ((phase * 0.06 + i * 0.24) % 0.8);
-        const p = pointOnCurve(t);
-        const before = pointOnCurve(Math.max(0, t - 0.02));
-        const after = pointOnCurve(Math.min(1, t + 0.02));
-        const angle = Math.atan2(after.y - before.y, after.x - before.x) + Math.PI / 2;
-        ctx.save();
-        ctx.translate(p.x, p.y);
-        ctx.rotate(angle);
-        ctx.fillStyle = i % 2 === 0 ? '#ffffff' : topHex;
-        ctx.globalAlpha = 0.34 + 0.2 * Math.sin(phase * 2 + i);
-        ctx.beginPath();
-        ctx.ellipse(0, 0, 0.9, 4.5, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
+      // Layer 4: Specular reflection highlight streak (Offset leftwards toward light source)
+      // Gives the stream an authentic glass-like / viscous syrup 3D cylindrical sheen.
+      const specularPath = new Path2D();
+      const specOffset = -2.2;
+      specularPath.moveTo(x1 + specOffset * 0.6, y1);
+      if (Math.abs(dyAir) > 3) {
+        specularPath.bezierCurveTo(
+          cp1x + specOffset,
+          cp1y,
+          cp2x + specOffset,
+          cp2y,
+          xm + specOffset,
+          ym
+        );
       }
+      specularPath.lineTo(xImp + specOffset, Math.max(ym, yImp - 2));
 
-      if (showSplash) {
-        const moundY = y2;
-        const splashPulse = 1 + Math.sin(phase * 4.4) * 0.24;
+      ctx.lineWidth = 1.8;
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.72)';
+      ctx.stroke(specularPath);
 
+      // Spout root meniscus: Smooth teardrop joint anchoring stream firmly onto bottle lip
+      ctx.beginPath();
+      ctx.ellipse(x1, y1, 5.5, 3.8, (pts.tiltAngle * Math.PI) / 180, 0, Math.PI * 2);
+      ctx.fillStyle = mainHex;
+      ctx.fill();
+
+      // Liquid Surface Impact Interaction (Matching Reference Fig 2)
+      if (showSplash && yImp >= ym) {
+        const pulse = 1 + Math.sin(phase * 4.5) * 0.12;
+        const moundW = 11 * pulse;
+        const moundH = 5 * pulse;
+
+        // A. Surging Impact Dome (Rising liquid mound where stream hits surface)
         ctx.beginPath();
-        ctx.ellipse(x2, moundY, 8 * splashPulse, 2.8 * splashPulse, 0, 0, Math.PI * 2);
-        ctx.fillStyle = `${mainHex}aa`;
+        ctx.ellipse(xImp, yImp - 1, moundW, moundH, 0, 0, Math.PI * 2);
+        ctx.fillStyle = mainHex;
         ctx.fill();
 
+        // B. Top rim highlight of the impact mound
         ctx.beginPath();
-        ctx.ellipse(x2 + 2, moundY - 1.5, 5 * splashPulse, 1.8 * splashPulse, 0, 0, Math.PI * 2);
+        ctx.ellipse(xImp, yImp - 2.5, moundW * 0.72, moundH * 0.55, 0, 0, Math.PI);
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.65)';
+        ctx.lineWidth = 1.4;
+        ctx.stroke();
+
+        // C. Left & Right surging foam curls (authentic liquid wave crests like Fig 2)
+        const leftCurlX = xImp - moundW * 0.7;
+        const rightCurlX = xImp + moundW * 0.7;
+        const waveSway = Math.sin(phase * 3.8) * 1.5;
+
+        ctx.beginPath();
+        ctx.arc(leftCurlX, yImp - 3 + waveSway, 3.2, 0, Math.PI * 2);
         ctx.fillStyle = topHex;
         ctx.fill();
 
         ctx.beginPath();
-        ctx.ellipse(x2, moundY + 1, 10 * splashPulse, 3 * splashPulse, 0, 0, Math.PI * 2);
-        ctx.strokeStyle = `${topHex}b8`;
-        ctx.lineWidth = 1.1;
-        ctx.stroke();
+        ctx.arc(rightCurlX, yImp - 2.5 - waveSway, 2.8, 0, Math.PI * 2);
+        ctx.fillStyle = topHex;
+        ctx.fill();
 
-        ctx.beginPath();
-        ctx.moveTo(x2 - 12, moundY + 1);
-        ctx.quadraticCurveTo(x2 - 9, moundY - 8 * splashPulse, x2 - 5, moundY - 3);
-        ctx.quadraticCurveTo(x2 - 1, moundY + 1, x2 + 2, moundY - 4);
-        ctx.quadraticCurveTo(x2 + 7, moundY - 10 * splashPulse, x2 + 12, moundY + 1);
-        ctx.strokeStyle = `${topHex}dc`;
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
+        // D. Floating frothy micro-bubbles around impact center
+        for (let i = 0; i < 4; i += 1) {
+          const bAngle = phase * 2.2 + (i * Math.PI) / 2;
+          const bRadius = 4.5 + (i % 2) * 3;
+          const bx = xImp + Math.cos(bAngle) * bRadius;
+          const by = yImp - 2 + Math.sin(bAngle) * 2;
+          const bSize = 1.2 + (i % 2) * 0.6;
 
-        for (let i = 0; i < 7; i += 1) {
-          const cycle = (phase * 0.045 + i / 7) % 1;
-          const angle = -Math.PI * 0.92 + (i / 6) * Math.PI * 0.84;
-          const spread = 4 + cycle * 15;
-          const arcHeight = Math.sin(cycle * Math.PI) * (8 + (i % 3) * 2);
-          const dropletX = x2 + Math.cos(angle) * spread;
-          const dropletY = moundY - arcHeight + cycle * 3;
           ctx.beginPath();
-          ctx.ellipse(dropletX, dropletY, 1.1 + (i % 3) * 0.25, 2 + (i % 2) * 0.7, -0.2, 0, Math.PI * 2);
+          ctx.arc(bx, by, bSize, 0, Math.PI * 2);
           ctx.fillStyle = i % 2 === 0 ? '#ffffff' : topHex;
-          ctx.globalAlpha = 0.72 - cycle * 0.3;
+          ctx.globalAlpha = 0.85;
+          ctx.fill();
+        }
+
+        // E. Tiny energetic airborne droplets jumping slightly above the surface
+        for (let i = 0; i < 3; i += 1) {
+          const dropCycle = (phase * 0.08 + i * 0.33) % 1;
+          const dropH = Math.sin(dropCycle * Math.PI) * 7.5;
+          const dropSpread = (i - 1) * 6;
+          const dxDrop = xImp + dropSpread;
+          const dyDrop = yImp - 3 - dropH;
+
+          ctx.beginPath();
+          ctx.arc(dxDrop, dyDrop, 1.1, 0, Math.PI * 2);
+          ctx.fillStyle = '#ffffff';
+          ctx.globalAlpha = (1 - dropCycle) * 0.8;
           ctx.fill();
         }
       }
@@ -193,7 +249,7 @@ export const WaterStream: React.FC<WaterStreamProps> = ({
       running = false;
       if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
     };
-  }, [active, colorDef.hex, colorDef.topHex]);
+  }, [active, colorDef.hex, colorDef.topHex, colorDef.shadeHex, showSplash]);
 
   useEffect(() => {
     const handleResize = () => {

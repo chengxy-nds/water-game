@@ -35,7 +35,8 @@ import { QuickDemo } from './components/QuickDemo';
 const STATS_STORAGE_KEY = 'water_sort_player_stats_v1';
 const PREFS_STORAGE_KEY = 'water_sort_preferences_v1';
 const MECHANIC_TUTORIAL_KEY = 'water_sort_mechanics_seen_v1';
-const POUR_MOUTH_GAP_PX = 18;
+const POUR_MOUTH_GAP_Y = 32;
+const POUR_MOUTH_OFFSET_X = 14;
 
 interface GameSnapshot {
   bottles: Bottle[];
@@ -584,16 +585,16 @@ export default function App() {
       const fromPos = getTubeRowCol(fromIdx);
       const toPos = getTubeRowCol(toIdx);
 
-      let exactX = (toPos.col - fromPos.col) * 65;
-      let exactY = (toPos.row - fromPos.row) * 180 - 20;
       let isTargetRight = toPos.col >= fromPos.col;
+      let exactX = (toPos.col - fromPos.col) * 65 + (isTargetRight ? -POUR_MOUTH_OFFSET_X : POUR_MOUTH_OFFSET_X);
+      let exactY = (toPos.row - fromPos.row) * 180 - POUR_MOUTH_GAP_Y;
       let alignForTilt = (_angle: number) => ({ x: exactX, y: exactY });
 
       // Tilt magnitude follows how much liquid the source tube currently holds
       const sourceUnits = bottles[fromIdx].layers.length;
       const tiltForUnits = (units: number) => {
         const fillRatio = Math.max(0, Math.min(1, units / TUBE_CAPACITY));
-        return 38 + (1 - fillRatio) * 22;
+        return 44 + (1 - fillRatio) * 38;
       };
       let tiltAngle = (isTargetRight ? 1 : -1) * tiltForUnits(sourceUnits);
 
@@ -622,9 +623,11 @@ export default function App() {
             const angle = (angleDegrees * Math.PI) / 180;
             const rotatedX = vectorX * Math.cos(angle) - vectorY * Math.sin(angle);
             const rotatedY = vectorX * Math.sin(angle) + vectorY * Math.cos(angle);
+            const targetSpoutTargetX = targetMouth.x + (isTargetRight ? -POUR_MOUTH_OFFSET_X : POUR_MOUTH_OFFSET_X);
+            const targetSpoutTargetY = targetMouth.y - POUR_MOUTH_GAP_Y;
             return {
-              x: targetMouth.x - sourcePivot.x - rotatedX,
-              y: targetMouth.y - POUR_MOUTH_GAP_PX - sourcePivot.y - rotatedY,
+              x: targetSpoutTargetX - sourcePivot.x - rotatedX,
+              y: targetSpoutTargetY - sourcePivot.y - rotatedY,
             };
           };
           ({ x: exactX, y: exactY } = alignForTilt(tiltAngle));
@@ -672,9 +675,11 @@ export default function App() {
           targetPoint.x = getBottleMouthPoint().x;
           targetPoint.y = getBottleMouthPoint().y;
           const targetScreen = targetPoint.matrixTransform(targetMatrix);
+          const targetSpoutTargetX = targetScreen.x + (isTargetRight ? -POUR_MOUTH_OFFSET_X : POUR_MOUTH_OFFSET_X);
+          const targetSpoutTargetY = targetScreen.y - POUR_MOUTH_GAP_Y;
           return {
-            x: targetScreen.x - sourceScreen.x,
-            y: targetScreen.y - POUR_MOUTH_GAP_PX - sourceScreen.y,
+            x: targetSpoutTargetX - sourceScreen.x,
+            y: targetSpoutTargetY - sourceScreen.y,
           };
         };
 

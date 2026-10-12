@@ -321,6 +321,122 @@
   box-shadow: 0 2px 6px rgba(29, 78, 216, 0.4);
 }
 
+.control-bar {
+  position: relative;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  max-width: 350px;
+  margin: 0 auto;
+  padding: 0 12px 12px;
+  user-select: none;
+}
+
+.control-action-wrap {
+  display: flex;
+  flex: 0 0 58px;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.control-action-button {
+  position: relative;
+  display: grid;
+  width: 56px;
+  height: 54px;
+  place-items: center;
+  overflow: visible;
+  padding: 0;
+  color: white;
+  cursor: pointer;
+  border: 2px solid #93c5fd;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #60a5fa 0%, #3b82f6 34%, #1d4ed8 76%, #1e40af 100%);
+  box-shadow: 0 5px 12px rgba(29, 78, 216, 0.48), inset 0 2px 3px rgba(255,255,255,.82), inset 0 -3px 4px rgba(30,58,138,.55);
+  transition: transform .15s ease, filter .15s ease, box-shadow .15s ease;
+}
+
+.control-action-button::before {
+  position: absolute;
+  top: 3px;
+  right: 4px;
+  left: 4px;
+  height: 13px;
+  content: "";
+  pointer-events: none;
+  border-radius: 9px 9px 50% 50%;
+  background: linear-gradient(180deg, rgba(255,255,255,.72), rgba(255,255,255,0));
+}
+
+.control-action-button:hover:not(:disabled) {
+  filter: brightness(1.12);
+  transform: translateY(-2px);
+  box-shadow: 0 7px 16px rgba(29,78,216,.6), inset 0 2px 3px rgba(255,255,255,.9);
+}
+
+.control-action-button:active:not(:disabled) {
+  transform: translateY(1px) scale(.95);
+}
+
+.control-action-button:disabled {
+  cursor: not-allowed;
+  filter: grayscale(.35);
+  opacity: .48;
+}
+
+.control-action-icon {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  filter: drop-shadow(0 1px 2px rgba(5,20,70,.65));
+}
+
+.control-action-icon svg {
+  width: 25px;
+  height: 25px;
+  stroke-width: 2.5;
+}
+
+.control-action-label {
+  color: #bfdbfe;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: .04em;
+  text-shadow: 0 1px 4px rgba(0,0,0,.75);
+}
+
+.control-action-badge {
+  position: absolute;
+  z-index: 2;
+  top: -7px;
+  right: -7px;
+  display: grid;
+  min-width: 19px;
+  height: 19px;
+  place-items: center;
+  padding: 0 4px;
+  color: #fff;
+  border: 1px solid rgba(255,255,255,.9);
+  border-radius: 999px;
+  background: linear-gradient(180deg, #fb7185, #e11d48);
+  box-shadow: 0 2px 5px rgba(80,10,30,.5);
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+@media (max-width: 360px) {
+  .control-bar { gap: 4px; padding-right: 8px; padding-left: 8px; }
+  .control-action-wrap { flex-basis: 54px; }
+  .control-action-button { width: 52px; height: 51px; }
+}
+
 /* Glossy Blue Pill (Matching reference screenshot "第2关" pill) */
 .game-pill-blue {
   background: linear-gradient(180deg, #60a5fa 0%, #3b82f6 35%, #1d4ed8 100%);
