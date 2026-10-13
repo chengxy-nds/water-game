@@ -32,73 +32,203 @@ function leak(id: string, layers: string[], targetId: string): Bottle {
 // 统一颜色映射：红→red 蓝→blue 黄→yellow 绿→green 紫→purple 橙→orange 青→cyan 粉→pink
 // 瓶内颜色数组顺序严格按【底部 → 顶部】排列
 export const CURATED_LEVELS: Level[] = [
-  // 第 1 关
+  // 第 1 关：新手入门（3色半满，大空隙好倒，2个免费空瓶）
   {
     id: 1,
-    title: "认识同色倒水",
+    title: "初识三色倒水",
     optimalSteps: 5,
     difficulty: "easy",
     bottles: [
-      normal("b1", ["red", "red", "blue", "red"]),
-      normal("b2", ["blue", "red", "blue", "blue"]),
-      empty("b3"),
-      empty("b4"),
+      normal("b1", ["red", "blue"]),
+      normal("b2", ["blue", "yellow"]),
+      normal("b3", ["yellow", "red"]),
+      normal("b4", ["red", "blue", "yellow"]),
+      empty("b5"),
+      empty("b6"),
     ],
   },
-  // 第 2 关
+  // 第 2 关：双排启蒙（3色半满，3个免费空瓶，空间充裕）
   {
     id: 2,
-    title: "首次整理两种颜色",
-    optimalSteps: 4,
-    difficulty: "easy",
-    bottles: [
-      normal("b1", ["blue", "red", "red", "red"]),
-      normal("b2", ["blue", "red", "blue", "blue"]),
-      empty("b3"),
-      empty("b4"),
-    ],
-  },
-  // 第 3 关：初识布帘瓶与外卖订单
-  {
-    id: 3,
-    title: "初识布帘瓶订单",
+    title: "双排三色整理",
     optimalSteps: 6,
     difficulty: "easy",
     bottles: [
-      normal("b1", ["yellow", "blue", "red", "yellow"]),
-      normal("b2", ["red", "red", "yellow", "blue"]),
-      masked("b3", ["red", "yellow", "blue", "blue"], 1),
-      empty("b4"),
+      // 第一排 (4瓶)
+      normal("b1", ["red", "blue", "green"]),
+      normal("b2", ["green", "red", "blue"]),
+      normal("b3", ["blue", "green", "red"]),
+      normal("b4", ["red", "green", "blue"]),
+      // 第二排 (3瓶)：全部免费空瓶
       empty("b5"),
+      empty("b6"),
+      empty("b7"),
     ],
   },
-  // 第 4 关：双排10瓶对标参考图（含两翼视频空瓶）
+  // 第 3 关：四色双排（半满留白，2个免费空瓶，自由腾挪）
+  {
+    id: 3,
+    title: "四色空间规划",
+    optimalSteps: 8,
+    difficulty: "easy",
+    bottles: [
+      // 第一排 (4瓶)
+      normal("b1", ["red", "yellow", "green"]),
+      normal("b2", ["green", "blue", "red"]),
+      normal("b3", ["yellow", "green", "blue"]),
+      normal("b4", ["blue", "red", "yellow"]),
+      // 第二排 (4瓶)
+      normal("b5", ["red", "blue"]),
+      normal("b6", ["green", "yellow"]),
+      empty("b7"),
+      empty("b8"),
+    ],
+  },
+  // 第 4 关：初识布帘瓶（门槛1，有2个免费空瓶+1个辅助视频空瓶，绝对不卡死）
   {
     id: 4,
-    title: "双排试炼与视频空瓶",
+    title: "初识布帘与订单",
+    optimalSteps: 8,
+    difficulty: "easy",
+    bottles: [
+      // 第一排 (5瓶)
+      normal("b1", ["yellow", "green", "blue"]),
+      normal("b2", ["green", "red", "yellow"]),
+      masked("b3", ["blue", "yellow", "green", "red"], 1),
+      normal("b4", ["red", "blue", "red"]),
+      empty("b5"),
+      // 第二排 (4瓶)
+      normal("b6", ["yellow", "blue"]),
+      normal("b7", ["green", "red"]),
+      empty("b8"),
+      videoEmpty("b9"), // 辅助道具空瓶：不看视频靠 b5, b8 也完全能通关！
+    ],
+  },
+  // 第 5 关：双排10瓶（完全对标标杆参考图！半满瓶+大量顶部容积+两翼辅助视频空瓶）
+  {
+    id: 5,
+    title: "双排试炼与半满瓶",
+    optimalSteps: 10,
+    difficulty: "medium",
+    bottles: [
+      // 第一排 (5瓶)：半满瓶（1~2格水，顶部留有2~3格空闲容积随时可倒入）
+      normal("b1", ["yellow", "green"]),
+      normal("b2", ["green", "blue"]),
+      normal("b3", ["blue", "purple"]),
+      normal("b4", ["green"]),
+      normal("b5", ["red", "purple"]),
+
+      // 第二排 (5瓶)：
+      videoEmpty("b6"), // 左翼辅助视频空瓶（可看不看）
+      normal("b7", ["red", "yellow"]),
+      normal("b8", ["red", "purple"]),
+      normal("b9", ["red", "blue"]),
+      videoEmpty("b10"), // 右翼辅助视频空瓶（可看不看）
+    ],
+  },
+  // 第 6 关：六色深度整理（12瓶双排 6+6，有2个免费空瓶+1个视频空瓶辅助）
+  {
+    id: 6,
+    title: "六色双排整理",
     optimalSteps: 12,
     difficulty: "medium",
     bottles: [
-      // 第一排 (5瓶)
-      normal("b1", ["yellow", "green", "green", "yellow"]),
-      normal("b2", ["green", "blue", "blue", "green"]),
-      normal("b3", ["blue", "purple", "purple", "blue"]),
-      normal("b4", ["green", "green", "purple", "purple"]),
-      normal("b5", ["red", "purple", "red", "purple"]),
-      // 第二排 (5瓶)：左右两翼视频空瓶
-      videoEmpty("b6"),
-      normal("b7", ["red", "yellow", "yellow", "red"]),
-      normal("b8", ["red", "purple", "purple", "red"]),
-      normal("b9", ["blue", "blue", "red", "red"]),
-      videoEmpty("b10"),
+      // 第一排 (6瓶)
+      normal("b1", ["red", "blue", "yellow"]),
+      normal("b2", ["green", "purple", "cyan"]),
+      normal("b3", ["yellow", "green", "red"]),
+      normal("b4", ["purple", "cyan", "blue"]),
+      normal("b5", ["cyan", "yellow", "green"]),
+      empty("b6"),
+      // 第二排 (6瓶)
+      normal("b7", ["blue", "purple", "red"]),
+      normal("b8", ["green", "cyan", "purple"]),
+      normal("b9", ["red", "blue", "yellow"]),
+      masked("b10", ["yellow", "purple", "cyan", "red"], 1),
+      empty("b11"),
+      videoEmpty("b12"), // 辅助视频空瓶
     ],
   },
-  // 第 5 关：21瓶满屏高熵大关（3行×7列，集齐布帘1/2/3阶梯+双视频空瓶+满屏7列无遮挡）
+  // 第 7 关：进阶阶梯布帘（12瓶双排 6+6，门槛1与2，2个免费空瓶+1个视频空瓶）
   {
-    id: 5,
+    id: 7,
+    title: "阶梯布帘挑战",
+    optimalSteps: 14,
+    difficulty: "medium",
+    bottles: [
+      // 第一排 (6瓶)
+      normal("b1", ["blue", "yellow", "red", "green"]),
+      normal("b2", ["purple", "orange", "cyan"]),
+      masked("b3", ["green", "blue", "yellow", "red"], 2),
+      normal("b4", ["orange", "cyan", "purple"]),
+      normal("b5", ["red", "green", "blue"]),
+      empty("b6"),
+      // 第二排 (6瓶)
+      videoEmpty("b7"), // 辅助视频空瓶
+      normal("b8", ["cyan", "orange", "purple"]),
+      normal("b9", ["yellow", "red", "green"]),
+      masked("b10", ["purple", "cyan", "orange", "blue"], 1),
+      normal("b11", ["blue", "yellow", "orange"]),
+      empty("b12"),
+    ],
+  },
+  // 第 8 关：双排满编（14瓶 7+7，2个免费空瓶+2个辅助视频空瓶）
+  {
+    id: 8,
+    title: "双排高熵试炼",
+    optimalSteps: 18,
+    difficulty: "hard",
+    bottles: [
+      // 第一排 (7瓶)
+      normal("b1", ["red", "yellow", "blue", "green"]),
+      normal("b2", ["purple", "orange", "cyan", "pink"]),
+      normal("b3", ["yellow", "blue", "green", "red"]),
+      masked("b4", ["pink", "cyan", "purple", "orange"], 2),
+      normal("b5", ["orange", "purple", "pink", "cyan"]),
+      normal("b6", ["green", "red", "yellow", "blue"]),
+      empty("b7"),
+      // 第二排 (7瓶)
+      videoEmpty("b8"),
+      normal("b9", ["cyan", "pink", "orange", "purple"]),
+      normal("b10", ["blue", "green", "red", "yellow"]),
+      masked("b11", ["red", "yellow", "blue", "green"], 1),
+      normal("b12", ["purple", "orange", "cyan", "pink"]),
+      empty("b13"),
+      videoEmpty("b14"),
+    ],
+  },
+  // 第 9 关：三排雏形（15瓶 5+5+5，包含免费空瓶与辅助视频瓶）
+  {
+    id: 9,
+    title: "三排空间规划",
+    optimalSteps: 20,
+    difficulty: "hard",
+    bottles: [
+      normal("b1", ["red", "yellow", "blue"]),
+      normal("b2", ["green", "purple", "orange"]),
+      normal("b3", ["cyan", "pink", "red"]),
+      normal("b4", ["yellow", "green", "blue"]),
+      empty("b5"),
+
+      videoEmpty("b6"),
+      normal("b7", ["purple", "orange", "cyan"]),
+      normal("b8", ["pink", "red", "yellow"]),
+      normal("b9", ["green", "blue", "purple"]),
+      empty("b10"),
+
+      normal("b11", ["orange", "cyan", "pink"]),
+      normal("b12", ["blue", "green", "yellow"]),
+      masked("b13", ["red", "purple", "orange", "cyan"], 1),
+      empty("b14"),
+      videoEmpty("b15"),
+    ],
+  },
+  // 第 10 关：首章终极大关（21瓶满屏 3行×7列，高熵巅峰集大成，天然自带免费空瓶！）
+  {
+    id: 10,
     title: "满屏高熵终极考验",
     optimalSteps: 28,
-    difficulty: "hard",
+    difficulty: "master",
     bottles: [
       // 第 1 行 (7 瓶)
       normal("b1", ["red", "yellow", "blue", "green"]),
@@ -107,9 +237,9 @@ export const CURATED_LEVELS: Level[] = [
       masked("b4", ["pink", "cyan", "purple", "orange"], 2),
       normal("b5", ["orange", "purple", "pink", "cyan"]),
       normal("b6", ["green", "red", "yellow", "blue"]),
-      empty("b7"),
+      empty("b7"), // 免费空瓶1
 
-      // 第 2 行 (7 瓶)：左右两翼为视频解锁空瓶
+      // 第 2 行 (7 瓶)：两翼为辅助视频空瓶（可看不看）
       videoEmpty("b8"),
       normal("b9", ["cyan", "pink", "orange", "purple"]),
       normal("b10", ["blue", "green", "red", "yellow"]),
@@ -121,83 +251,11 @@ export const CURATED_LEVELS: Level[] = [
       // 第 3 行 (7 瓶)
       normal("b15", ["pink", "cyan", "purple", "orange"]),
       normal("b16", ["green", "blue", "yellow", "red"]),
-      empty("b17"),
+      empty("b17"), // 免费空瓶2
       masked("b18", ["orange", "purple", "pink", "cyan"], 1),
       normal("b19", ["blue", "red", "green", "yellow"]),
       normal("b20", ["cyan", "pink", "orange", "purple"]),
-      empty("b21"),
-    ],
-  },
-  // 第 6 关
-  {
-    id: 6,
-    title: "三色混合",
-    optimalSteps: 6,
-    difficulty: "easy",
-    bottles: [
-      normal("b1", ["blue", "red", "red", "blue"]),
-      normal("b2", ["blue", "blue", "yellow", "yellow"]),
-      normal("b3", ["red", "yellow", "yellow", "red"]),
-      empty("b4"),
-      empty("b5"),
-    ],
-  },
-  // 第 7 关
-  {
-    id: 7,
-    title: "四瓶空间规划",
-    optimalSteps: 8,
-    difficulty: "easy",
-    bottles: [
-      normal("b1", ["blue", "yellow", "blue", "red"]),
-      normal("b2", ["blue", "red", "red", "yellow"]),
-      normal("b3", ["yellow", "yellow", "blue", "red"]),
-      empty("b4"),
-      empty("b5"),
-    ],
-  },
-  // 第 8 关
-  {
-    id: 8,
-    title: "减少空瓶",
-    optimalSteps: 14,
-    difficulty: "medium",
-    bottles: [
-      normal("b1", ["yellow", "blue", "yellow", "green"]),
-      normal("b2", ["green", "red", "green", "blue"]),
-      normal("b3", ["green", "blue", "red", "blue"]),
-      normal("b4", ["yellow", "red", "yellow", "red"]),
-      empty("b5"),
-      empty("b6"),
-    ],
-  },
-  // 第 9 关
-  {
-    id: 9,
-    title: "四种颜色初步规划",
-    optimalSteps: 14,
-    difficulty: "medium",
-    bottles: [
-      normal("b1", ["green", "blue", "red", "blue"]),
-      normal("b2", ["red", "yellow", "red", "blue"]),
-      normal("b3", ["green", "blue", "green", "yellow"]),
-      normal("b4", ["green", "red", "yellow", "yellow"]),
-      empty("b5"),
-    ],
-  },
-  // 第 10 关
-  {
-    id: 10,
-    title: "观察连续同色层",
-    optimalSteps: 16,
-    difficulty: "medium",
-    bottles: [
-      normal("b1", ["red", "purple", "purple", "red"]),
-      normal("b2", ["blue", "yellow", "purple", "green"]),
-      normal("b3", ["purple", "green", "yellow", "red"]),
-      normal("b4", ["green", "blue", "yellow", "blue"]),
-      normal("b5", ["blue", "green", "red", "yellow"]),
-      empty("b6"),
+      empty("b21"), // 免费空瓶3
     ],
   },
   // 第 11 关

@@ -229,33 +229,12 @@ export const GameBoard: React.FC<GameBoardProps> = ({
 
   const rowDistribution = getRowDistribution(bottles.length);
   const rowCount = rowDistribution.length;
-  const maxBottlesInRow = Math.max(...rowDistribution, 1);
 
-  const sizeVariant = useMemo<TubeSizeVariant>(() => {
-    if (rowCount >= 3) {
-      return maxBottlesInRow >= 6 ? 'mini' : 'compact';
-    }
-    if (maxBottlesInRow >= 7) return 'mini';
-    if (maxBottlesInRow === 6) return 'compact';
-    if (maxBottlesInRow === 5) return 'normal';
-    return 'spacious';
-  }, [rowCount, maxBottlesInRow]);
+  // 瓶子统一使用黄金恒定尺寸，绝不随加瓶数量而变小
+  const sizeVariant: TubeSizeVariant = 'normal';
 
-  const rowGapClass = useMemo(() => {
-    if (sizeVariant === 'mini') return 'gap-1 xs:gap-1.5 sm:gap-2';
-    if (sizeVariant === 'compact') return 'gap-1 xs:gap-1.5 sm:gap-2';
-    if (sizeVariant === 'normal') return 'gap-1.5 xs:gap-2 sm:gap-2.5';
-    return 'gap-2 sm:gap-3';
-  }, [sizeVariant]);
-
-  const getShelfWidth = useMemo(() => {
-    const tubeW = sizeVariant === 'mini' ? 36 : sizeVariant === 'compact' ? 40 : sizeVariant === 'normal' ? 44 : 49;
-    const gapW = sizeVariant === 'mini' ? 5 : sizeVariant === 'compact' ? 6 : sizeVariant === 'normal' ? 7 : 9;
-    return (count: number) => {
-      const calculated = count * tubeW + (count - 1) * gapW + 24;
-      return Math.min(410, Math.max(130, calculated));
-    };
-  }, [sizeVariant]);
+  // 水平间距保持自然呼吸感，左右不拥挤
+  const rowGapClass = 'gap-1.5 xs:gap-2 sm:gap-2.5';
 
   const rows: { startIndex: number; bottles: Bottle[] }[] = [];
   let rowStartIndex = 0;
@@ -379,7 +358,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
         />
       </div>
 
-      <div className={`relative z-10 flex flex-col items-center ${rowCount >= 3 ? 'gap-2 sm:gap-3' : 'gap-4 sm:gap-5'}`}>
+      <div className={`relative z-10 flex flex-col items-center ${rowCount >= 3 ? 'gap-3.5 xs:gap-4.5 sm:gap-5' : 'gap-5 xs:gap-6 sm:gap-7'}`}>
         {rows.map((row, rowIndex) => {
           const isPouringInRow = pourAnimation
             ? pourAnimation.sourceIndex >= row.startIndex && pourAnimation.sourceIndex < row.startIndex + row.bottles.length
@@ -394,21 +373,6 @@ export const GameBoard: React.FC<GameBoardProps> = ({
             >
               <div className={`flex flex-nowrap items-end justify-center ${rowGapClass} z-10`}>
                 {row.bottles.map((bottle, localIdx) => renderTube(bottle, row.startIndex + localIdx))}
-              </div>
-
-              {/* Frosted Glow Shelf Platform from Figma 2:1039 */}
-              <div
-                className="h-[10px] -mt-1 pointer-events-none select-none z-0 transition-all duration-300 flex items-center justify-center"
-                style={{
-                  width: `${getShelfWidth(row.bottles.length)}px`,
-                  maxWidth: '96vw',
-                }}
-              >
-                <img
-                  src="/figma/shelf_base.png"
-                  alt="陈列底座"
-                  className="w-full h-full object-fill drop-shadow-[0_4px_12px_rgba(56,189,248,0.35)]"
-                />
               </div>
             </div>
           );
