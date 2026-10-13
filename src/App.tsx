@@ -785,14 +785,14 @@ export default function App() {
         setPourAnimation((prev) =>
           prev
             ? {
-                ...prev,
-                phase: 'returning',
-                tiltAngle: 0,
-                translateX: 0,
-                translateY: -20,
-                drainCount: 0,
-                riseCount: 0,
-              }
+              ...prev,
+              phase: 'returning',
+              tiltAngle: 0,
+              translateX: 0,
+              translateY: -20,
+              drainCount: 0,
+              riseCount: 0,
+            }
             : null
         );
       }, 1380);
@@ -907,7 +907,7 @@ export default function App() {
             targetBottle.layers.length > 0 &&
             sourceBottle.layers.length > 0 &&
             targetBottle.layers[targetBottle.layers.length - 1] !==
-              sourceBottle.layers[sourceBottle.layers.length - 1];
+            sourceBottle.layers[sourceBottle.layers.length - 1];
 
           if (isTargetFull || isColorMismatch) {
             triggerInvalidFeedback(clickedIdx);
