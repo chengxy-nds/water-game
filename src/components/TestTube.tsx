@@ -144,9 +144,8 @@ export const TestTube = React.memo(forwardRef<TestTubeRef, TestTubeProps>(({
     return (
       <div
         ref={containerRef}
-        className={`flex flex-col items-center group relative select-none opacity-0 pointer-events-none ${
-          compact ? 'w-[42px] sm:w-[46px] h-[122px] sm:h-[133px]' : 'w-[54px] sm:w-[60px] h-[156px] sm:h-[174px]'
-        }`}
+        className={`flex flex-col items-center group relative select-none opacity-0 pointer-events-none ${compact ? 'w-[42px] sm:w-[46px] h-[122px] sm:h-[133px]' : 'w-[54px] sm:w-[60px] h-[156px] sm:h-[174px]'
+          }`}
       />
     );
   }
@@ -321,17 +320,17 @@ export const TestTube = React.memo(forwardRef<TestTubeRef, TestTubeProps>(({
     transform: isFlying
       ? `translate(${flyX}px, ${flyY}px) scale(0.22) rotate(-3deg)`
       : isPouringSource
-      ? `translate(${translateX}px, ${translateY}px) rotate(${tiltAngle}deg)`
-      : isSelected
-      ? 'translateY(-18px)'
-      : 'translateY(0)',
+        ? `translate(${translateX}px, ${translateY}px) rotate(${tiltAngle}deg)`
+        : isSelected
+          ? 'translateY(-18px)'
+          : 'translateY(0)',
     transition: isFlying
       ? 'transform 0.65s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.65s ease-in'
       : isPouringSource
-      ? isPouringFluid
-        ? 'transform 0s'
-        : 'transform 0.38s cubic-bezier(0.25, 1, 0.5, 1)'
-      : 'transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1)',
+        ? isPouringFluid
+          ? 'transform 0s'
+          : 'transform 0.38s cubic-bezier(0.25, 1, 0.5, 1)'
+        : 'transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1)',
     opacity: isFlying ? 0.78 : 1,
     zIndex: isFlying ? 90 : isPouringSource ? 45 : isSelected ? 30 : 10,
     willChange: isPouringSource || isFlying ? 'transform' : 'auto',
@@ -343,9 +342,8 @@ export const TestTube = React.memo(forwardRef<TestTubeRef, TestTubeProps>(({
   return (
     <div
       ref={containerRef}
-      className={`flex flex-col items-center group relative cursor-pointer select-none ${
-        isShaking ? 'anim-invalid-shake' : ''
-      }`}
+      className={`flex flex-col items-center group relative cursor-pointer select-none ${isShaking ? 'anim-invalid-shake' : ''
+        }`}
       style={transformStyle}
       onClick={() => !disabled && onClick(index)}
     >
@@ -371,17 +369,16 @@ export const TestTube = React.memo(forwardRef<TestTubeRef, TestTubeProps>(({
 
       {/* SVG 3D Crystal Bottle */}
       <div
-        className={`relative flex flex-col items-center transition-all duration-200 ${
-          isWhirling
+        className={`relative flex flex-col items-center transition-all duration-200 ${isWhirling
             ? 'anim-whirl-pulse filter drop-shadow-[0_0_24px_rgba(251,191,36,0.95)]'
             : isSelected
               ? 'filter drop-shadow-[0_0_10px_rgba(186,230,253,0.72)]'
-            : isHintSource
-            ? 'filter drop-shadow-[0_0_12px_rgba(251,191,36,0.85)]'
-            : isHintTarget
-            ? 'filter drop-shadow-[0_0_12px_rgba(52,211,153,0.85)]'
-            : ''
-        }`}
+              : isHintSource
+                ? 'filter drop-shadow-[0_0_12px_rgba(251,191,36,0.85)]'
+                : isHintTarget
+                  ? 'filter drop-shadow-[0_0_12px_rgba(52,211,153,0.85)]'
+                  : ''
+          }`}
       >
         {/* 瓶口中心物理定位锚点（跨平台兼容，消除移动端WebKit矩阵解析Bug） */}
         <div
@@ -413,9 +410,8 @@ export const TestTube = React.memo(forwardRef<TestTubeRef, TestTubeProps>(({
 
         <svg
           viewBox="0 0 77 223"
-          className={`overflow-visible select-none ${
-            compact ? 'w-[44px] sm:w-[50px] h-[127px] sm:h-[145px]' : 'w-[62px] sm:w-[70px] h-[180px] sm:h-[203px]'
-          }`}
+          className={`overflow-visible select-none ${compact ? 'w-[44px] sm:w-[50px] h-[127px] sm:h-[145px]' : 'w-[62px] sm:w-[70px] h-[180px] sm:h-[203px]'
+            }`}
         >
           <defs>
             <filter id={`liquid-glow-${index}`} x="-30%" y="-30%" width="160%" height="180%">
@@ -582,131 +578,131 @@ export const TestTube = React.memo(forwardRef<TestTubeRef, TestTubeProps>(({
 
 
           <g key={`fluid-layers-${index}-${levelEntryId}`}>
-          {/* Dynamic Pouring Stream Flow vs Stacked Liquid Layers */}
-          {Math.abs(tiltAngle) > 0.5 ? (
-            /* Authentic Fluid Wedge: Continuous bottom fill + 2.5D horizontal elliptic surface */
-            <g clipPath={`url(#tilted-chamber-clip-${index})`}>
-              {(() => {
-                if (clampedLayers.length === 0) return null;
+            {/* Dynamic Pouring Stream Flow vs Stacked Liquid Layers */}
+            {Math.abs(tiltAngle) > 0.5 ? (
+              /* Authentic Fluid Wedge: Continuous bottom fill + 2.5D horizontal elliptic surface */
+              <g clipPath={`url(#tilted-chamber-clip-${index})`}>
+                {(() => {
+                  if (clampedLayers.length === 0) return null;
 
-                const fluidSurfaceAngle = tiltAngle;
-                const rad = (fluidSurfaceAngle * Math.PI) / 180;
-                const sinA = Math.sin(rad);
-                const cosA = Math.cos(rad);
-                const absSinA = Math.abs(sinA);
+                  const fluidSurfaceAngle = tiltAngle;
+                  const rad = (fluidSurfaceAngle * Math.PI) / 180;
+                  const sinA = Math.sin(rad);
+                  const cosA = Math.cos(rad);
+                  const absSinA = Math.abs(sinA);
 
-                // Spout lip depth in gravity coordinates (connects exactly to top rim at y=5.0)
-                const Y_lip = 5.0 * absSinA + Math.max(-4, 1.5 * cosA);
+                  // Spout lip depth in gravity coordinates (connects exactly to top rim at y=5.0)
+                  const Y_lip = 5.0 * absSinA + Math.max(-4, 1.5 * cosA);
 
-                // Deepest cavity wall in gravity coordinates:
-                // When tilt angle > 90deg, bottle base rises into the sky (cosA < 0),
-                // so the lowest gravitational points naturally shift to the downward neck/spout.
-                const baseContribution = Math.max(0, 181.0 * cosA);
-                const Y_deep = Math.max(Y_lip + 28, 32.0 * absSinA + baseContribution);
-                const H_delta = Math.max(20, Y_deep - Y_lip);
+                  // Deepest cavity wall in gravity coordinates:
+                  // When tilt angle > 90deg, bottle base rises into the sky (cosA < 0),
+                  // so the lowest gravitational points naturally shift to the downward neck/spout.
+                  const baseContribution = Math.max(0, 181.0 * cosA);
+                  const Y_deep = Math.max(Y_lip + 28, 32.0 * absSinA + baseContribution);
+                  const H_delta = Math.max(20, Y_deep - Y_lip);
 
-                // Total remaining fluid units
-                const totalUnits = clampedLayers.reduce((sum, l) => sum + l.heightPercent / 100, 0);
-                if (totalUnits <= 0.01) return null;
+                  // Total remaining fluid units
+                  const totalUnits = clampedLayers.reduce((sum, l) => sum + l.heightPercent / 100, 0);
+                  if (totalUnits <= 0.01) return null;
 
-                const fillRatio = Math.max(0, Math.min(1, totalUnits / capacity));
+                  const fillRatio = Math.max(0, Math.min(1, totalUnits / capacity));
 
-                // Natural surface depth: free surface connects to spout lip and smoothly recedes as it empties
-                const Y_surface = Y_lip + (1 - Math.min(1, Math.sqrt(fillRatio))) * 10;
+                  // Natural surface depth: free surface connects to spout lip and smoothly recedes as it empties
+                  const Y_surface = Y_lip + (1 - Math.min(1, Math.sqrt(fillRatio))) * 10;
 
-                // CRITICAL: The fluid bottom MUST extend to 260 to completely fill the lower wall and base!
-                // No artificial bottom cutoff; cavity clipPath shapes the true bottom fluid profile.
-                const Y_bottom_fill = 260;
+                  // CRITICAL: The fluid bottom MUST extend to 260 to completely fill the lower wall and base!
+                  // No artificial bottom cutoff; cavity clipPath shapes the true bottom fluid profile.
+                  const Y_bottom_fill = 260;
 
-                // Divide fluid layers from surface (topmost/draining) down to bottommost (filling deep base)
-                const layerThicknesses = clampedLayers.map((l) =>
-                  (l.heightPercent / 100 / totalUnits) * (Y_deep - Y_surface)
-                );
+                  // Divide fluid layers from surface (topmost/draining) down to bottommost (filling deep base)
+                  const layerThicknesses = clampedLayers.map((l) =>
+                    (l.heightPercent / 100 / totalUnits) * (Y_deep - Y_surface)
+                  );
 
-                let currentLevel = Y_surface;
-                const gravityLayers = [];
+                  let currentLevel = Y_surface;
+                  const gravityLayers = [];
 
-                // clampedLayers: idx 0 = base layer, idx len-1 = top draining layer
-                for (let i = clampedLayers.length - 1; i >= 0; i--) {
-                  const thickness = layerThicknesses[i];
-                  const yTop = currentLevel;
-                  // The bottommost layer (i === 0) fills all the way to 260 to ensure full solid bottom
-                  const yBottom = i === 0 ? Y_bottom_fill : currentLevel + thickness;
-                  currentLevel += thickness;
-                  gravityLayers.push({
-                    layer: clampedLayers[i],
-                    lIdx: i,
-                    yTop,
-                    yBottom,
-                  });
-                }
+                  // clampedLayers: idx 0 = base layer, idx len-1 = top draining layer
+                  for (let i = clampedLayers.length - 1; i >= 0; i--) {
+                    const thickness = layerThicknesses[i];
+                    const yTop = currentLevel;
+                    // The bottommost layer (i === 0) fills all the way to 260 to ensure full solid bottom
+                    const yBottom = i === 0 ? Y_bottom_fill : currentLevel + thickness;
+                    currentLevel += thickness;
+                    gravityLayers.push({
+                      layer: clampedLayers[i],
+                      lIdx: i,
+                      yTop,
+                      yBottom,
+                    });
+                  }
 
-                // 2.5D Perspective Ellipse on the free surface
-                const ellipseRx = 28;
-                const ellipseRy = 7.5;
-                // Center ellipse along the liquid wedge surface
-                const ellipseCx = fluidSurfaceAngle >= 0 ? 12 : -12;
+                  // 2.5D Perspective Ellipse on the free surface
+                  const ellipseRx = 28;
+                  const ellipseRy = 7.5;
+                  // Center ellipse along the liquid wedge surface
+                  const ellipseCx = fluidSurfaceAngle >= 0 ? 12 : -12;
 
-                return (
-                  <g transform={`rotate(${-fluidSurfaceAngle}, 38.5, 14)`}>
-                    {gravityLayers.map(({ layer, lIdx, yTop, yBottom }) => {
-                      const cDef = getColor(layer.colorId);
-                      const isHiddenLayer = hiddenCount > 0 && lIdx < hiddenCount;
-                      const isDimmed = maskHidden && lIdx === 0;
-                      const liquidFill = isHiddenLayer ? `url(#fog-grad-${index})` : `url(#grad-${cDef.id}-${index})`;
-                      const isVeryTop = (lIdx === clampedLayers.length - 1);
+                  return (
+                    <g transform={`rotate(${-fluidSurfaceAngle}, 38.5, 14)`}>
+                      {gravityLayers.map(({ layer, lIdx, yTop, yBottom }) => {
+                        const cDef = getColor(layer.colorId);
+                        const isHiddenLayer = hiddenCount > 0 && lIdx < hiddenCount;
+                        const isDimmed = maskHidden && lIdx === 0;
+                        const liquidFill = isHiddenLayer ? `url(#fog-grad-${index})` : `url(#grad-${cDef.id}-${index})`;
+                        const isVeryTop = (lIdx === clampedLayers.length - 1);
 
-                      return (
-                        <g key={`tilted-layer-${lIdx}`} opacity={isDimmed ? 0.4 : 1}>
-                          {/* Continuous solid fluid wedge in gravity space (clipped by bottle inner walls) */}
-                          <rect
-                            x={-160}
-                            y={yTop}
-                            width={380}
-                            height={Math.max(0.5, yBottom - yTop)}
-                            fill={liquidFill}
-                          />
-
-                          {/* Top Free Surface: Natural Horizontal Waterline Sheen */}
-                          {isVeryTop && (
-                            <line
-                              x1={-160}
-                              y1={yTop}
-                              x2={220}
-                              y2={yTop}
-                              stroke="rgba(255, 255, 255, 0.42)"
-                              strokeWidth="0.9"
-                              strokeLinecap="round"
+                        return (
+                          <g key={`tilted-layer-${lIdx}`} opacity={isDimmed ? 0.4 : 1}>
+                            {/* Continuous solid fluid wedge in gravity space (clipped by bottle inner walls) */}
+                            <rect
+                              x={-160}
+                              y={yTop}
+                              width={380}
+                              height={Math.max(0.5, yBottom - yTop)}
+                              fill={liquidFill}
                             />
-                          )}
 
-                          {/* Subtle horizontal interface between distinct stacked colors */}
-                          {lIdx > 0 && clampedLayers[lIdx - 1]?.colorId !== layer.colorId && (
-                            <line
-                              x1={-160}
-                              y1={yTop + (layerThicknesses[lIdx] || 0)}
-                              x2={220}
-                              y2={yTop + (layerThicknesses[lIdx] || 0)}
-                              stroke="rgba(255, 255, 255, 0.22)"
-                              strokeWidth="0.6"
-                            />
-                          )}
-                        </g>
-                      );
-                    })}
-                  </g>
-                );
-              })()}
-            </g>
-          ) : (
-            /* Standard Rest State: Layered Continuous Fluid Volumes */
-            <g clipPath={`url(#inner-clip-${index})`}>
-              {fluidSegments.map((seg, sIdx) => {
-                const cDef = getColor(seg.colorId);
-                const liquidFill = seg.isHidden ? `url(#fog-grad-${index})` : `url(#grad-${cDef.id}-${index})`;
+                            {/* Top Free Surface: Natural Horizontal Waterline Sheen */}
+                            {isVeryTop && (
+                              <line
+                                x1={-160}
+                                y1={yTop}
+                                x2={220}
+                                y2={yTop}
+                                stroke="rgba(255, 255, 255, 0.42)"
+                                strokeWidth="0.9"
+                                strokeLinecap="round"
+                              />
+                            )}
 
-                const bodyPath = seg.isBottom
-                  ? `
+                            {/* Subtle horizontal interface between distinct stacked colors */}
+                            {lIdx > 0 && clampedLayers[lIdx - 1]?.colorId !== layer.colorId && (
+                              <line
+                                x1={-160}
+                                y1={yTop + (layerThicknesses[lIdx] || 0)}
+                                x2={220}
+                                y2={yTop + (layerThicknesses[lIdx] || 0)}
+                                stroke="rgba(255, 255, 255, 0.22)"
+                                strokeWidth="0.6"
+                              />
+                            )}
+                          </g>
+                        );
+                      })}
+                    </g>
+                  );
+                })()}
+              </g>
+            ) : (
+              /* Standard Rest State: Layered Continuous Fluid Volumes */
+              <g clipPath={`url(#inner-clip-${index})`}>
+                {fluidSegments.map((seg, sIdx) => {
+                  const cDef = getColor(seg.colorId);
+                  const liquidFill = seg.isHidden ? `url(#fog-grad-${index})` : `url(#grad-${cDef.id}-${index})`;
+
+                  const bodyPath = seg.isBottom
+                    ? `
                     M 6.3 ${seg.yTop}
                     L 6.3 196.0
                     A 32 14.5 0 0 0 70.3 196.0
@@ -714,7 +710,7 @@ export const TestTube = React.memo(forwardRef<TestTubeRef, TestTubeProps>(({
                     A ${RX} ${RY} 0 0 1 6.3 ${seg.yTop}
                     Z
                   `
-                  : `
+                    : `
                     M 6.3 ${seg.yTop}
                     L 6.3 ${seg.yBottom}
                     A ${RX} ${RY} 0 0 0 70.3 ${seg.yBottom}
@@ -723,100 +719,100 @@ export const TestTube = React.memo(forwardRef<TestTubeRef, TestTubeProps>(({
                     Z
                   `;
 
-                return (
-                  <g key={`fluid-seg-${seg.colorId}-${sIdx}`} opacity={seg.isDimmed ? 0.4 : 1}>
-                    {/* Unified 3D Fluid Cylinder Body (Same colors completely seamless) */}
-                    <path
-                      d={bodyPath}
-                      fill={liquidFill}
-                    />
-
-                    {/* Subtle, non-intrusive internal unit guideline within multi-unit same-color liquid */}
-                    {seg.unitBoundaries.map((bY, bIdx) => (
-                      <line
-                        key={`unit-ref-${bIdx}`}
-                        x1="14"
-                        y1={bY}
-                        x2="63"
-                        y2={bY}
-                        stroke="rgba(255, 255, 255, 0.08)"
-                        strokeWidth="0.75"
-                        strokeDasharray="3 4"
-                      />
-                    ))}
-
-                    {/* Frosted fog question mark over hidden bottom layers */}
-                    {seg.isHidden && (
-                      <text
-                        x="38.5"
-                        y={(seg.yTop + seg.yBottom) / 2 + 3}
-                        textAnchor="middle"
-                        fontSize="14"
-                        fontWeight="bold"
-                        fill="rgba(25, 35, 65, 0.6)"
-                      >
-                        ?
-                      </text>
-                    )}
-
-                    {/* Gentle, soft meniscus boundary line between distinct stacked colors (no harsh glare) */}
-                    {!seg.isBottom && (
+                  return (
+                    <g key={`fluid-seg-${seg.colorId}-${sIdx}`} opacity={seg.isDimmed ? 0.4 : 1}>
+                      {/* Unified 3D Fluid Cylinder Body (Same colors completely seamless) */}
                       <path
-                        d={`M 6.3 ${seg.yBottom} A ${RX} ${RY} 0 0 0 70.3 ${seg.yBottom}`}
-                        stroke="rgba(255, 255, 255, 0.14)"
-                        strokeWidth="0.65"
-                        fill="none"
+                        d={bodyPath}
+                        fill={liquidFill}
                       />
-                    )}
 
-                    {/* Top Free Surface Meniscus Cap (only on topmost fluid layer) */}
-                    {seg.isTop && (seg.yBottom - seg.yTop) > 2 && (
-                      <g
-                        className={
-                          isShaking
-                            ? 'anim-liquid-shake'
-                            : isSelected && !isPouringSource && !isPouringTarget
-                            ? 'anim-liquid-select'
-                            : entrySwayActive && !isPouringSource && !isPouringTarget
-                            ? 'anim-liquid-entry'
-                            : ''
-                        }
-                        onAnimationStart={(event) => {
-                          if (event.animationName !== 'liquidEntrySway') setEntrySwayActive(false);
-                        }}
-                        onAnimationEnd={(event) => {
-                          if (event.animationName === 'liquidEntrySway') setEntrySwayActive(false);
-                        }}
-                        style={{
-                          transformBox: 'fill-box',
-                          transformOrigin: '50% 50%',
-                          animationDelay: `${(index % 7) * 32}ms`,
-                        }}
-                      >
-                        <ellipse
-                          cx="38.5"
-                          cy={seg.yTop}
-                          rx={RX}
-                          ry={RY}
-                          fill={seg.isHidden ? `url(#fog-grad-${index})` : `url(#meniscus-grad-${cDef.id}-${index})`}
-                          stroke="rgba(255, 255, 255, 0.22)"
-                          strokeWidth="0.6"
+                      {/* Subtle, non-intrusive internal unit guideline within multi-unit same-color liquid */}
+                      {seg.unitBoundaries.map((bY, bIdx) => (
+                        <line
+                          key={`unit-ref-${bIdx}`}
+                          x1="14"
+                          y1={bY}
+                          x2="63"
+                          y2={bY}
+                          stroke="rgba(255, 255, 255, 0.08)"
+                          strokeWidth="0.75"
+                          strokeDasharray="3 4"
                         />
+                      ))}
+
+                      {/* Frosted fog question mark over hidden bottom layers */}
+                      {seg.isHidden && (
+                        <text
+                          x="38.5"
+                          y={(seg.yTop + seg.yBottom) / 2 + 3}
+                          textAnchor="middle"
+                          fontSize="14"
+                          fontWeight="bold"
+                          fill="rgba(25, 35, 65, 0.6)"
+                        >
+                          ?
+                        </text>
+                      )}
+
+                      {/* Gentle, soft meniscus boundary line between distinct stacked colors (no harsh glare) */}
+                      {!seg.isBottom && (
                         <path
-                          d={`M 16 ${seg.yTop + 0.6} Q 38.5 ${seg.yTop + RY * 0.75} 61 ${seg.yTop + 0.6}`}
-                          stroke="#ffffff"
-                          strokeWidth="0.8"
-                          strokeLinecap="round"
+                          d={`M 6.3 ${seg.yBottom} A ${RX} ${RY} 0 0 0 70.3 ${seg.yBottom}`}
+                          stroke="rgba(255, 255, 255, 0.14)"
+                          strokeWidth="0.65"
                           fill="none"
-                          opacity="0.32"
                         />
-                      </g>
-                    )}
-                  </g>
-                );
-              })}
-            </g>
-          )}
+                      )}
+
+                      {/* Top Free Surface Meniscus Cap (only on topmost fluid layer) */}
+                      {seg.isTop && (seg.yBottom - seg.yTop) > 2 && (
+                        <g
+                          className={
+                            isShaking
+                              ? 'anim-liquid-shake'
+                              : isSelected && !isPouringSource && !isPouringTarget
+                                ? 'anim-liquid-select'
+                                : entrySwayActive && !isPouringSource && !isPouringTarget
+                                  ? 'anim-liquid-entry'
+                                  : ''
+                          }
+                          onAnimationStart={(event) => {
+                            if (event.animationName !== 'liquidEntrySway') setEntrySwayActive(false);
+                          }}
+                          onAnimationEnd={(event) => {
+                            if (event.animationName === 'liquidEntrySway') setEntrySwayActive(false);
+                          }}
+                          style={{
+                            transformBox: 'fill-box',
+                            transformOrigin: '50% 50%',
+                            animationDelay: `${(index % 7) * 32}ms`,
+                          }}
+                        >
+                          <ellipse
+                            cx="38.5"
+                            cy={seg.yTop}
+                            rx={RX}
+                            ry={RY}
+                            fill={seg.isHidden ? `url(#fog-grad-${index})` : `url(#meniscus-grad-${cDef.id}-${index})`}
+                            stroke="rgba(255, 255, 255, 0.22)"
+                            strokeWidth="0.6"
+                          />
+                          <path
+                            d={`M 16 ${seg.yTop + 0.6} Q 38.5 ${seg.yTop + RY * 0.75} 61 ${seg.yTop + 0.6}`}
+                            stroke="#ffffff"
+                            strokeWidth="0.8"
+                            strokeLinecap="round"
+                            fill="none"
+                            opacity="0.32"
+                          />
+                        </g>
+                      )}
+                    </g>
+                  );
+                })}
+              </g>
+            )}
           </g>
 
           {/* 3. High-Gloss Specular Glass Reflections Overlay (True Alpha Transparency) */}
@@ -903,11 +899,10 @@ export const TestTube = React.memo(forwardRef<TestTubeRef, TestTubeProps>(({
 
       {/* Ground Shadow */}
       <div
-        className={`w-14 h-2.5 rounded-[50%] transition-all duration-200 pointer-events-none -mt-1 ${
-          isSelected || isPouringSource
+        className={`w-14 h-2.5 rounded-[50%] transition-all duration-200 pointer-events-none -mt-1 ${isSelected || isPouringSource
             ? 'scale-75 opacity-15 translate-y-1'
             : 'scale-100 opacity-55'
-        }`}
+          }`}
         style={{
           background: 'radial-gradient(ellipse at center, rgba(1, 5, 15, 0.55) 0%, rgba(1, 5, 15, 0.34) 38%, rgba(3, 10, 24, 0.12) 64%, transparent 82%)',
         }}
