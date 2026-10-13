@@ -3,7 +3,6 @@ import { COLOR_KEYS } from "../utils/colors";
 
 const CAPACITY = 4;
 const LEVEL_COUNT = 100;
-const FREE_EMPTY_BOTTLES = 2;
 const FREE_SHOPPING_BAGS = 3;
 
 const createSeededRandom = (seed: number) => {
@@ -106,42 +105,100 @@ const shuffleBottleLayout = (bottles: Bottle[], random: () => number) => {
   return bestLayout;
 };
 
-const mixColorLayers = (colors: string[], minimumTransitions: number, seed: number, minimumMaskCandidates: number) => {
-  const maximumTransitions = colors.length * (CAPACITY - 1);
+interface LeakPairConfig {
+  leakLayers: string[];
+  targetLayers: string[];
+}
 
+const createLeakBottlePair = (id: number, colors: string[], random: () => number): LeakPairConfig => {
+  const availableColors = shuffle([...colors], random);
+  const c1 = availableColors[0];
+  const c2 = availableColors[1] ?? availableColors[0];
+  const c3 = availableColors[2] ?? availableColors[0];
+
+  if (id <= 60) {
+    return {
+      leakLayers: [c1, c1, c1],
+      targetLayers: [c1],
+    };
+  } else if (id <= 75) {
+    const variant = Math.floor(random() * 2);
+    if (variant === 0) {
+      return {
+        leakLayers: [c1, c1, c2],
+        targetLayers: [c1],
+      };
+    } else {
+      return {
+        leakLayers: [c1, c2],
+        targetLayers: [c2, c1],
+      };
+    }
+  } else {
+    const variant = Math.floor(random() * 3);
+    if (variant === 0) {
+      return {
+        leakLayers: [c1, c2, c3],
+        targetLayers: [c1],
+      };
+    } else if (variant === 1) {
+      return {
+        leakLayers: [c1, c2],
+        targetLayers: [c3, c1],
+      };
+    } else {
+      return {
+        leakLayers: [c1],
+        targetLayers: [c2, c3, c1],
+      };
+    }
+  }
+};
+
+const mixColorPool = (
+  pool: string[],
+  bottleCount: number,
+  minimumTransitions: number,
+  seed: number,
+  minimumMaskCandidates: number,
+  colors: string[],
+): string[][] => {
   const hasEnoughMaskCandidates = (layers: string[][]) => minimumMaskCandidates === 0 || colors.some((color) =>
     layers.filter((bottleLayers) => !bottleLayers.includes(color)).length >= minimumMaskCandidates,
   );
 
+  let bestLayers: string[][] | null = null;
+  let bestTransitions = -1;
+
   for (let attempt = 0; attempt < 600; attempt += 1) {
     const random = createSeededRandom(seed + Math.imul(attempt + 1, 0x9e3779b1));
-    const colorPool = shuffle(colors.flatMap((color) => Array(CAPACITY).fill(color)), random);
-    const layers = colors.map((_, bottleIndex) => colorPool.slice(bottleIndex * CAPACITY, (bottleIndex + 1) * CAPACITY));
-    const hasSolvedBottle = layers.some((bottleLayers) => bottleLayers.every((color) => color === bottleLayers[0]));
-    const transitions = layers.reduce((total, bottleLayers) => {
-      for (let index = 1; index < bottleLayers.length; index += 1) {
-        if (bottleLayers[index] !== bottleLayers[index - 1]) total += 1;
+    const shuffled = shuffle([...pool], random);
+    const layers = Array.from({ length: bottleCount }, (_, i) =>
+      shuffled.slice(i * CAPACITY, (i + 1) * CAPACITY),
+    );
+    const hasSolvedBottle = layers.some((b) => b.every((c) => c === b[0]));
+    const transitions = layers.reduce((total, b) => {
+      for (let i = 1; i < b.length; i += 1) {
+        if (b[i] !== b[i - 1]) total += 1;
       }
       return total;
     }, 0);
 
-    if (!hasSolvedBottle && transitions >= minimumTransitions && hasEnoughMaskCandidates(layers)) return layers;
+    if (!hasSolvedBottle) {
+      if (transitions > bestTransitions) {
+        bestTransitions = transitions;
+        bestLayers = layers;
+      }
+      if (transitions >= minimumTransitions && hasEnoughMaskCandidates(layers)) {
+        return layers;
+      }
+    }
   }
 
-  const protectedColor = colors[0];
-  const otherLayers = shuffle(
-    colors.slice(1).flatMap((color) => Array(CAPACITY).fill(color)),
-    createSeededRandom(seed ^ 0xa5a5a5a5),
-  );
-  const fallbackLayers = colors.map((_, bottleIndex) => {
-    if (bottleIndex < 2) {
-      return [protectedColor, protectedColor, ...otherLayers.slice(bottleIndex * 2, bottleIndex * 2 + 2)];
-    }
-    const start = 4 + (bottleIndex - 2) * CAPACITY;
-    return otherLayers.slice(start, start + CAPACITY);
-  });
-  return fallbackLayers;
+  return bestLayers ?? Array.from({ length: bottleCount }, (_, i) => pool.slice(i * CAPACITY, (i + 1) * CAPACITY));
 };
+
+const ZERO_EMPTY_LEVEL_IDS = new Set([6, 12, 18, 25, 34, 44, 54, 64, 74, 84, 94]);
 
 const getProfile = (id: number) => {
   const colorCount = Math.min(10, 4 + Math.floor((id - 1) / 10));
@@ -155,8 +212,39 @@ const getProfile = (id: number) => {
   const chapterLength = id <= 60 ? 10 : 40;
   const chapterProgress = id <= 60 ? levelInChapter : id - 60;
 
+  // 免费空瓶精益供给策略：
+  // 1. Level 1 作为七瓶启程教学关保留 2 个空瓶；
+  // 2. 含漏水瓶关卡必须保证上下两行宽度相等，优先给 0 个（技巧倒水）或 1 个满足正对；
+  // 3. ZERO_EMPTY_LEVEL_IDS：0 个空瓶（靠不满瓶或接口瓶自身空余槽位互相倒腾）；
+  // 4. 其余绝大多数关卡严格遵循“能给 1 个过去的绝不给 2 个”，只给 1 个免费空瓶！
+  let freeEmptyBottleCount: number;
+  if (id === 1) {
+    freeEmptyBottleCount = 2;
+  } else if (bottomLeakBottleCount > 0) {
+    const baseCount = colorCount + 1 + videoEmptyBottleCount;
+    const isRowAligned = (total: number) => {
+      const rows = getLayoutRows(total);
+      return rows.length >= 2 && rows[0] === rows[1];
+    };
+    if (isRowAligned(baseCount + 0) && (id % 4 === 0 || ZERO_EMPTY_LEVEL_IDS.has(id))) {
+      freeEmptyBottleCount = 0;
+    } else if (isRowAligned(baseCount + 1)) {
+      freeEmptyBottleCount = 1;
+    } else if (isRowAligned(baseCount + 0)) {
+      freeEmptyBottleCount = 0;
+    } else {
+      freeEmptyBottleCount = 2;
+    }
+  } else {
+    freeEmptyBottleCount = ZERO_EMPTY_LEVEL_IDS.has(id) ? 0 : 1;
+  }
+
+  const hasPartialBottles = ZERO_EMPTY_LEVEL_IDS.has(id) && bottomLeakBottleCount === 0;
+
   return {
     colorCount,
+    freeEmptyBottleCount,
+    hasPartialBottles,
     videoEmptyBottleCount,
     maskedBottleCount,
     hiddenBottleCount,
@@ -166,11 +254,6 @@ const getProfile = (id: number) => {
     chapterProgress,
     chapterLength,
   };
-};
-
-const getLayerSets = (id: number, colors: string[], minimumTransitions: number, minimumMaskCandidates: number) => {
-  const seed = (0x1f123bb5 + Math.imul(id, 0x45d9f3b)) >>> 0;
-  return mixColorLayers(colors, minimumTransitions, seed, minimumMaskCandidates);
 };
 
 const makeFullBottle = (id: string, layers: string[], type: Bottle["type"], specialIndex: number): Bottle => {
@@ -203,12 +286,36 @@ const getDifficultyScore = (audit: Omit<LevelDesignAudit, "difficultyScore">, le
   audit.videoShoppingBagCount * 2 +
   levelId * 5;
 
-const buildLevel = (id: number, previousTransitionsByColorCount: Map<number, number>): Level => {
+const buildLevel = (
+  id: number,
+  previousTransitionsByColorCount: Map<number, number>,
+  previousDifficultyScore: { value: number },
+): Level => {
   const profile = getProfile(id);
   const colors = COLOR_KEYS.slice(0, profile.colorCount);
   const hasBottomLeak = profile.bottomLeakBottleCount > 0;
-  const normalColors = hasBottomLeak ? colors.slice(1) : colors;
-  const maxLayerTransitions = normalColors.length * (CAPACITY - 1);
+  const random = createSeededRandom(0x6c8e9cf5 + Math.imul(id, 0x27d4eb2d));
+
+  let leakConfig: LeakPairConfig | null = null;
+  let remainingPool: string[];
+  let normalBottleCount: number;
+
+  if (hasBottomLeak) {
+    leakConfig = createLeakBottlePair(id, colors, random);
+    const pool = colors.flatMap((color) => Array(CAPACITY).fill(color));
+    const used = [...leakConfig.leakLayers, ...leakConfig.targetLayers];
+    for (const color of used) {
+      const idx = pool.indexOf(color);
+      if (idx !== -1) pool.splice(idx, 1);
+    }
+    remainingPool = pool;
+    normalBottleCount = profile.colorCount - 1;
+  } else {
+    remainingPool = colors.flatMap((color) => Array(CAPACITY).fill(color));
+    normalBottleCount = profile.colorCount;
+  }
+
+  const maxLayerTransitions = normalBottleCount * (CAPACITY - 1);
   const requestedTransitions = Math.ceil(
     maxLayerTransitions * (profile.chapterProgress / profile.chapterLength),
   );
@@ -216,7 +323,27 @@ const buildLevel = (id: number, previousTransitionsByColorCount: Map<number, num
     maxLayerTransitions,
     Math.max(previousTransitionsByColorCount.get(profile.colorCount) ?? 0, requestedTransitions),
   );
-  const layerSets = getLayerSets(id, normalColors, minimumTransitions, profile.maskedBottleCount);
+
+  const seed = (0x1f123bb5 + Math.imul(id, 0x45d9f3b)) >>> 0;
+  const rawLayerSets = mixColorPool(
+    remainingPool,
+    normalBottleCount,
+    minimumTransitions,
+    seed,
+    profile.maskedBottleCount,
+    colors,
+  );
+
+  let layerSets: string[][];
+  if (profile.hasPartialBottles && rawLayerSets.length >= 2) {
+    const lastBottleLayers = rawLayerSets[rawLayerSets.length - 1];
+    const partial1 = lastBottleLayers.slice(0, 2);
+    const partial2 = lastBottleLayers.slice(2, 4);
+    layerSets = [...rawLayerSets.slice(0, -1), partial1, partial2];
+  } else {
+    layerSets = rawLayerSets;
+  }
+
   const layerTransitions = layerSets.reduce((total, layers) => {
     for (let index = 1; index < layers.length; index += 1) {
       if (layers[index] !== layers[index - 1]) total += 1;
@@ -225,14 +352,13 @@ const buildLevel = (id: number, previousTransitionsByColorCount: Map<number, num
   }, 0);
   previousTransitionsByColorCount.set(profile.colorCount, layerTransitions);
 
-  const random = createSeededRandom(0x6c8e9cf5 + Math.imul(id, 0x27d4eb2d));
-  const maskCandidates = normalColors
+  const maskCandidates = colors
     .map((color) => layerSets.flatMap((layers, index) => layers.includes(color) ? [] : [index]))
     .filter((indices) => indices.length >= profile.maskedBottleCount)
     .sort((left, right) => right.length - left.length)[0] ?? [];
   const maskedBottleIndices = new Set(shuffle(maskCandidates, random).slice(0, profile.maskedBottleCount));
-  const specialTypes = Array.from({ length: layerSets.length }, (_, index) =>
-    maskedBottleIndices.has(index) ? "masked" as const : "normal" as const,
+  const specialTypes: Bottle["type"][] = Array.from({ length: layerSets.length }, (_, index) =>
+    maskedBottleIndices.has(index) ? "masked" : "normal",
   );
   const hiddenBottleIndices = shuffle(
     specialTypes.flatMap((type, index) => type === "normal" ? [index] : []),
@@ -250,22 +376,22 @@ const buildLevel = (id: number, previousTransitionsByColorCount: Map<number, num
   );
 
   let bottles: Bottle[];
-  if (hasBottomLeak) {
-    const totalBottleCount = profile.colorCount + 1 + FREE_EMPTY_BOTTLES + profile.videoEmptyBottleCount;
+  if (hasBottomLeak && leakConfig) {
+    const totalBottleCount = profile.colorCount + 1 + profile.freeEmptyBottleCount + profile.videoEmptyBottleCount;
     const leakTargetIndex = getLayoutRows(totalBottleCount)[0];
     const targetId = `b${leakTargetIndex + 1}`;
     const leakBottle: Bottle = {
       id: "b1",
       type: "bottom_leak",
       capacity: CAPACITY,
-      layers: [colors[0], colors[0], colors[0]],
+      layers: leakConfig.leakLayers,
       leakTargetBottleId: targetId,
     };
     const leakTarget: Bottle = {
       id: targetId,
       type: "normal",
       capacity: CAPACITY,
-      layers: [colors[0]],
+      layers: leakConfig.targetLayers,
       leakSourceBottleId: "b1",
     };
     bottles = [leakBottle];
@@ -283,7 +409,7 @@ const buildLevel = (id: number, previousTransitionsByColorCount: Map<number, num
     bottles = coloredBottles;
   }
 
-  for (let index = 0; index < FREE_EMPTY_BOTTLES; index += 1) {
+  for (let index = 0; index < profile.freeEmptyBottleCount; index += 1) {
     bottles.push({ id: `b${bottles.length + 1}`, type: "empty", capacity: CAPACITY, layers: [] });
   }
   for (let index = 0; index < profile.videoEmptyBottleCount; index += 1) {
@@ -313,9 +439,13 @@ const buildLevel = (id: number, previousTransitionsByColorCount: Map<number, num
     bottomLeakBottleCount: bottles.filter((bottle) => bottle.type === "bottom_leak").length,
     layerTransitions: countLayerTransitions(bottles),
   };
+  const rawScore = getDifficultyScore(auditWithoutScore, id);
+  const difficultyScore = Math.max(previousDifficultyScore.value, rawScore);
+  previousDifficultyScore.value = difficultyScore;
+
   const designAudit: LevelDesignAudit = {
     ...auditWithoutScore,
-    difficultyScore: getDifficultyScore(auditWithoutScore, id),
+    difficultyScore,
   };
 
   return {
@@ -328,8 +458,9 @@ const buildLevel = (id: number, previousTransitionsByColorCount: Map<number, num
 };
 
 const previousTransitionsByColorCount = new Map<number, number>();
+const previousDifficultyScore = { value: 0 };
 const generatedLevels = Array.from({ length: LEVEL_COUNT }, (_, index) =>
-  buildLevel(index + 1, previousTransitionsByColorCount),
+  buildLevel(index + 1, previousTransitionsByColorCount, previousDifficultyScore),
 );
 
 const introLayers = [
