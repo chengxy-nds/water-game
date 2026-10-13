@@ -30,6 +30,7 @@ export interface Bottle {
   hiddenBottomLayers?: number;
   // bottom_leak (底部漏水瓶): fixed target bottle below
   leakTargetBottleId?: string;
+  leakSourceBottleId?: string;
   locked?: boolean;
 }
 
@@ -54,6 +55,25 @@ export interface Level {
   optimalSteps?: number;
   description?: string;
   isCustom?: boolean;
+  designAudit?: LevelDesignAudit;
+}
+
+export interface LevelDesignAudit {
+  bottleCount: number;
+  fullColorBottleCount: number;
+  partialBottleCount: number;
+  freeEmptyBottleCount: number;
+  videoEmptyBottleCount: number;
+  colorCount: number;
+  visibleColorCount: number;
+  freeShoppingBagCount: number;
+  videoShoppingBagCount: number;
+  queuedShoppingColors: number;
+  maskedBottleCount: number;
+  hiddenBottleCount: number;
+  bottomLeakBottleCount: number;
+  layerTransitions: number;
+  difficultyScore: number;
 }
 
 export interface SolverResult {

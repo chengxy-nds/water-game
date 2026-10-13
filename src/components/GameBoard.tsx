@@ -81,7 +81,7 @@ export const getRowDistribution = (total: number): number[] => {
   const remainder = total % rows;
   const result: number[] = [];
   for (let i = 0; i < rows; i++) {
-    result.push(Math.min(MAX_BOTTLES_PER_ROW, base + (i < remainder ? 1 : 0)));
+    result.push(Math.min(MAX_BOTTLES_PER_ROW, base + (i >= rows - remainder ? 1 : 0)));
   }
   return result;
 };

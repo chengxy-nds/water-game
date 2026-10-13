@@ -162,10 +162,15 @@ export const LevelSelectorModal: React.FC<LevelSelectorModalProps> = ({
                       <div className="text-[10px] text-blue-200/60">
                         {record ? (
                           <span className="text-emerald-400 font-medium">
-                            最佳: {record.bestSteps}步 (最优{lvl.optimalSteps}步)
+                            最佳: {record.bestSteps}步
+                            {lvl.optimalSteps !== undefined ? ` (最优${lvl.optimalSteps}步)` : ''}
                           </span>
                         ) : (
-                          <span>理论最优: {lvl.optimalSteps} 步</span>
+                          <span>
+                            {lvl.optimalSteps !== undefined
+                              ? `理论最优: ${lvl.optimalSteps} 步`
+                              : `设计难度: ${lvl.designAudit?.difficultyScore ?? '—'}`}
+                          </span>
                         )}
                       </div>
 

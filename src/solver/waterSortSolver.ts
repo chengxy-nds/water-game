@@ -161,15 +161,36 @@ export function isDirectlyBelow(
   if (sourceIndex < 0 || targetIndex < 0 || sourceIndex === targetIndex) return false;
   if (bottles.length === 0) return false;
 
-  const rowCount = Math.min(3, Math.max(1, Math.ceil(bottles.length / 7)));
-  const rowSize = Math.ceil(bottles.length / rowCount);
+  const rowSizes = bottles.length <= 5
+    ? [bottles.length]
+    : bottles.length <= 14
+    ? [Math.ceil(bottles.length / 2), Math.floor(bottles.length / 2)]
+    : (() => {
+      const rowCount = Math.max(3, Math.ceil(bottles.length / 7));
+      const base = Math.floor(bottles.length / rowCount);
+      const remainder = bottles.length % rowCount;
+      return Array.from({ length: rowCount }, (_, index) => base + (index >= rowCount - remainder ? 1 : 0));
+    })();
 
-  const sourceRow = Math.floor(sourceIndex / rowSize);
-  const targetRow = Math.floor(targetIndex / rowSize);
-  const sourceCol = sourceIndex % rowSize;
-  const targetCol = targetIndex % rowSize;
+  let rowStart = 0;
+  let sourceRow = -1;
+  let sourceCol = -1;
+  let targetRow = -1;
+  let targetCol = -1;
+  for (let rowIndex = 0; rowIndex < rowSizes.length; rowIndex += 1) {
+    const rowEnd = rowStart + rowSizes[rowIndex];
+    if (sourceIndex >= rowStart && sourceIndex < rowEnd) {
+      sourceRow = rowIndex;
+      sourceCol = sourceIndex - rowStart;
+    }
+    if (targetIndex >= rowStart && targetIndex < rowEnd) {
+      targetRow = rowIndex;
+      targetCol = targetIndex - rowStart;
+    }
+    rowStart = rowEnd;
+  }
 
-  return sourceRow + 1 === targetRow && sourceCol === targetCol && targetIndex > sourceIndex;
+  return sourceRow + 1 === targetRow && sourceCol === targetCol;
 }
 
 export function canLeak(
@@ -183,6 +204,7 @@ export function canLeak(
   if (source.type !== 'bottom_leak') return false;
   if (!source.leakTargetBottleId) return false;
   if (source.leakTargetBottleId !== target.id) return false;
+  if (target.leakSourceBottleId !== source.id) return false;
   if (sourceIndex !== undefined && targetIndex !== undefined && !isDirectlyBelow(sourceIndex, targetIndex, bottles)) {
     return false;
   }
@@ -277,7 +299,8 @@ function bottleSignature(b: Bottle): string {
   const layers = b.layers.length === 0 ? 'E' : b.layers.join(',');
   if (b.type === 'hidden') return `${layers}:h${b.hiddenBottomLayers ?? 0}`;
   if (b.type === 'masked') return `${layers}:m${b.maskRevealed ? 1 : 0}`;
-  if (b.type === 'bottom_leak') return `${layers}:l`;
+  if (b.type === 'bottom_leak') return `${layers}:l${b.leakTargetBottleId ?? ''}`;
+  if (b.leakSourceBottleId) return `${layers}:t${b.leakSourceBottleId}`;
   return layers;
 }
 
