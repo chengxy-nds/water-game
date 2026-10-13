@@ -388,6 +388,45 @@
   opacity: .48;
 }
 
+.header-action-button {
+  position: relative;
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  overflow: visible;
+  padding: 0;
+  color: white;
+  cursor: pointer;
+  border: 2px solid #93c5fd;
+  border-radius: 13px;
+  background: linear-gradient(180deg, #60a5fa 0%, #3b82f6 34%, #1d4ed8 76%, #1e40af 100%);
+  box-shadow: 0 4px 10px rgba(29, 78, 216, 0.48), inset 0 2px 3px rgba(255,255,255,.82), inset 0 -2px 3px rgba(30,58,138,.55);
+  transition: transform .15s ease, filter .15s ease, box-shadow .15s ease;
+}
+
+.header-action-button::before {
+  position: absolute;
+  top: 2px;
+  right: 3px;
+  left: 3px;
+  height: 11px;
+  content: "";
+  pointer-events: none;
+  border-radius: 8px 8px 50% 50%;
+  background: linear-gradient(180deg, rgba(255,255,255,.72), rgba(255,255,255,0));
+}
+
+.header-action-button:hover:not(:disabled) {
+  filter: brightness(1.12);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(29,78,216,.58), inset 0 2px 3px rgba(255,255,255,.9);
+}
+
+.header-action-button:active:not(:disabled) {
+  transform: translateY(1px) scale(.95);
+}
+
 .control-action-icon {
   position: relative;
   z-index: 1;

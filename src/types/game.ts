@@ -10,7 +10,7 @@ export interface ColorDef {
   textColor: string;
 }
 
-export type BottleType = 'normal' | 'empty' | 'masked' | 'hidden' | 'bottom_leak';
+export type BottleType = 'normal' | 'empty' | 'masked' | 'hidden' | 'bottom_leak' | 'video_empty';
 
 /**
  * A bottle in the puzzle. `layers` is the single source of truth for liquid,

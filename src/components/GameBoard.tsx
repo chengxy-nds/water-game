@@ -6,6 +6,7 @@ import {
   BOTTLE_VIEWBOX_WIDTH,
   BOTTLE_VIEWBOX_HEIGHT,
   TestTube,
+  TubeSizeVariant,
   getBottleLiquidSurfaceY,
   getBottlePourSpoutPoint,
 } from './TestTube';
@@ -58,28 +59,31 @@ interface GameBoardProps {
   disabled?: boolean;
 }
 
+export const MAX_BOTTLES_PER_ROW = 7;
+
 /**
  * 瓶子上下货架分层排布算法：
- * 1. 一排最多 7 个瓶子
- * 2. 瓶子少时（<=3 瓶）单排放置；
- * 3. 4~14 瓶优雅均分成 2 层货架（如 4 瓶 2+2，5 瓶 3+2，6 瓶 3+3，7 瓶 4+3，10 瓶 5+5 等），避免瓶子过少全挤在 1 行不美观；
- * 4. >= 15 瓶均分成 3 层货架（每层最多 7 瓶）。
+ * 1. 一排最多 7 个瓶子（严格保证 MAX_BOTTLES_PER_ROW = 7）；
+ * 2. 1~5 瓶单排居中展示；
+ * 3. 6~14 瓶优雅均分成 2 层货架（每层最多 7 瓶，如 6 瓶 3+3，7 瓶 4+3，10 瓶 5+5，14 瓶 7+7）；
+ * 4. >= 15 瓶均分成 3 层货架（每层最多 7 瓶，如 15 瓶 5+5+5，21 瓶 7+7+7）。
  */
 export const getRowDistribution = (total: number): number[] => {
   if (total <= 0) return [];
-  if (total <= 3) return [total];
+  if (total <= 5) return [total];
   if (total <= 14) {
-    const top = Math.ceil(total / 2);
-    return [top, total - top];
+    const top = Math.min(MAX_BOTTLES_PER_ROW, Math.ceil(total / 2));
+    const bottom = total - top;
+    return [top, bottom];
   }
-  const rows = 3;
+  const rows = Math.max(3, Math.ceil(total / MAX_BOTTLES_PER_ROW));
   const base = Math.floor(total / rows);
-  const rem = total % rows;
-  return [
-    Math.min(7, base + (rem > 0 ? 1 : 0)),
-    Math.min(7, base + (rem > 1 ? 1 : 0)),
-    Math.min(7, base),
-  ];
+  const remainder = total % rows;
+  const result: number[] = [];
+  for (let i = 0; i < rows; i++) {
+    result.push(Math.min(MAX_BOTTLES_PER_ROW, base + (i < remainder ? 1 : 0)));
+  }
+  return result;
 };
 
 export const GameBoard: React.FC<GameBoardProps> = ({
@@ -225,6 +229,34 @@ export const GameBoard: React.FC<GameBoardProps> = ({
 
   const rowDistribution = getRowDistribution(bottles.length);
   const rowCount = rowDistribution.length;
+  const maxBottlesInRow = Math.max(...rowDistribution, 1);
+
+  const sizeVariant = useMemo<TubeSizeVariant>(() => {
+    if (rowCount >= 3) {
+      return maxBottlesInRow >= 6 ? 'mini' : 'compact';
+    }
+    if (maxBottlesInRow >= 7) return 'mini';
+    if (maxBottlesInRow === 6) return 'compact';
+    if (maxBottlesInRow === 5) return 'normal';
+    return 'spacious';
+  }, [rowCount, maxBottlesInRow]);
+
+  const rowGapClass = useMemo(() => {
+    if (sizeVariant === 'mini') return 'gap-1 xs:gap-1.5 sm:gap-2';
+    if (sizeVariant === 'compact') return 'gap-1 xs:gap-1.5 sm:gap-2';
+    if (sizeVariant === 'normal') return 'gap-1.5 xs:gap-2 sm:gap-2.5';
+    return 'gap-2 sm:gap-3';
+  }, [sizeVariant]);
+
+  const getShelfWidth = useMemo(() => {
+    const tubeW = sizeVariant === 'mini' ? 36 : sizeVariant === 'compact' ? 40 : sizeVariant === 'normal' ? 44 : 49;
+    const gapW = sizeVariant === 'mini' ? 5 : sizeVariant === 'compact' ? 6 : sizeVariant === 'normal' ? 7 : 9;
+    return (count: number) => {
+      const calculated = count * tubeW + (count - 1) * gapW + 24;
+      return Math.min(410, Math.max(130, calculated));
+    };
+  }, [sizeVariant]);
+
   const rows: { startIndex: number; bottles: Bottle[] }[] = [];
   let rowStartIndex = 0;
 
@@ -263,7 +295,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
           index={globalIdx}
           bottle={bottle}
           levelEntryId={levelEntryId}
-          compact={rowCount >= 3}
+          sizeVariant={sizeVariant}
           isSelected={isSelected}
           isHintSource={isHintSource}
           isHintTarget={isHintTarget}
@@ -294,7 +326,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
   return (
     <div
       ref={containerRef}
-      className={`relative w-full max-w-xl mx-auto flex flex-col items-center justify-start ${rowCount >= 3 ? 'pt-[3vh]' : 'pt-[6vh]'} pb-2 px-1 select-none`}
+      className={`relative w-full max-w-full mx-auto flex flex-col items-center justify-start ${rowCount >= 3 ? 'pt-[1.5vh]' : 'pt-[3.5vh]'} pb-2 px-4 xs:px-5 sm:px-6 select-none`}
     >
       {/* SVG <defs> and <filter> defining 'gooey' filter and jelly liquid layer gradients */}
       <svg className="fixed w-0 h-0 pointer-events-none" aria-hidden="true">
@@ -347,7 +379,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
         />
       </div>
 
-      <div className={`relative z-10 flex flex-col items-center ${rowCount >= 3 ? 'gap-2 sm:gap-3' : 'gap-5 sm:gap-6'}`}>
+      <div className={`relative z-10 flex flex-col items-center ${rowCount >= 3 ? 'gap-2 sm:gap-3' : 'gap-4 sm:gap-5'}`}>
         {rows.map((row, rowIndex) => {
           const isPouringInRow = pourAnimation
             ? pourAnimation.sourceIndex >= row.startIndex && pourAnimation.sourceIndex < row.startIndex + row.bottles.length
@@ -360,7 +392,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                 isPouringInRow ? 'z-40' : 'z-10'
               }`}
             >
-              <div className="flex flex-nowrap items-end justify-center gap-1.5 sm:gap-2.5 md:gap-3.5 z-10">
+              <div className={`flex flex-nowrap items-end justify-center ${rowGapClass} z-10`}>
                 {row.bottles.map((bottle, localIdx) => renderTube(bottle, row.startIndex + localIdx))}
               </div>
 
@@ -368,8 +400,8 @@ export const GameBoard: React.FC<GameBoardProps> = ({
               <div
                 className="h-[10px] -mt-1 pointer-events-none select-none z-0 transition-all duration-300 flex items-center justify-center"
                 style={{
-                  width: `${Math.min(382, Math.max(160, row.bottles.length * (rowCount >= 3 ? 48 : 62) + 32))}px`,
-                  maxWidth: '94vw',
+                  width: `${getShelfWidth(row.bottles.length)}px`,
+                  maxWidth: '96vw',
                 }}
               >
                 <img

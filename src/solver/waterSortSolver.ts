@@ -19,6 +19,7 @@ export function isBottleComplete(bottle: Bottle, capacity: number = TUBE_CAPACIT
 }
 
 export function isBottleReadyToCollect(bottle: Bottle, capacity: number = TUBE_CAPACITY): boolean {
+  if (bottle.type === 'video_empty' && bottle.locked !== false) return false;
   if (!isBottleComplete(bottle, capacity)) return false;
   if (bottle.type === 'masked' && !bottle.maskRevealed) return false;
   if (bottle.type === 'hidden' && (bottle.hiddenBottomLayers ?? 0) > 0) return false;
@@ -125,6 +126,10 @@ export function canPour(
 ): { valid: boolean; count: number; color: string | null } {
   if (from.type === 'bottom_leak') return { valid: false, count: 0, color: null };
   if (to.type === 'bottom_leak') return { valid: false, count: 0, color: null };
+  if (from.type === 'video_empty' && from.locked !== false) return { valid: false, count: 0, color: null };
+  if (to.type === 'video_empty' && to.locked !== false) return { valid: false, count: 0, color: null };
+  if (from.type === 'masked' && !from.maskRevealed) return { valid: false, count: 0, color: null };
+  if (to.type === 'masked' && !to.maskRevealed) return { valid: false, count: 0, color: null };
   if (from.layers.length === 0) return { valid: false, count: 0, color: null };
   if (to.layers.length >= capacity) return { valid: false, count: 0, color: null };
 

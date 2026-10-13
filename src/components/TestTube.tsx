@@ -111,6 +111,27 @@ const getTiltedChamberSurfaceY = (tiltAngle: number, fillRatio: number) => {
   return (low + high) / 2;
 };
 
+export type TubeSizeVariant = 'spacious' | 'normal' | 'compact' | 'mini';
+
+export const TUBE_SIZE_CLASSES: Record<TubeSizeVariant, { placeholder: string; svg: string }> = {
+  spacious: {
+    placeholder: 'w-[45px] xs:w-[48px] sm:w-[52px] h-[130px] xs:h-[139px] sm:h-[150px]',
+    svg: 'w-[45px] xs:w-[48px] sm:w-[52px] h-[130px] xs:h-[139px] sm:h-[150px]',
+  },
+  normal: {
+    placeholder: 'w-[40px] xs:w-[42px] sm:w-[46px] h-[116px] xs:h-[122px] sm:h-[133px]',
+    svg: 'w-[40px] xs:w-[42px] sm:w-[46px] h-[116px] xs:h-[122px] sm:h-[133px]',
+  },
+  compact: {
+    placeholder: 'w-[36px] xs:w-[38px] sm:w-[42px] h-[104px] xs:h-[110px] sm:h-[122px]',
+    svg: 'w-[36px] xs:w-[38px] sm:w-[42px] h-[104px] xs:h-[110px] sm:h-[122px]',
+  },
+  mini: {
+    placeholder: 'w-[33px] xs:w-[35px] sm:w-[38px] h-[95px] xs:h-[101px] sm:h-[110px]',
+    svg: 'w-[33px] xs:w-[35px] sm:w-[38px] h-[95px] xs:h-[101px] sm:h-[110px]',
+  },
+};
+
 interface TestTubeProps {
   index: number;
   bottle: Bottle;
@@ -136,6 +157,7 @@ interface TestTubeProps {
   hasCork?: boolean;
   isCollected?: boolean;
   compact?: boolean;
+  sizeVariant?: TubeSizeVariant;
   levelEntryId?: number;
   onClick: (index: number) => void;
   disabled?: boolean;
@@ -166,12 +188,16 @@ export const TestTube = React.memo(forwardRef<TestTubeRef, TestTubeProps>(({
   hasCork = false,
   isCollected = false,
   compact = false,
+  sizeVariant,
   levelEntryId = 0,
   onClick,
   disabled = false,
 }, ref) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [entrySwayActive, setEntrySwayActive] = useState(true);
+
+  const resolvedVariant = sizeVariant || (compact ? 'compact' : 'normal');
+  const sizeClasses = TUBE_SIZE_CLASSES[resolvedVariant];
 
   useEffect(() => {
     if (isPouringSource || isPouringTarget) setEntrySwayActive(false);
@@ -209,6 +235,7 @@ export const TestTube = React.memo(forwardRef<TestTubeRef, TestTubeProps>(({
   const maskHidden = isMasked && !bottle.maskRevealed;
   const hiddenCount = bottle.type === 'hidden' ? Math.min(tube.length, bottle.hiddenBottomLayers ?? 0) : 0;
   const isLeaky = bottle.type === 'bottom_leak';
+  const isVideoEmptyLocked = bottle.type === 'video_empty' && bottle.locked !== false;
 
   // One-shot cloth drop animation when a masked bottle unlocks
   const [maskFalling, setMaskFalling] = useState(false);
@@ -229,8 +256,7 @@ export const TestTube = React.memo(forwardRef<TestTubeRef, TestTubeProps>(({
     return (
       <div
         ref={containerRef}
-        className={`flex flex-col items-center group relative select-none opacity-0 pointer-events-none ${compact ? 'w-[42px] sm:w-[46px] h-[122px] sm:h-[133px]' : 'w-[54px] sm:w-[60px] h-[156px] sm:h-[174px]'
-          }`}
+        className={`flex flex-col items-center group relative select-none opacity-0 pointer-events-none ${sizeClasses.placeholder}`}
       />
     );
   }
@@ -496,8 +522,7 @@ export const TestTube = React.memo(forwardRef<TestTubeRef, TestTubeProps>(({
 
         <svg
           viewBox="0 0 77 223"
-          className={`overflow-visible select-none ${compact ? 'w-[44px] sm:w-[50px] h-[127px] sm:h-[145px]' : 'w-[62px] sm:w-[70px] h-[180px] sm:h-[203px]'
-            }`}
+          className={`overflow-visible select-none ${sizeClasses.svg}`}
         >
           <defs>
             <filter id={`liquid-glow-${index}`} x="-30%" y="-30%" width="160%" height="180%">

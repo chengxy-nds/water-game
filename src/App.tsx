@@ -1026,7 +1026,7 @@ export default function App() {
     if (soundEnabled) soundManager.playUndo();
   };
 
-  // Add extra empty tube & unlock bonus bag color
+  // 加空瓶道具（用于底部操作栏与死局弹窗，绝不改动购物袋）
   const handleAddTube = () => {
     if (bottles.length >= 21 || isAutoSolving) return;
     setBottles((prev) => [
@@ -1034,26 +1034,41 @@ export default function App() {
       { id: `extra-${prev.length + 1}`, type: 'empty', capacity: TUBE_CAPACITY, layers: [] },
     ]);
     setExtraTubesAdded((c) => c + 1);
-
-    // 看完视频解锁一个具体颜色：优先取待收集池中的下一色，或关卡未完成颜色
-    if (!unlockedBonusColor) {
-      let chosenColor: string | null = null;
-      if (pendingBagColors.length > 0) {
-        chosenColor = pendingBagColors[0];
-        setPendingBagColors((prev) => prev.slice(1));
-      } else {
-        const levelColors = getVisibleBottleColors(bottles);
-        const uncollected = levelColors.filter((c) => !collectedColors.has(c));
-        chosenColor = uncollected.length > 0 ? uncollected[0] : (levelColors[0] || 'yellow');
-      }
-      setUnlockedBonusColor(chosenColor);
-    }
-
     setSelectedIndex(null);
     setHint(null);
     setIsDeadlocked(false);
     if (soundEnabled) soundManager.playSelect();
     if (vibrateEnabled) soundManager.vibrate(20);
+  };
+
+  // 点击第 4 个“视频购物袋”看广告解锁新颜色（严格保证颜色不重复，绝不添加空瓶）
+  const handleUnlockBonusBag = () => {
+    if (unlockedBonusColor || isAutoSolving) return;
+
+    // 当前前 3 个袋子正在展示的有效颜色集合
+    const showingColors = new Set(activeBagColors.filter(Boolean) as string[]);
+
+    // 寻找关卡中尚未收集且当前未展示的目标颜色（严格不重复）
+    // 1. 优先从待展示池 pendingBagColors 中寻找
+    let chosenColor = pendingBagColors.find((c) => !showingColors.has(c) && !collectedColors.has(c));
+
+    // 2. 若 pending 中没有，从关卡全部出现过的颜色中寻找
+    if (!chosenColor) {
+      const allLevelColors = getVisibleBottleColors(bottles);
+      chosenColor = allLevelColors.find((c) => !showingColors.has(c) && !collectedColors.has(c));
+    }
+
+    if (!chosenColor) {
+      // 全场所有颜色都已在展示或已收集
+      return;
+    }
+
+    // 解锁第 4 槽位为该目标颜色，并从待收集池中移除，避免未来补位重复
+    setUnlockedBonusColor(chosenColor);
+    setPendingBagColors((prev) => prev.filter((c) => c !== chosenColor));
+
+    if (soundEnabled) soundManager.playSelect();
+    if (vibrateEnabled) soundManager.vibrate(25);
   };
 
   // Auto-Solve loop
@@ -1144,7 +1159,7 @@ export default function App() {
       </div>
 
       {/* Main Game Interface matching Figma 2:934 (瓶中有序 · 游戏主界面) */}
-      <div className="relative z-10 flex flex-col justify-between flex-1 max-w-[430px] mx-auto w-full h-full overflow-hidden">
+      <div className="relative z-10 flex flex-col justify-between flex-1 max-w-[450px] sm:max-w-[480px] mx-auto w-full h-full overflow-hidden">
         {/* 1. Top Header: Settings, Level Capsule, Daily Challenge */}
         <GameHeader
           currentLevel={currentLevel}
@@ -1164,14 +1179,14 @@ export default function App() {
             replenishingSlotIndex={replenishingSlotIndex}
             activeGulpColor={activeGulpColor}
             collectedColors={collectedColors}
-            onUnlockBonus={handleAddTube}
-            bonusUnlocked={extraTubesAdded > 0}
+            onUnlockBonus={handleUnlockBonusBag}
+            bonusUnlocked={!!unlockedBonusColor}
             unlockedBonusColor={unlockedBonusColor}
           />
         </div>
 
         {/* 3. Central Game Board (Shelves with bottles and guidance tip bar) */}
-        <main className="flex-1 min-h-0 flex flex-col items-stretch justify-center py-1 px-1">
+        <main className="flex-1 min-h-0 flex flex-col items-stretch justify-center py-1 px-1 sm:px-2">
           {/* Clean Hint callout banner if active */}
           {hint && (
             <div className="mb-2 px-3 py-1 rounded-full bg-amber-100 border border-amber-300 text-amber-900 text-xs font-bold flex items-center gap-1.5 shadow-sm animate-pulse mx-auto">
