@@ -398,8 +398,8 @@ export const TestTube = React.memo(forwardRef<TestTubeRef, TestTubeProps>(({
     ? calculatedLayers[calculatedLayers.length - 1].yTop
     : BOTTLE_CHAMBER_BOTTOM;
   const remainingPourUnits = clampedLayers.reduce((sum, layer) => sum + layer.heightPercent / 100, 0);
-  const pourMouthClearance = isPouringSource
-    ? 5 + Math.min(4, Math.max(0, capacity - remainingPourUnits) * 1.2)
+  const liquidRetreat = isPouringSource && isPouringFluid
+    ? 8 + Math.min(5, Math.max(0, capacity - remainingPourUnits) * 1.25)
     : 0;
 
   const transformStyle: React.CSSProperties = {
@@ -534,18 +534,6 @@ export const TestTube = React.memo(forwardRef<TestTubeRef, TestTubeProps>(({
             <mask id={`liquid-star-clean-mask-${index}`} maskUnits="userSpaceOnUse" x="0" y="0" width="77" height="223">
               <rect x="0" y="0" width="77" height="223" fill="#ffffff" />
               <circle cx="52.8" cy="164.5" r="6.8" fill={`url(#liquid-star-mask-gradient-${index})`} />
-            </mask>
-
-            <mask id={`pour-mouth-clearance-${index}`} maskUnits="userSpaceOnUse" x="-10" y="-10" width="97" height="243">
-              <rect x="-10" y="-10" width="97" height="243" fill="#ffffff" />
-              {isPouringSource && (
-                <path
-                  d={`M 38.5 5 L ${tiltAngle >= 0 ? 51 : 26} 5`}
-                  stroke="#000000"
-                  strokeWidth={pourMouthClearance}
-                  strokeLinecap="round"
-                />
-              )}
             </mask>
 
             <radialGradient id={`liquid-bloom-${index}`} cx="50%" cy="18%" r="58%">
@@ -713,7 +701,6 @@ export const TestTube = React.memo(forwardRef<TestTubeRef, TestTubeProps>(({
               /* Gravity-aligned liquid layers with curved interfaces */
               <g
                 clipPath={`url(#tilted-chamber-clip-${index})`}
-                mask={isPouringSource ? `url(#pour-mouth-clearance-${index})` : undefined}
               >
                 {(() => {
                   if (clampedLayers.length === 0) return null;
@@ -779,7 +766,7 @@ export const TestTube = React.memo(forwardRef<TestTubeRef, TestTubeProps>(({
                   }
 
                   return (
-                    <g transform={`rotate(${-fluidSurfaceAngle}, 38.5, 5)`}>
+                    <g transform={`translate(0 ${liquidRetreat}) rotate(${-fluidSurfaceAngle}, 38.5, 5)`}>
                       {gravityBands.map((band, bandIndex) => {
                         const cDef = getColor(band.colorId);
                         const liquidFill = band.isHidden ? `url(#fog-grad-${index})` : `url(#grad-${cDef.id}-${index})`;
