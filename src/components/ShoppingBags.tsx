@@ -74,6 +74,8 @@ export interface ShoppingBagsProps {
   bonusUnlocked?: boolean;
   // 看视频解锁出的第 4 个购物袋颜色 (null 时展示无色摄像机袋)
   unlockedBonusColor?: string | null;
+  // 是否展示第 4 个视频购物袋槽位（第 1 关不展示，第 2 关开始陆续加入）
+  showBonusSlot?: boolean;
 }
 
 export const ShoppingBags: React.FC<ShoppingBagsProps> = ({
@@ -85,6 +87,7 @@ export const ShoppingBags: React.FC<ShoppingBagsProps> = ({
   onUnlockBonus,
   bonusUnlocked = false,
   unlockedBonusColor = null,
+  showBonusSlot = true,
 }) => {
   // 固定 3 个左侧槽位
   const slots = [0, 1, 2];
@@ -101,7 +104,7 @@ export const ShoppingBags: React.FC<ShoppingBagsProps> = ({
   return (
     <div
       id="shopping-bags-container"
-      className="w-full max-w-[395px] sm:max-w-[440px] mx-auto flex items-center justify-center gap-1.5 xs:gap-2 sm:gap-2.5 px-2 py-1 select-none"
+      className="w-full max-w-[375px] sm:max-w-[420px] mx-auto flex items-center justify-center gap-2.5 xs:gap-3.5 sm:gap-4 px-2 py-1 select-none"
     >
       {/* 左边 3 个颜色目标购物袋 */}
       {slots.map((slotIdx) => {
@@ -116,9 +119,9 @@ export const ShoppingBags: React.FC<ShoppingBagsProps> = ({
           return (
             <div
               key={`bag-empty-slot-${slotIdx}`}
-              className="relative flex flex-col items-center justify-center w-[76px] xs:w-[80px] sm:w-[86px] h-[146px] xs:h-[154px] sm:h-[166px]"
+              className="relative flex flex-col items-center justify-center w-[62px] xs:w-[66px] sm:w-[72px] h-[126px] xs:h-[134px] sm:h-[144px]"
             >
-              <div className="w-14 h-18 rounded-xl border border-sky-400/20 bg-sky-900/10 flex items-center justify-center">
+              <div className="w-12 h-16 rounded-xl border border-sky-400/20 bg-sky-900/10 flex items-center justify-center">
                 <span className="text-sky-300/30 text-lg">✦</span>
               </div>
             </div>
@@ -146,7 +149,7 @@ export const ShoppingBags: React.FC<ShoppingBagsProps> = ({
           >
             {isLifting && <RiderHand />}
 
-            <div className="relative w-[76px] xs:w-[80px] sm:w-[86px] h-[146px] xs:h-[154px] sm:h-[166px]" style={{ willChange: 'transform' }}>
+            <div className="relative w-[62px] xs:w-[66px] sm:w-[72px] h-[126px] xs:h-[134px] sm:h-[144px]" style={{ willChange: 'transform' }}>
               <img
                 src={bagImg}
                 alt={`购物袋-${colorId}`}
@@ -172,40 +175,42 @@ export const ShoppingBags: React.FC<ShoppingBagsProps> = ({
         );
       })}
 
-      {/* 右侧第 4 个：看视频解锁袋（未解锁为无色摄像机袋；解锁后化身真实目标颜色购物袋） */}
-      <div
-        id={unlockedBonusColor ? `shopping-bag-${unlockedBonusColor}` : 'shopping-bag-bonus'}
-        data-slot={3}
-        className={`relative flex flex-col items-center transition-all ${
-          !bonusUnlocked ? 'cursor-pointer active:scale-95' : ''
-        } ${
-          isBonusLifting
-            ? 'anim-bag-lift-away z-50 pointer-events-none'
-            : isBonusGulping
-            ? 'anim-bag-gulp z-40'
-            : isBonusDone
-            ? 'filter drop-shadow-[0_0_12px_rgba(186,220,255,0.65)]'
-            : 'filter drop-shadow-[0_6px_12px_rgba(0,0,0,0.45)]'
-        }`}
-        onClick={!bonusUnlocked ? onUnlockBonus : undefined}
-        title={!bonusUnlocked ? '看广告解锁新颜色购物袋' : `已解锁目标袋: ${unlockedBonusColor || '奖励袋'}`}
-      >
-        {isBonusLifting && <RiderHand />}
+      {/* 右侧第 4 个：看视频解锁袋（仅在 showBonusSlot 为 true 时展示，第 1 关不展示） */}
+      {showBonusSlot && (
+        <div
+          id={unlockedBonusColor ? `shopping-bag-${unlockedBonusColor}` : 'shopping-bag-bonus'}
+          data-slot={3}
+          className={`relative flex flex-col items-center transition-all ${
+            !bonusUnlocked ? 'cursor-pointer active:scale-95' : ''
+          } ${
+            isBonusLifting
+              ? 'anim-bag-lift-away z-50 pointer-events-none'
+              : isBonusGulping
+              ? 'anim-bag-gulp z-40'
+              : isBonusDone
+              ? 'filter drop-shadow-[0_0_12px_rgba(186,220,255,0.65)]'
+              : 'filter drop-shadow-[0_6px_12px_rgba(0,0,0,0.45)]'
+          }`}
+          onClick={!bonusUnlocked ? onUnlockBonus : undefined}
+          title={!bonusUnlocked ? '看广告解锁新颜色购物袋' : `已解锁目标袋: ${unlockedBonusColor || '奖励袋'}`}
+        >
+          {isBonusLifting && <RiderHand />}
 
-        <div className="relative w-[76px] xs:w-[80px] sm:w-[86px] h-[146px] xs:h-[154px] sm:h-[166px]" style={{ willChange: 'transform' }}>
-          <img
-            src={bonusBagImg}
-            alt={unlockedBonusColor ? `已解锁购物袋-${unlockedBonusColor}` : '看视频解锁购物袋'}
-            data-bag-art
-            className={`w-full h-full object-contain pointer-events-none ${
-              bonusUnlocked && unlockedBonusColor ? 'anim-bag-drop-in' : ''
-            }`}
-            draggable={false}
-            loading="eager"
-            decoding="async"
-          />
+          <div className="relative w-[62px] xs:w-[66px] sm:w-[72px] h-[126px] xs:h-[134px] sm:h-[144px]" style={{ willChange: 'transform' }}>
+            <img
+              src={bonusBagImg}
+              alt={unlockedBonusColor ? `已解锁购物袋-${unlockedBonusColor}` : '看视频解锁购物袋'}
+              data-bag-art
+              className={`w-full h-full object-contain pointer-events-none ${
+                bonusUnlocked && unlockedBonusColor ? 'anim-bag-drop-in' : ''
+              }`}
+              draggable={false}
+              loading="eager"
+              decoding="async"
+            />
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

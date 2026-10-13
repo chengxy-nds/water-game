@@ -114,8 +114,8 @@ const getTiltedChamberSurfaceY = (tiltAngle: number, fillRatio: number) => {
 export type TubeSizeVariant = 'spacious' | 'normal' | 'compact' | 'mini';
 
 const UNIFIED_SIZE = {
-  placeholder: 'w-[37px] xs:w-[39px] sm:w-[43px] h-[107px] xs:h-[113px] sm:h-[124px]',
-  svg: 'w-[37px] xs:w-[39px] sm:w-[43px] h-[107px] xs:h-[113px] sm:h-[124px]',
+  placeholder: 'w-[42px] xs:w-[45px] sm:w-[48px] h-[122px] xs:h-[130px] sm:h-[140px]',
+  svg: 'w-[42px] xs:w-[45px] sm:w-[48px] h-[122px] xs:h-[130px] sm:h-[140px]',
 };
 
 export const TUBE_SIZE_CLASSES: Record<TubeSizeVariant, { placeholder: string; svg: string }> = {

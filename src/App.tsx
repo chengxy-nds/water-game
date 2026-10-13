@@ -1224,6 +1224,7 @@ export default function App() {
             onUnlockBonus={handleUnlockBonusBag}
             bonusUnlocked={!!unlockedBonusColor}
             unlockedBonusColor={unlockedBonusColor}
+            showBonusSlot={Number(currentLevel.id) >= 2}
           />
         </div>
 
