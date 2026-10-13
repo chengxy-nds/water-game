@@ -248,7 +248,7 @@ export const TestTube = React.memo(forwardRef<TestTubeRef, TestTubeProps>(({
   const CHAMBER_TOP_Y = 47.5;
   const CHAMBER_HEIGHT = CHAMBER_BOTTOM_Y - CHAMBER_TOP_Y; // 163px
   const RX = 32;
-  const RY = 3.2; // Natural subtle meniscus curvature (was harsh 8.0)
+  const RY = 8.0; // 2.5D Top-down perspective depth (matching reference game design)
 
   const getBlockNominalHeight = (_layerIdx: number, totalCapacity: number = 4): number => {
     return CHAMBER_HEIGHT / totalCapacity;
@@ -279,7 +279,6 @@ export const TestTube = React.memo(forwardRef<TestTubeRef, TestTubeProps>(({
     isTop: boolean;
     isHidden: boolean;
     isDimmed: boolean;
-    unitBoundaries: number[];
   }
 
   const fluidSegments: FluidSegment[] = [];
@@ -295,7 +294,6 @@ export const TestTube = React.memo(forwardRef<TestTubeRef, TestTubeProps>(({
       prevSeg.isHidden === isHiddenLayer &&
       prevSeg.isDimmed === isDimmed
     ) {
-      prevSeg.unitBoundaries.push(prevSeg.yTop);
       prevSeg.yTop = layer.yTop;
       prevSeg.isTop = layer.isTop || false;
     } else {
@@ -307,7 +305,6 @@ export const TestTube = React.memo(forwardRef<TestTubeRef, TestTubeProps>(({
         isTop: layer.isTop || false,
         isHidden: isHiddenLayer,
         isDimmed,
-        unitBoundaries: [],
       });
     }
   }
@@ -370,14 +367,14 @@ export const TestTube = React.memo(forwardRef<TestTubeRef, TestTubeProps>(({
       {/* SVG 3D Crystal Bottle */}
       <div
         className={`relative flex flex-col items-center transition-all duration-200 ${isWhirling
-            ? 'anim-whirl-pulse filter drop-shadow-[0_0_24px_rgba(251,191,36,0.95)]'
-            : isSelected
-              ? 'filter drop-shadow-[0_0_10px_rgba(186,230,253,0.72)]'
-              : isHintSource
-                ? 'filter drop-shadow-[0_0_12px_rgba(251,191,36,0.85)]'
-                : isHintTarget
-                  ? 'filter drop-shadow-[0_0_12px_rgba(52,211,153,0.85)]'
-                  : ''
+          ? 'anim-whirl-pulse filter drop-shadow-[0_0_24px_rgba(251,191,36,0.95)]'
+          : isSelected
+            ? 'filter drop-shadow-[0_0_10px_rgba(186,230,253,0.72)]'
+            : isHintSource
+              ? 'filter drop-shadow-[0_0_12px_rgba(251,191,36,0.85)]'
+              : isHintTarget
+                ? 'filter drop-shadow-[0_0_12px_rgba(52,211,153,0.85)]'
+                : ''
           }`}
       >
         {/* 瓶口中心物理定位锚点（跨平台兼容，消除移动端WebKit矩阵解析Bug） */}
@@ -420,6 +417,10 @@ export const TestTube = React.memo(forwardRef<TestTubeRef, TestTubeProps>(({
                 <feMergeNode in="blur" />
                 <feMergeNode in="SourceGraphic" />
               </feMerge>
+            </filter>
+
+            <filter id={`liquid-interface-shadow-${index}`} x="-20%" y="-100%" width="140%" height="300%">
+              <feGaussianBlur stdDeviation="1.15" />
             </filter>
 
             <radialGradient id={`liquid-bloom-${index}`} cx="50%" cy="18%" r="58%">
@@ -493,7 +494,7 @@ export const TestTube = React.memo(forwardRef<TestTubeRef, TestTubeProps>(({
               </linearGradient>
             ))}
 
-            {/* 3D Top Meniscus Horizontal Depth Shading (matches side wall lighting) */}
+            {/* 2.5D Top Meniscus Cap Radiant Shading (Bright top-down light matching reference) */}
             {Object.values(COLOR_PALETTE).map((c: ColorDef) => (
               <linearGradient
                 key={`meniscus-grad-${c.id}-${index}`}
@@ -501,11 +502,11 @@ export const TestTube = React.memo(forwardRef<TestTubeRef, TestTubeProps>(({
                 x1="0%"
                 y1="0%"
                 x2="100%"
-                y2="0%"
+                y2="70%"
               >
-                <stop offset="0%" stopColor={c.topHex || c.hex} stopOpacity="1" />
-                <stop offset="30%" stopColor={c.hex} stopOpacity="1" />
-                <stop offset="100%" stopColor={c.shadeHex || c.hex} stopOpacity="1" />
+                <stop offset="0%" stopColor={c.topHex || c.hex} />
+                <stop offset="70%" stopColor={c.topHex || c.hex} />
+                <stop offset="100%" stopColor={c.hex} />
               </linearGradient>
             ))}
 
@@ -591,14 +592,14 @@ export const TestTube = React.memo(forwardRef<TestTubeRef, TestTubeProps>(({
                   const cosA = Math.cos(rad);
                   const absSinA = Math.abs(sinA);
 
-                  // Spout lip depth in gravity coordinates (connects exactly to top rim at y=5.0)
-                  const Y_lip = 5.0 * absSinA + Math.max(-4, 1.5 * cosA);
+                  // Spout lip depth in gravity coordinates (recedes further towards bottle base for elegant neck clearance)
+                  const Y_lip = 16.5 * absSinA + Math.max(-4, 1.5 * cosA);
 
                   // Deepest cavity wall in gravity coordinates:
                   // When tilt angle > 90deg, bottle base rises into the sky (cosA < 0),
                   // so the lowest gravitational points naturally shift to the downward neck/spout.
                   const baseContribution = Math.max(0, 181.0 * cosA);
-                  const Y_deep = Math.max(Y_lip + 28, 32.0 * absSinA + baseContribution);
+                  const Y_deep = Math.max(Y_lip + 32, 36.0 * absSinA + baseContribution);
                   const H_delta = Math.max(20, Y_deep - Y_lip);
 
                   // Total remaining fluid units
@@ -610,9 +611,9 @@ export const TestTube = React.memo(forwardRef<TestTubeRef, TestTubeProps>(({
                   // Natural surface depth: free surface connects to spout lip and smoothly recedes as it empties
                   const Y_surface = Y_lip + (1 - Math.min(1, Math.sqrt(fillRatio))) * 10;
 
-                  // CRITICAL: The fluid bottom MUST extend to 260 to completely fill the lower wall and base!
+                  // CRITICAL: The fluid bottom MUST extend to 300 to completely fill the lower wall and base!
                   // No artificial bottom cutoff; cavity clipPath shapes the true bottom fluid profile.
-                  const Y_bottom_fill = 260;
+                  const Y_bottom_fill = 300;
 
                   // Divide fluid layers from surface (topmost/draining) down to bottommost (filling deep base)
                   const layerThicknesses = clampedLayers.map((l) =>
@@ -626,7 +627,7 @@ export const TestTube = React.memo(forwardRef<TestTubeRef, TestTubeProps>(({
                   for (let i = clampedLayers.length - 1; i >= 0; i--) {
                     const thickness = layerThicknesses[i];
                     const yTop = currentLevel;
-                    // The bottommost layer (i === 0) fills all the way to 260 to ensure full solid bottom
+                    // The bottommost layer (i === 0) fills all the way to 280 to ensure full solid bottom
                     const yBottom = i === 0 ? Y_bottom_fill : currentLevel + thickness;
                     currentLevel += thickness;
                     gravityLayers.push({
@@ -656,35 +657,38 @@ export const TestTube = React.memo(forwardRef<TestTubeRef, TestTubeProps>(({
                           <g key={`tilted-layer-${lIdx}`} opacity={isDimmed ? 0.4 : 1}>
                             {/* Continuous solid fluid wedge in gravity space (clipped by bottle inner walls) */}
                             <rect
-                              x={-160}
+                              x={-350}
                               y={yTop}
-                              width={380}
+                              width={700}
                               height={Math.max(0.5, yBottom - yTop)}
                               fill={liquidFill}
                             />
 
-                            {/* Top Free Surface: Natural Horizontal Waterline Sheen */}
+                            {/* Soft free-surface sheen; keep it subtle so it cannot read as a layer divider */}
                             {isVeryTop && (
                               <line
-                                x1={-160}
+                                x1={-350}
                                 y1={yTop}
-                                x2={220}
+                                x2={350}
                                 y2={yTop}
-                                stroke="rgba(255, 255, 255, 0.42)"
-                                strokeWidth="0.9"
+                                stroke="rgba(255, 255, 255, 0.14)"
+                                strokeWidth="1.4"
                                 strokeLinecap="round"
+                                filter={`url(#liquid-interface-shadow-${index})`}
                               />
                             )}
 
-                            {/* Subtle horizontal interface between distinct stacked colors */}
+                            {/* Natural soft contact shadow only where the color actually changes */}
                             {lIdx > 0 && clampedLayers[lIdx - 1]?.colorId !== layer.colorId && (
                               <line
-                                x1={-160}
+                                x1={-350}
                                 y1={yTop + (layerThicknesses[lIdx] || 0)}
-                                x2={220}
+                                x2={350}
                                 y2={yTop + (layerThicknesses[lIdx] || 0)}
-                                stroke="rgba(255, 255, 255, 0.22)"
-                                strokeWidth="0.6"
+                                stroke="rgba(4, 12, 42, 0.22)"
+                                strokeWidth="2.2"
+                                strokeLinecap="round"
+                                filter={`url(#liquid-interface-shadow-${index})`}
                               />
                             )}
                           </g>
@@ -707,15 +711,15 @@ export const TestTube = React.memo(forwardRef<TestTubeRef, TestTubeProps>(({
                     L 6.3 196.0
                     A 32 14.5 0 0 0 70.3 196.0
                     L 70.3 ${seg.yTop}
-                    A ${RX} ${RY} 0 0 1 6.3 ${seg.yTop}
+                    Q 38.5 ${seg.yTop + RY} 6.3 ${seg.yTop}
                     Z
                   `
                     : `
                     M 6.3 ${seg.yTop}
                     L 6.3 ${seg.yBottom}
-                    A ${RX} ${RY} 0 0 0 70.3 ${seg.yBottom}
+                    Q 38.5 ${seg.yBottom + RY} 70.3 ${seg.yBottom}
                     L 70.3 ${seg.yTop}
-                    A ${RX} ${RY} 0 0 1 6.3 ${seg.yTop}
+                    Q 38.5 ${seg.yTop + RY} 6.3 ${seg.yTop}
                     Z
                   `;
 
@@ -726,20 +730,6 @@ export const TestTube = React.memo(forwardRef<TestTubeRef, TestTubeProps>(({
                         d={bodyPath}
                         fill={liquidFill}
                       />
-
-                      {/* Subtle, non-intrusive internal unit guideline within multi-unit same-color liquid */}
-                      {seg.unitBoundaries.map((bY, bIdx) => (
-                        <line
-                          key={`unit-ref-${bIdx}`}
-                          x1="14"
-                          y1={bY}
-                          x2="63"
-                          y2={bY}
-                          stroke="rgba(255, 255, 255, 0.08)"
-                          strokeWidth="0.75"
-                          strokeDasharray="3 4"
-                        />
-                      ))}
 
                       {/* Frosted fog question mark over hidden bottom layers */}
                       {seg.isHidden && (
@@ -755,17 +745,20 @@ export const TestTube = React.memo(forwardRef<TestTubeRef, TestTubeProps>(({
                         </text>
                       )}
 
-                      {/* Gentle, soft meniscus boundary line between distinct stacked colors (no harsh glare) */}
+                      {/* One blurred contact shadow at the color interface */}
                       {!seg.isBottom && (
                         <path
-                          d={`M 6.3 ${seg.yBottom} A ${RX} ${RY} 0 0 0 70.3 ${seg.yBottom}`}
-                          stroke="rgba(255, 255, 255, 0.14)"
-                          strokeWidth="0.65"
+                          d={`M 8 ${seg.yBottom + 0.2} Q 38.5 ${seg.yBottom + RY + 0.2} 69 ${seg.yBottom + 0.2}`}
                           fill="none"
+                          stroke="rgba(4, 12, 42, 0.24)"
+                          strokeWidth="2.2"
+                          strokeLinecap="round"
+                          filter={`url(#liquid-interface-shadow-${index})`}
+                          opacity="0.58"
                         />
                       )}
 
-                      {/* Top Free Surface Meniscus Cap (only on topmost fluid layer) */}
+                      {/* 2.5D Perspective Bright Top Meniscus Cap (only on topmost fluid layer) */}
                       {seg.isTop && (seg.yBottom - seg.yTop) > 2 && (
                         <g
                           className={
@@ -789,22 +782,22 @@ export const TestTube = React.memo(forwardRef<TestTubeRef, TestTubeProps>(({
                             animationDelay: `${(index % 7) * 32}ms`,
                           }}
                         >
+                          {/* 2.5D 明亮通透立体顶面椭圆盖 */}
                           <ellipse
                             cx="38.5"
                             cy={seg.yTop}
                             rx={RX}
                             ry={RY}
                             fill={seg.isHidden ? `url(#fog-grad-${index})` : `url(#meniscus-grad-${cDef.id}-${index})`}
-                            stroke="rgba(255, 255, 255, 0.22)"
-                            strokeWidth="0.6"
                           />
+                          {/* Short, soft glint on the near/front edge of the meniscus */}
                           <path
-                            d={`M 16 ${seg.yTop + 0.6} Q 38.5 ${seg.yTop + RY * 0.75} 61 ${seg.yTop + 0.6}`}
-                            stroke="#ffffff"
-                            strokeWidth="0.8"
+                            d={`M 25 ${seg.yTop + 4.2} Q 38.5 ${seg.yTop + RY * 0.92} 52 ${seg.yTop + 4.2}`}
+                            stroke="rgba(255, 255, 255, 0.3)"
+                            strokeWidth="1.2"
                             strokeLinecap="round"
                             fill="none"
-                            opacity="0.32"
+                            opacity="0.62"
                           />
                         </g>
                       )}
@@ -900,8 +893,8 @@ export const TestTube = React.memo(forwardRef<TestTubeRef, TestTubeProps>(({
       {/* Ground Shadow */}
       <div
         className={`w-14 h-2.5 rounded-[50%] transition-all duration-200 pointer-events-none -mt-1 ${isSelected || isPouringSource
-            ? 'scale-75 opacity-15 translate-y-1'
-            : 'scale-100 opacity-55'
+          ? 'scale-75 opacity-15 translate-y-1'
+          : 'scale-100 opacity-55'
           }`}
         style={{
           background: 'radial-gradient(ellipse at center, rgba(1, 5, 15, 0.55) 0%, rgba(1, 5, 15, 0.34) 38%, rgba(3, 10, 24, 0.12) 64%, transparent 82%)',
