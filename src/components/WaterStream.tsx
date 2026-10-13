@@ -1,11 +1,79 @@
 import React, { useEffect, useRef } from 'react';
 import { getColor } from '../utils/colors';
 
+interface Point {
+  x: number;
+  y: number;
+}
+
+interface CubicSegment {
+  start: Point;
+  control1: Point;
+  control2: Point;
+  end: Point;
+}
+
+const cubicPoint = (segment: CubicSegment, t: number): Point => {
+  const inverse = 1 - t;
+  return {
+    x: inverse ** 3 * segment.start.x + 3 * inverse ** 2 * t * segment.control1.x + 3 * inverse * t ** 2 * segment.control2.x + t ** 3 * segment.end.x,
+    y: inverse ** 3 * segment.start.y + 3 * inverse ** 2 * t * segment.control1.y + 3 * inverse * t ** 2 * segment.control2.y + t ** 3 * segment.end.y,
+  };
+};
+
+const cubicTangent = (segment: CubicSegment, t: number): Point => {
+  const inverse = 1 - t;
+  return {
+    x: 3 * inverse ** 2 * (segment.control1.x - segment.start.x) + 6 * inverse * t * (segment.control2.x - segment.control1.x) + 3 * t ** 2 * (segment.end.x - segment.control2.x),
+    y: 3 * inverse ** 2 * (segment.control1.y - segment.start.y) + 6 * inverse * t * (segment.control2.y - segment.control1.y) + 3 * t ** 2 * (segment.end.y - segment.control2.y),
+  };
+};
+
+const createLiquidRibbon = (segments: CubicSegment[], phase: number) => {
+  const samples: { point: Point; tangent: Point; progress: number }[] = [];
+  const segmentSteps = 28;
+
+  segments.forEach((segment, segmentIndex) => {
+    for (let step = segmentIndex === 0 ? 0 : 1; step <= segmentSteps; step += 1) {
+      const t = step / segmentSteps;
+      samples.push({
+        point: cubicPoint(segment, t),
+        tangent: cubicTangent(segment, t),
+        progress: (segmentIndex + t) / segments.length,
+      });
+    }
+  });
+
+  const leftEdge: Point[] = [];
+  const rightEdge: Point[] = [];
+
+  for (const sample of samples) {
+    const tangentLength = Math.hypot(sample.tangent.x, sample.tangent.y) || 1;
+    const normalX = -sample.tangent.y / tangentLength;
+    const normalY = sample.tangent.x / tangentLength;
+    const startTaper = Math.min(1, 0.42 + sample.progress * 5.8);
+    const endTaper = Math.min(1, 0.7 + (1 - sample.progress) * 5.2);
+    const width = (1.85 + Math.sin(sample.progress * Math.PI) * 0.42 + Math.sin(phase * 1.4 + sample.progress * 8) * 0.1) * startTaper * endTaper;
+    leftEdge.push({ x: sample.point.x + normalX * width, y: sample.point.y + normalY * width });
+    rightEdge.push({ x: sample.point.x - normalX * width, y: sample.point.y - normalY * width });
+  }
+
+  const path = new Path2D();
+  if (leftEdge.length === 0) return path;
+  path.moveTo(leftEdge[0].x, leftEdge[0].y);
+  for (let index = 1; index < leftEdge.length; index += 1) path.lineTo(leftEdge[index].x, leftEdge[index].y);
+  for (let index = rightEdge.length - 1; index >= 0; index -= 1) path.lineTo(rightEdge[index].x, rightEdge[index].y);
+  path.closePath();
+  return path;
+};
+
 export interface WaterStreamTargetPoints {
   from: { x: number; y: number };
   mouth?: { x: number; y: number };
   impact: { x: number; y: number };
   tiltAngle?: number;
+  mouthRadiusX?: number;
+  mouthRadiusY?: number;
 }
 
 export interface WaterStreamProps {
@@ -33,6 +101,8 @@ export const WaterStream: React.FC<WaterStreamProps> = ({
     mouth: { x: number; y: number };
     impact: { x: number; y: number };
     tiltAngle: number;
+    mouthRadiusX: number;
+    mouthRadiusY: number;
   } | null>(null);
 
   const colorDef = getColor(colorId);
@@ -44,6 +114,8 @@ export const WaterStream: React.FC<WaterStreamProps> = ({
         mouth: streamPoints.mouth ?? streamPoints.impact,
         impact: streamPoints.impact,
         tiltAngle: streamPoints.tiltAngle ?? 0,
+        mouthRadiusX: streamPoints.mouthRadiusX ?? 17,
+        mouthRadiusY: streamPoints.mouthRadiusY ?? 4.5,
       };
     } else if (fromPos && toPos) {
       pointsRef.current = {
@@ -51,6 +123,8 @@ export const WaterStream: React.FC<WaterStreamProps> = ({
         mouth: toPos,
         impact: toPos,
         tiltAngle: 0,
+        mouthRadiusX: 17,
+        mouthRadiusY: 4.5,
       };
     } else {
       pointsRef.current = null;
@@ -112,26 +186,45 @@ export const WaterStream: React.FC<WaterStreamProps> = ({
       const yImp = Math.max(ym, pts.impact.y);
 
       const dx = xm - x1;
-      const dyAir = ym - y1;
-      const isPourDown = dyAir > 0;
-      const curveDir = dx >= 0 ? 1 : -1;
-
-      // Natural gravity arc from tilted spout down into target bottle mouth:
-      // Spout velocity launches along tilt slope, then gravity curves straight down into bottle neck.
-      const cp1x = x1 + dx * 0.38 + curveDir * Math.max(3, Math.abs(dx) * 0.08);
-      const cp1y = y1 + (isPourDown ? dyAir * 0.18 : 6);
-      const cp2x = xm;
-      const cp2y = ym - Math.max(6, Math.abs(dyAir) * 0.22);
-
-      // 1. Center streamline path: from tilted lip -> curve into mouth -> straight down to liquid surface
+      const dyAir = Math.max(2, ym - y1);
+      const impactDepth = Math.max(2, yImp - ym);
+      const launchAngle = (pts.tiltAngle * Math.PI) / 180;
+      const sourceToMouthDistance = Math.hypot(dx, dyAir) || 1;
+      const launchDistance = Math.min(24, Math.max(4, sourceToMouthDistance * 0.42));
+      const launchDirection = streamPoints
+        ? { x: Math.sin(launchAngle), y: -Math.cos(launchAngle) }
+        : { x: dx / sourceToMouthDistance, y: dyAir / sourceToMouthDistance };
+      const entranceControl = Math.min(8, dyAir * 0.28);
+      const flowSegments: CubicSegment[] = [
+        {
+          start: { x: x1, y: y1 },
+          control1: {
+            x: x1 + launchDirection.x * launchDistance,
+            y: y1 + launchDirection.y * launchDistance,
+          },
+          control2: { x: xm, y: ym - entranceControl },
+          end: { x: xm, y: ym },
+        },
+        {
+          start: { x: xm, y: ym },
+          control1: { x: xm, y: ym + Math.min(10, impactDepth * 0.28) },
+          control2: { x: xImp, y: yImp - Math.min(12, impactDepth * 0.25) },
+          end: { x: xImp, y: yImp },
+        },
+      ];
       const streamPath = new Path2D();
       streamPath.moveTo(x1, y1);
-      if (Math.abs(dyAir) > 3) {
-        streamPath.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, xm, ym);
+      for (const segment of flowSegments) {
+        streamPath.bezierCurveTo(
+          segment.control1.x,
+          segment.control1.y,
+          segment.control2.x,
+          segment.control2.y,
+          segment.end.x,
+          segment.end.y,
+        );
       }
-      streamPath.lineTo(xImp, yImp);
-
-      // Colors from palette
+      const streamRibbon = createLiquidRibbon(flowSegments, phase);
       const mainHex = colorDef.hex;
       const topHex = colorDef.topHex || mainHex;
 
@@ -139,82 +232,92 @@ export const WaterStream: React.FC<WaterStreamProps> = ({
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
 
-      // 1. Solid Pure Liquid Stream Body (Natural viscous fluid color, no radioactive glow)
+      if (streamPoints) {
+        ctx.beginPath();
+        ctx.ellipse(xm, ym, pts.mouthRadiusX, pts.mouthRadiusY, 0, Math.PI, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(116, 184, 255, 0.48)';
+        ctx.lineWidth = 1.8;
+        ctx.stroke();
+      }
+
+      ctx.shadowColor = mainHex;
+      ctx.shadowBlur = 2.4;
+      const streamGradient = ctx.createLinearGradient(x1, y1, xImp, yImp);
+      streamGradient.addColorStop(0, topHex);
+      streamGradient.addColorStop(0.32, mainHex);
+      streamGradient.addColorStop(0.82, mainHex);
+      streamGradient.addColorStop(1, topHex);
+      ctx.fillStyle = streamGradient;
+      ctx.fill(streamRibbon);
+
       ctx.shadowBlur = 0;
-      ctx.lineWidth = 9.2;
-      ctx.strokeStyle = mainHex;
+      ctx.lineWidth = 0.8;
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.36)';
+      ctx.globalAlpha = 0.72;
       ctx.stroke(streamPath);
+      ctx.globalAlpha = 1;
 
-      // 2. Subtle internal cylindrical depth (gentle tone transition, no harsh white glare)
-      ctx.lineWidth = 4.0;
-      ctx.strokeStyle = topHex;
-      ctx.globalAlpha = 0.45;
-      ctx.stroke(streamPath);
-      ctx.globalAlpha = 1.0;
-
-      // Spout root meniscus: Smooth teardrop joint anchoring stream firmly onto bottle lip
       ctx.beginPath();
-      ctx.ellipse(x1, y1, 5.0, 3.4, (pts.tiltAngle * Math.PI) / 180, 0, Math.PI * 2);
-      ctx.fillStyle = mainHex;
+      ctx.ellipse(x1, y1, 3.4, 2.5, (pts.tiltAngle * Math.PI) / 180, 0, Math.PI * 2);
+      ctx.fillStyle = topHex;
       ctx.fill();
 
-      // Liquid Surface Impact Interaction
+      if (streamPoints) {
+        ctx.beginPath();
+        ctx.ellipse(xm, ym, pts.mouthRadiusX, pts.mouthRadiusY, 0, 0, Math.PI);
+        ctx.strokeStyle = 'rgba(159, 213, 255, 0.82)';
+        ctx.lineWidth = 2.2;
+        ctx.shadowColor = 'rgba(85, 174, 255, 0.5)';
+        ctx.shadowBlur = 3;
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+      }
+
       if (showSplash && yImp >= ym) {
-        const pulse = 1 + Math.sin(phase * 4.5) * 0.12;
-        const moundW = 10 * pulse;
-        const moundH = 4.5 * pulse;
-
-        // A. Surging Impact Dome (Rising liquid mound where stream hits surface)
+        const pulse = 1 + Math.sin(phase * 3.4) * 0.08;
+        const moundW = 9.5 * pulse;
+        const splashGradient = ctx.createLinearGradient(xImp, yImp - 9, xImp, yImp + 2);
+        splashGradient.addColorStop(0, topHex);
+        splashGradient.addColorStop(1, mainHex);
         ctx.beginPath();
-        ctx.ellipse(xImp, yImp - 1, moundW, moundH, 0, 0, Math.PI * 2);
-        ctx.fillStyle = mainHex;
+        ctx.moveTo(xImp - moundW, yImp + 1.2);
+        ctx.quadraticCurveTo(xImp - 6, yImp - 2, xImp - 3.6, yImp - 1.1);
+        ctx.bezierCurveTo(xImp - 2.4, yImp - 8, xImp - 0.9, yImp - 8, xImp, yImp - 3.2);
+        ctx.bezierCurveTo(xImp + 1.1, yImp - 8.2, xImp + 2.5, yImp - 7.6, xImp + 3.8, yImp - 1);
+        ctx.quadraticCurveTo(xImp + 6.2, yImp - 2.4, xImp + moundW, yImp + 1.2);
+        ctx.quadraticCurveTo(xImp, yImp + 3.4, xImp - moundW, yImp + 1.2);
+        ctx.closePath();
+        ctx.fillStyle = splashGradient;
+        ctx.shadowColor = mainHex;
+        ctx.shadowBlur = 2;
         ctx.fill();
+        ctx.shadowBlur = 0;
 
-        // B. Left & Right bouncing liquid pearls (soft natural fluid droplets)
-        const leftPearlX = xImp - moundW * 0.72;
-        const rightPearlX = xImp + moundW * 0.72;
-        const waveSway = Math.sin(phase * 3.6) * 1.2;
-
-        // Left water droplet pearl
+        const ripplePhase = (phase * 0.055) % 1;
         ctx.beginPath();
-        ctx.arc(leftPearlX, yImp - 2.6 + waveSway, 3.0, 0, Math.PI * 2);
-        ctx.fillStyle = topHex;
-        ctx.fill();
+        ctx.ellipse(xImp, yImp + 1, 4 + ripplePhase * 13, 1.2 + ripplePhase * 2.1, 0, 0, Math.PI * 2);
+        ctx.strokeStyle = topHex;
+        ctx.globalAlpha = 0.42 * (1 - ripplePhase);
+        ctx.lineWidth = 1.15;
+        ctx.stroke();
+        ctx.globalAlpha = 1;
 
-        // Right water droplet pearl
-        ctx.beginPath();
-        ctx.arc(rightPearlX, yImp - 2.2 - waveSway, 2.6, 0, Math.PI * 2);
-        ctx.fillStyle = topHex;
-        ctx.fill();
-
-        // D. Floating frothy micro-bubbles around impact center
-        for (let i = 0; i < 4; i += 1) {
-          const bAngle = phase * 2.2 + (i * Math.PI) / 2;
-          const bRadius = 4.5 + (i % 2) * 3;
-          const bx = xImp + Math.cos(bAngle) * bRadius;
-          const by = yImp - 2 + Math.sin(bAngle) * 2;
-          const bSize = 1.2 + (i % 2) * 0.6;
-
-          ctx.beginPath();
-          ctx.arc(bx, by, bSize, 0, Math.PI * 2);
-          ctx.fillStyle = i % 2 === 0 ? '#ffffff' : topHex;
-          ctx.globalAlpha = 0.85;
-          ctx.fill();
-        }
-
-        // E. Tiny energetic airborne droplets jumping slightly above the surface
         for (let i = 0; i < 3; i += 1) {
-          const dropCycle = (phase * 0.08 + i * 0.33) % 1;
-          const dropH = Math.sin(dropCycle * Math.PI) * 7.5;
-          const dropSpread = (i - 1) * 6;
-          const dxDrop = xImp + dropSpread;
-          const dyDrop = yImp - 3 - dropH;
+          const dropCycle = (phase * 0.055 + i / 3) % 1;
+          const dropHeight = Math.sin(dropCycle * Math.PI) * (i === 1 ? 12 : 9);
+          const side = i - 1;
+          const dxDrop = xImp + side * (6 + dropCycle * 7);
+          const dyDrop = yImp - 3 - dropHeight;
 
+          ctx.save();
+          ctx.translate(dxDrop, dyDrop);
+          ctx.rotate(side * 0.18);
           ctx.beginPath();
-          ctx.arc(dxDrop, dyDrop, 1.1, 0, Math.PI * 2);
-          ctx.fillStyle = '#ffffff';
-          ctx.globalAlpha = (1 - dropCycle) * 0.8;
+          ctx.ellipse(0, 0, i === 1 ? 1.8 : 1.45, i === 1 ? 3.1 : 2.5, 0, 0, Math.PI * 2);
+          ctx.fillStyle = topHex;
+          ctx.globalAlpha = 0.72 + Math.sin(dropCycle * Math.PI) * 0.24;
           ctx.fill();
+          ctx.restore();
         }
       }
 

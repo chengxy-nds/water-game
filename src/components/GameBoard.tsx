@@ -137,6 +137,8 @@ export const GameBoard: React.FC<GameBoardProps> = ({
     let fromY = 0;
     let mouthX = 0;
     let mouthY = 0;
+    let mouthRadiusX = 16;
+    let mouthRadiusY = 4.5;
 
     if (spoutAnchor && targetMouthAnchor) {
       const sRect = spoutAnchor.getBoundingClientRect();
@@ -164,6 +166,8 @@ export const GameBoard: React.FC<GameBoardProps> = ({
     if (targetSvg) {
       const tRect = targetSvg.getBoundingClientRect();
       impactY = tRect.top + (surfaceSvgY / BOTTLE_VIEWBOX_HEIGHT) * tRect.height;
+      mouthRadiusX = (20 / BOTTLE_VIEWBOX_WIDTH) * tRect.width;
+      mouthRadiusY = (6 / BOTTLE_VIEWBOX_HEIGHT) * tRect.height;
     }
 
     return {
@@ -171,6 +175,8 @@ export const GameBoard: React.FC<GameBoardProps> = ({
       mouth: { x: mouthX, y: mouthY },
       impact: { x: mouthX, y: impactY },
       tiltAngle: pourAnimation.tiltAngle,
+      mouthRadiusX,
+      mouthRadiusY,
     };
   }, [pourAnimation, bottles]);
 

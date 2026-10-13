@@ -26,6 +26,91 @@ export const getBottleLiquidSurfaceY = (units: number, capacity = TUBE_CAPACITY)
   BOTTLE_CHAMBER_BOTTOM -
   (Math.max(0, Math.min(capacity, units)) / capacity) * (BOTTLE_CHAMBER_BOTTOM - BOTTLE_CHAMBER_TOP);
 
+const INNER_CHAMBER_POLYGON = [
+  { x: 26, y: 5 },
+  { x: 26, y: 28 },
+  ...Array.from({ length: 12 }, (_, index) => {
+    const t = (index + 1) / 12;
+    const inverse = 1 - t;
+    return {
+      x: inverse ** 3 * 26 + 3 * inverse ** 2 * t * 26 + 3 * inverse * t ** 2 * 6.3 + t ** 3 * 6.3,
+      y: inverse ** 3 * 28 + 3 * inverse ** 2 * t * 38 + 3 * inverse * t ** 2 * 38 + t ** 3 * 47.5,
+    };
+  }),
+  { x: 6.3, y: 196 },
+  ...Array.from({ length: 32 }, (_, index) => {
+    const angle = Math.PI - ((index + 1) * Math.PI) / 32;
+    return { x: 38.3 + 32 * Math.cos(angle), y: 196 + 14.5 * Math.sin(angle) };
+  }),
+  { x: 70.3, y: 47.5 },
+  ...Array.from({ length: 12 }, (_, index) => {
+    const t = (index + 1) / 12;
+    const inverse = 1 - t;
+    return {
+      x: inverse ** 3 * 70.3 + 3 * inverse ** 2 * t * 70.3 + 3 * inverse * t ** 2 * 51 + t ** 3 * 51,
+      y: inverse ** 3 * 47.5 + 3 * inverse ** 2 * t * 38 + 3 * inverse * t ** 2 * 38 + t ** 3 * 28,
+    };
+  }),
+  { x: 51, y: 5 },
+];
+
+const polygonArea = (points: { x: number; y: number }[]) => {
+  let area = 0;
+  for (let index = 0; index < points.length; index += 1) {
+    const current = points[index];
+    const next = points[(index + 1) % points.length];
+    area += current.x * next.y - next.x * current.y;
+  }
+  return Math.abs(area) / 2;
+};
+
+const getTiltedChamberSurfaceY = (tiltAngle: number, fillRatio: number) => {
+  const angle = (tiltAngle * Math.PI) / 180;
+  const cos = Math.cos(angle);
+  const sin = Math.sin(angle);
+  const pivot = { x: BOTTLE_MOUTH_CENTER.x, y: BOTTLE_MOUTH_CENTER.y };
+  const points = INNER_CHAMBER_POLYGON.map(({ x, y }) => ({
+    x: pivot.x + (x - pivot.x) * cos - (y - pivot.y) * sin,
+    y: pivot.y + (x - pivot.x) * sin + (y - pivot.y) * cos,
+  }));
+  const minY = Math.min(...points.map((point) => point.y));
+  const maxY = Math.max(...points.map((point) => point.y));
+  const totalArea = polygonArea(points);
+  const targetArea = totalArea * Math.max(0, Math.min(1, fillRatio));
+
+  if (targetArea <= 0.01) return maxY;
+  if (targetArea >= totalArea - 0.01) return minY;
+
+  const areaBelow = (surfaceY: number) => {
+    const clipped: { x: number; y: number }[] = [];
+    for (let index = 0; index < points.length; index += 1) {
+      const current = points[index];
+      const next = points[(index + 1) % points.length];
+      const currentInside = current.y >= surfaceY;
+      const nextInside = next.y >= surfaceY;
+
+      if (currentInside !== nextInside) {
+        const progress = (surfaceY - current.y) / (next.y - current.y);
+        clipped.push({
+          x: current.x + (next.x - current.x) * progress,
+          y: surfaceY,
+        });
+      }
+      if (nextInside) clipped.push(next);
+    }
+    return polygonArea(clipped);
+  };
+
+  let low = minY;
+  let high = maxY;
+  for (let iteration = 0; iteration < 18; iteration += 1) {
+    const middle = (low + high) / 2;
+    if (areaBelow(middle) > targetArea) low = middle;
+    else high = middle;
+  }
+  return (low + high) / 2;
+};
+
 interface TestTubeProps {
   index: number;
   bottle: Bottle;
@@ -312,6 +397,10 @@ export const TestTube = React.memo(forwardRef<TestTubeRef, TestTubeProps>(({
   const targetSurfaceY = calculatedLayers.length > 0
     ? calculatedLayers[calculatedLayers.length - 1].yTop
     : BOTTLE_CHAMBER_BOTTOM;
+  const remainingPourUnits = clampedLayers.reduce((sum, layer) => sum + layer.heightPercent / 100, 0);
+  const pourMouthClearance = isPouringSource
+    ? 5 + Math.min(4, Math.max(0, capacity - remainingPourUnits) * 1.2)
+    : 0;
 
   const transformStyle: React.CSSProperties = {
     transform: isFlying
@@ -422,6 +511,42 @@ export const TestTube = React.memo(forwardRef<TestTubeRef, TestTubeProps>(({
             <filter id={`liquid-interface-shadow-${index}`} x="-20%" y="-100%" width="140%" height="300%">
               <feGaussianBlur stdDeviation="1.15" />
             </filter>
+
+            <linearGradient id={`liquid-interface-shading-${index}`} x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#06112d" stopOpacity="0" />
+              <stop offset="46%" stopColor="#06112d" stopOpacity="0.035" />
+              <stop offset="66%" stopColor="#06112d" stopOpacity="0.07" />
+              <stop offset="100%" stopColor="#06112d" stopOpacity="0" />
+            </linearGradient>
+
+            <linearGradient id={`liquid-depth-${index}`} x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#ffffff" stopOpacity="0.07" />
+              <stop offset="42%" stopColor="#ffffff" stopOpacity="0" />
+              <stop offset="100%" stopColor="#02091f" stopOpacity="0.1" />
+            </linearGradient>
+
+            <radialGradient id={`liquid-star-mask-gradient-${index}`} cx="52.8" cy="164.5" r="6.8" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stopColor="#000000" />
+              <stop offset="68%" stopColor="#000000" />
+              <stop offset="100%" stopColor="#ffffff" />
+            </radialGradient>
+
+            <mask id={`liquid-star-clean-mask-${index}`} maskUnits="userSpaceOnUse" x="0" y="0" width="77" height="223">
+              <rect x="0" y="0" width="77" height="223" fill="#ffffff" />
+              <circle cx="52.8" cy="164.5" r="6.8" fill={`url(#liquid-star-mask-gradient-${index})`} />
+            </mask>
+
+            <mask id={`pour-mouth-clearance-${index}`} maskUnits="userSpaceOnUse" x="-10" y="-10" width="97" height="243">
+              <rect x="-10" y="-10" width="97" height="243" fill="#ffffff" />
+              {isPouringSource && (
+                <path
+                  d={`M 38.5 5 L ${tiltAngle >= 0 ? 51 : 26} 5`}
+                  stroke="#000000"
+                  strokeWidth={pourMouthClearance}
+                  strokeLinecap="round"
+                />
+              )}
+            </mask>
 
             <radialGradient id={`liquid-bloom-${index}`} cx="50%" cy="18%" r="58%">
               <stop offset="0%" stopColor="#ffffff" stopOpacity="0.52" />
@@ -540,10 +665,14 @@ export const TestTube = React.memo(forwardRef<TestTubeRef, TestTubeProps>(({
             <clipPath id={`inner-clip-${index}`}>
               <path
                 d="
-                  M 6.3 47.5
-                  H 70.3
-                  V 196.0
-                  A 32 14.5 0 0 1 6.3 196.0
+                  M 26 5
+                  L 26 28
+                  C 26 38, 6.3 38, 6.3 47.5
+                  L 6.3 196
+                  A 32 14.5 0 0 0 70.3 196
+                  L 70.3 47.5
+                  C 70.3 38, 51 38, 51 28
+                  L 51 5
                   Z
                 "
               />
@@ -581,55 +710,37 @@ export const TestTube = React.memo(forwardRef<TestTubeRef, TestTubeProps>(({
           <g key={`fluid-layers-${index}-${levelEntryId}`}>
             {/* Dynamic Pouring Stream Flow vs Stacked Liquid Layers */}
             {Math.abs(tiltAngle) > 0.5 ? (
-              /* Authentic Fluid Wedge: Continuous bottom fill + 2.5D horizontal elliptic surface */
-              <g clipPath={`url(#tilted-chamber-clip-${index})`}>
+              /* Gravity-aligned liquid layers with curved interfaces */
+              <g
+                clipPath={`url(#tilted-chamber-clip-${index})`}
+                mask={isPouringSource ? `url(#pour-mouth-clearance-${index})` : undefined}
+              >
                 {(() => {
                   if (clampedLayers.length === 0) return null;
 
                   const fluidSurfaceAngle = tiltAngle;
-                  const rad = (fluidSurfaceAngle * Math.PI) / 180;
-                  const sinA = Math.sin(rad);
-                  const cosA = Math.cos(rad);
-                  const absSinA = Math.abs(sinA);
-
-                  // Spout lip depth in gravity coordinates (recedes further towards bottle base for elegant neck clearance)
-                  const Y_lip = 16.5 * absSinA + Math.max(-4, 1.5 * cosA);
-
-                  // Deepest cavity wall in gravity coordinates:
-                  // When tilt angle > 90deg, bottle base rises into the sky (cosA < 0),
-                  // so the lowest gravitational points naturally shift to the downward neck/spout.
-                  const baseContribution = Math.max(0, 181.0 * cosA);
-                  const Y_deep = Math.max(Y_lip + 32, 36.0 * absSinA + baseContribution);
-                  const H_delta = Math.max(20, Y_deep - Y_lip);
-
-                  // Total remaining fluid units
                   const totalUnits = clampedLayers.reduce((sum, l) => sum + l.heightPercent / 100, 0);
                   if (totalUnits <= 0.01) return null;
 
-                  const fillRatio = Math.max(0, Math.min(1, totalUnits / capacity));
+                  const boundaryYCache = new Map<number, number>();
+                  const getBoundaryYForUnits = (units: number) => {
+                    const key = Number(units.toFixed(4));
+                    const cached = boundaryYCache.get(key);
+                    if (cached !== undefined) return cached;
+                    const boundary = getTiltedChamberSurfaceY(fluidSurfaceAngle, units / capacity);
+                    boundaryYCache.set(key, boundary);
+                    return boundary;
+                  };
 
-                  // Natural surface depth: free surface connects to spout lip and smoothly recedes as it empties
-                  const Y_surface = Y_lip + (1 - Math.min(1, Math.sqrt(fillRatio))) * 10;
-
-                  // CRITICAL: The fluid bottom MUST extend to 300 to completely fill the lower wall and base!
-                  // No artificial bottom cutoff; cavity clipPath shapes the true bottom fluid profile.
-                  const Y_bottom_fill = 300;
-
-                  // Divide fluid layers from surface (topmost/draining) down to bottommost (filling deep base)
-                  const layerThicknesses = clampedLayers.map((l) =>
-                    (l.heightPercent / 100 / totalUnits) * (Y_deep - Y_surface)
+                  const unitsBelow = clampedLayers.map((_, layerIndex) =>
+                    clampedLayers.slice(0, layerIndex).reduce((sum, layer) => sum + layer.heightPercent / 100, 0)
                   );
-
-                  let currentLevel = Y_surface;
                   const gravityLayers = [];
 
-                  // clampedLayers: idx 0 = base layer, idx len-1 = top draining layer
                   for (let i = clampedLayers.length - 1; i >= 0; i--) {
-                    const thickness = layerThicknesses[i];
-                    const yTop = currentLevel;
-                    // The bottommost layer (i === 0) fills all the way to 280 to ensure full solid bottom
-                    const yBottom = i === 0 ? Y_bottom_fill : currentLevel + thickness;
-                    currentLevel += thickness;
+                    const layerUnits = clampedLayers[i].heightPercent / 100;
+                    const yTop = getBoundaryYForUnits(unitsBelow[i] + layerUnits);
+                    const yBottom = i === 0 ? getBoundaryYForUnits(0) + 100 : getBoundaryYForUnits(unitsBelow[i]);
                     gravityLayers.push({
                       layer: clampedLayers[i],
                       lIdx: i,
@@ -638,60 +749,80 @@ export const TestTube = React.memo(forwardRef<TestTubeRef, TestTubeProps>(({
                     });
                   }
 
-                  // 2.5D Perspective Ellipse on the free surface
                   const ellipseRx = 28;
                   const ellipseRy = 7.5;
-                  // Center ellipse along the liquid wedge surface
-                  const ellipseCx = fluidSurfaceAngle >= 0 ? 12 : -12;
+                  const gravityBands: {
+                    colorId: string;
+                    yTop: number;
+                    yBottom: number;
+                    isHidden: boolean;
+                    isDimmed: boolean;
+                    isTop: boolean;
+                  }[] = [];
+
+                  for (const [position, entry] of gravityLayers.entries()) {
+                    const isHidden = hiddenCount > 0 && entry.lIdx < hiddenCount;
+                    const isDimmed = maskHidden && entry.lIdx === 0;
+                    const previousBand = gravityBands[gravityBands.length - 1];
+                    if (previousBand && previousBand.colorId === entry.layer.colorId && previousBand.isHidden === isHidden && previousBand.isDimmed === isDimmed) {
+                      previousBand.yBottom = entry.yBottom;
+                    } else {
+                      gravityBands.push({
+                        colorId: entry.layer.colorId,
+                        yTop: entry.yTop,
+                        yBottom: entry.yBottom,
+                        isHidden,
+                        isDimmed,
+                        isTop: position === 0,
+                      });
+                    }
+                  }
 
                   return (
-                    <g transform={`rotate(${-fluidSurfaceAngle}, 38.5, 14)`}>
-                      {gravityLayers.map(({ layer, lIdx, yTop, yBottom }) => {
-                        const cDef = getColor(layer.colorId);
-                        const isHiddenLayer = hiddenCount > 0 && lIdx < hiddenCount;
-                        const isDimmed = maskHidden && lIdx === 0;
-                        const liquidFill = isHiddenLayer ? `url(#fog-grad-${index})` : `url(#grad-${cDef.id}-${index})`;
-                        const isVeryTop = (lIdx === clampedLayers.length - 1);
+                    <g transform={`rotate(${-fluidSurfaceAngle}, 38.5, 5)`}>
+                      {gravityBands.map((band, bandIndex) => {
+                        const cDef = getColor(band.colorId);
+                        const liquidFill = band.isHidden ? `url(#fog-grad-${index})` : `url(#grad-${cDef.id}-${index})`;
+                        const curve = 4.6;
+                        const bodyPath = `
+                          M -350 ${band.yTop}
+                          Q 38.5 ${band.yTop - curve} 350 ${band.yTop}
+                          L 350 ${band.yBottom}
+                          Q 38.5 ${band.yBottom - curve} -350 ${band.yBottom}
+                          Z
+                        `;
 
                         return (
-                          <g key={`tilted-layer-${lIdx}`} opacity={isDimmed ? 0.4 : 1}>
-                            {/* Continuous solid fluid wedge in gravity space (clipped by bottle inner walls) */}
-                            <rect
-                              x={-350}
-                              y={yTop}
-                              width={700}
-                              height={Math.max(0.5, yBottom - yTop)}
-                              fill={liquidFill}
-                            />
+                          <g key={`tilted-layer-${bandIndex}`} opacity={band.isDimmed ? 0.4 : 1}>
+                            <path d={bodyPath} fill={liquidFill} />
+                            {!band.isHidden && <path d={bodyPath} fill={`url(#liquid-depth-${index})`} />}
 
-                            {/* Soft free-surface sheen; keep it subtle so it cannot read as a layer divider */}
-                            {isVeryTop && (
-                              <line
-                                x1={-350}
-                                y1={yTop}
-                                x2={350}
-                                y2={yTop}
-                                stroke="rgba(255, 255, 255, 0.14)"
-                                strokeWidth="1.4"
-                                strokeLinecap="round"
-                                filter={`url(#liquid-interface-shadow-${index})`}
-                              />
-                            )}
-
-                            {/* Natural soft contact shadow only where the color actually changes */}
-                            {lIdx > 0 && clampedLayers[lIdx - 1]?.colorId !== layer.colorId && (
-                              <line
-                                x1={-350}
-                                y1={yTop + (layerThicknesses[lIdx] || 0)}
-                                x2={350}
-                                y2={yTop + (layerThicknesses[lIdx] || 0)}
-                                stroke="rgba(4, 12, 42, 0.22)"
-                                strokeWidth="2.2"
-                                strokeLinecap="round"
-                                filter={`url(#liquid-interface-shadow-${index})`}
-                              />
+                            {band.isTop && (
+                              <>
+                                <ellipse
+                                  cx="38.5"
+                                  cy={band.yTop}
+                                  rx={ellipseRx}
+                                  ry={ellipseRy * 0.72}
+                                  fill={band.isHidden ? `url(#fog-grad-${index})` : `url(#meniscus-grad-${cDef.id}-${index})`}
+                                />
+                                {!band.isHidden && <ellipse cx="38.5" cy={band.yTop + 1.1} rx="11" ry="1.15" fill="#ffffff" opacity="0.14" />}
+                              </>
                             )}
                           </g>
+                        );
+                      })}
+                      {gravityBands.slice(0, -1).map((band, bandIndex) => {
+                        const nextBand = gravityBands[bandIndex + 1];
+                        if (nextBand.colorId === band.colorId) return null;
+                        const edgeY = band.yBottom;
+                        return (
+                          <path
+                            key={`tilted-interface-${bandIndex}`}
+                            d={`M -350 ${edgeY - 0.6} Q 38.5 ${edgeY - 2.8} 350 ${edgeY - 0.6} L 350 ${edgeY + 3.5} Q 38.5 ${edgeY + 1.5} -350 ${edgeY + 3.5} Z`}
+                            fill={`url(#liquid-interface-shading-${index})`}
+                            opacity="0.65"
+                          />
                         );
                       })}
                     </g>
@@ -816,6 +947,7 @@ export const TestTube = React.memo(forwardRef<TestTubeRef, TestTubeProps>(({
             width="77"
             height="223"
             preserveAspectRatio="none"
+            mask={`url(#liquid-star-clean-mask-${index})`}
             style={{ pointerEvents: 'none', mixBlendMode: 'lighten' }}
           />
 
