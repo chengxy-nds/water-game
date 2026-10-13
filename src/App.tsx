@@ -519,7 +519,22 @@ export default function App() {
         setLiftingSlotIndex((currentLifting) => {
           const slotIdx = currentLifting;
           if (slotIdx !== null) {
-            setCollectedColors((prev) => new Set(prev).add(completedColor));
+            setCollectedColors((prev) => {
+              const updated = new Set(prev).add(completedColor);
+              // 联动揭开布帘瓶：根据已收集数量 (updated.size)，解锁阈值达标的 masked 瓶子
+              setBottles((curBottles) => {
+                let changed = false;
+                const nextBottles = curBottles.map((b) => {
+                  if (b.type === 'masked' && !b.maskRevealed && (b.unlockTargetCompletedBottles ?? 1) <= updated.size) {
+                    changed = true;
+                    return { ...b, maskRevealed: true };
+                  }
+                  return b;
+                });
+                return changed ? nextBottles : curBottles;
+              });
+              return updated;
+            });
 
             if (slotIdx === 3) {
               // 第 4 槽位完成收集，重置该槽位
@@ -864,12 +879,39 @@ export default function App() {
     [soundEnabled, vibrateEnabled]
   );
 
+  const handleUnlockVideoBottle = useCallback(
+    (tubeIdx: number) => {
+      setBottles((prev) => {
+        const next = prev.map((b, i) => (i === tubeIdx ? { ...b, locked: false } : b));
+        return next;
+      });
+      setSelectedIndex(null);
+      if (soundEnabled) soundManager.playTubeComplete();
+      if (vibrateEnabled) soundManager.vibrate(25);
+    },
+    [soundEnabled, vibrateEnabled]
+  );
+
   const handleTubeClick = useCallback(
     (clickedIdx: number) => {
       if (isWon || pourAnimation || leakAnimation || isAutoSolving || isDeadlocked) return;
 
+      const clickedBottle = bottles[clickedIdx];
+
+      // 1. 点击视频锁定的空瓶：观看广告并解锁为空瓶
+      if (clickedBottle.type === 'video_empty' && clickedBottle.locked !== false) {
+        handleUnlockVideoBottle(clickedIdx);
+        return;
+      }
+
+      // 2. 遮罩未掀开的瓶子不可作为源或目标操作
+      if (clickedBottle.type === 'masked' && !clickedBottle.maskRevealed) {
+        triggerInvalidFeedback(clickedIdx);
+        return;
+      }
+
       if (selectedIndex === null) {
-        if (bottles[clickedIdx].layers.length === 0) {
+        if (clickedBottle.layers.length === 0) {
           triggerInvalidFeedback(clickedIdx);
           return;
         }

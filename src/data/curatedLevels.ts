@@ -22,6 +22,9 @@ function masked(id: string, layers: string[], threshold = 2): Bottle {
 function hidden(id: string, layers: string[], bottomLayers: number): Bottle {
   return { id, type: "hidden", capacity: CAP, layers, hiddenBottomLayers: bottomLayers };
 }
+function videoEmpty(id: string): Bottle {
+  return { id, type: "video_empty", capacity: CAP, layers: [], locked: true };
+}
 function leak(id: string, layers: string[], targetId: string): Bottle {
   return { id, type: "bottom_leak", capacity: CAP, layers, leakTargetBottleId: targetId };
 }
@@ -55,45 +58,74 @@ export const CURATED_LEVELS: Level[] = [
       empty("b4"),
     ],
   },
-  // 第 3 关
+  // 第 3 关：初识布帘瓶与外卖订单
   {
     id: 3,
-    title: "限制倒水顺序",
-    optimalSteps: 4,
-    difficulty: "easy",
-    bottles: [
-      normal("b1", ["red", "red", "blue", "blue"]),
-      normal("b2", ["red", "blue", "blue", "red"]),
-      empty("b3"),
-      empty("b4"),
-    ],
-  },
-  // 第 4 关
-  {
-    id: 4,
-    title: "练习利用空瓶",
-    optimalSteps: 8,
+    title: "初识布帘瓶订单",
+    optimalSteps: 6,
     difficulty: "easy",
     bottles: [
       normal("b1", ["yellow", "blue", "red", "yellow"]),
       normal("b2", ["red", "red", "yellow", "blue"]),
-      normal("b3", ["red", "yellow", "blue", "blue"]),
+      masked("b3", ["red", "yellow", "blue", "blue"], 1),
       empty("b4"),
       empty("b5"),
     ],
   },
-  // 第 5 关
+  // 第 4 关：双排10瓶对标参考图（含两翼视频空瓶）
+  {
+    id: 4,
+    title: "双排试炼与视频空瓶",
+    optimalSteps: 12,
+    difficulty: "medium",
+    bottles: [
+      // 第一排 (5瓶)
+      normal("b1", ["yellow", "green", "green", "yellow"]),
+      normal("b2", ["green", "blue", "blue", "green"]),
+      normal("b3", ["blue", "purple", "purple", "blue"]),
+      normal("b4", ["green", "green", "purple", "purple"]),
+      normal("b5", ["red", "purple", "red", "purple"]),
+      // 第二排 (5瓶)：左右两翼视频空瓶
+      videoEmpty("b6"),
+      normal("b7", ["red", "yellow", "yellow", "red"]),
+      normal("b8", ["red", "purple", "purple", "red"]),
+      normal("b9", ["blue", "blue", "red", "red"]),
+      videoEmpty("b10"),
+    ],
+  },
+  // 第 5 关：21瓶满屏高熵大关（3行×7列，集齐布帘1/2/3阶梯+双视频空瓶+满屏7列无遮挡）
   {
     id: 5,
-    title: "三色基础整理",
-    optimalSteps: 9,
-    difficulty: "easy",
+    title: "满屏高熵终极考验",
+    optimalSteps: 28,
+    difficulty: "hard",
     bottles: [
-      normal("b1", ["blue", "blue", "yellow", "red"]),
-      normal("b2", ["blue", "red", "yellow", "blue"]),
-      normal("b3", ["yellow", "red", "yellow", "red"]),
-      empty("b4"),
-      empty("b5"),
+      // 第 1 行 (7 瓶)
+      normal("b1", ["red", "yellow", "blue", "green"]),
+      normal("b2", ["purple", "orange", "cyan", "pink"]),
+      normal("b3", ["yellow", "blue", "green", "red"]),
+      masked("b4", ["pink", "cyan", "purple", "orange"], 2),
+      normal("b5", ["orange", "purple", "pink", "cyan"]),
+      normal("b6", ["green", "red", "yellow", "blue"]),
+      empty("b7"),
+
+      // 第 2 行 (7 瓶)：左右两翼为视频解锁空瓶
+      videoEmpty("b8"),
+      normal("b9", ["cyan", "pink", "orange", "purple"]),
+      normal("b10", ["blue", "green", "red", "yellow"]),
+      masked("b11", ["red", "yellow", "blue", "green"], 3),
+      normal("b12", ["purple", "orange", "cyan", "pink"]),
+      normal("b13", ["yellow", "green", "blue", "red"]),
+      videoEmpty("b14"),
+
+      // 第 3 行 (7 瓶)
+      normal("b15", ["pink", "cyan", "purple", "orange"]),
+      normal("b16", ["green", "blue", "yellow", "red"]),
+      empty("b17"),
+      masked("b18", ["orange", "purple", "pink", "cyan"], 1),
+      normal("b19", ["blue", "red", "green", "yellow"]),
+      normal("b20", ["cyan", "pink", "orange", "purple"]),
+      empty("b21"),
     ],
   },
   // 第 6 关

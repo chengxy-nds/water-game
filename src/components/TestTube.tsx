@@ -113,23 +113,16 @@ const getTiltedChamberSurfaceY = (tiltAngle: number, fillRatio: number) => {
 
 export type TubeSizeVariant = 'spacious' | 'normal' | 'compact' | 'mini';
 
+const UNIFIED_SIZE = {
+  placeholder: 'w-[37px] xs:w-[39px] sm:w-[43px] h-[107px] xs:h-[113px] sm:h-[124px]',
+  svg: 'w-[37px] xs:w-[39px] sm:w-[43px] h-[107px] xs:h-[113px] sm:h-[124px]',
+};
+
 export const TUBE_SIZE_CLASSES: Record<TubeSizeVariant, { placeholder: string; svg: string }> = {
-  spacious: {
-    placeholder: 'w-[45px] xs:w-[48px] sm:w-[52px] h-[130px] xs:h-[139px] sm:h-[150px]',
-    svg: 'w-[45px] xs:w-[48px] sm:w-[52px] h-[130px] xs:h-[139px] sm:h-[150px]',
-  },
-  normal: {
-    placeholder: 'w-[40px] xs:w-[42px] sm:w-[46px] h-[116px] xs:h-[122px] sm:h-[133px]',
-    svg: 'w-[40px] xs:w-[42px] sm:w-[46px] h-[116px] xs:h-[122px] sm:h-[133px]',
-  },
-  compact: {
-    placeholder: 'w-[36px] xs:w-[38px] sm:w-[42px] h-[104px] xs:h-[110px] sm:h-[122px]',
-    svg: 'w-[36px] xs:w-[38px] sm:w-[42px] h-[104px] xs:h-[110px] sm:h-[122px]',
-  },
-  mini: {
-    placeholder: 'w-[33px] xs:w-[35px] sm:w-[38px] h-[95px] xs:h-[101px] sm:h-[110px]',
-    svg: 'w-[33px] xs:w-[35px] sm:w-[38px] h-[95px] xs:h-[101px] sm:h-[110px]',
-  },
+  spacious: UNIFIED_SIZE,
+  normal: UNIFIED_SIZE,
+  compact: UNIFIED_SIZE,
+  mini: UNIFIED_SIZE,
 };
 
 interface TestTubeProps {
@@ -591,6 +584,13 @@ export const TestTube = React.memo(forwardRef<TestTubeRef, TestTubeProps>(({
               <stop offset="100%" stopColor="#18275f" stopOpacity="1" />
             </linearGradient>
 
+            {/* Video Camera Badge Gradient */}
+            <linearGradient id="video-badge-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#4ade80" />
+              <stop offset="50%" stopColor="#22c55e" />
+              <stop offset="100%" stopColor="#15803d" />
+            </linearGradient>
+
             {/* Left Gloss Specular Fading Gradient */}
             <linearGradient id={`specular-fade-${index}`} x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="#ffffff" stopOpacity="0.15" />
@@ -1020,6 +1020,59 @@ export const TestTube = React.memo(forwardRef<TestTubeRef, TestTubeProps>(({
                 preserveAspectRatio="none"
                 style={{ filter: 'drop-shadow(0 6px 10px rgba(0,0,0,0.4))' }}
               />
+              {/* Reference-aligned Unlock Tag */}
+              {maskHidden && (
+                <g>
+                  {/* Tag String / Cord */}
+                  <path
+                    d="M 38.5 78 L 38.5 98"
+                    stroke="#b48348"
+                    strokeWidth="1.2"
+                    strokeDasharray="2,2"
+                    fill="none"
+                  />
+                  {/* Tag Pin */}
+                  <circle cx="38.5" cy="78" r="2.2" fill="#d97706" />
+
+                  {/* Tag Body Card */}
+                  <g transform="translate(38.5, 118)">
+                    <rect
+                      x="-14"
+                      y="-18"
+                      width="28"
+                      height="36"
+                      rx="4"
+                      fill="#ffffff"
+                      stroke="#e5e7eb"
+                      strokeWidth="1.2"
+                      style={{ filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.25))' }}
+                    />
+                    {/* Mini Shopping Bag Graphic */}
+                    <path
+                      d="M -6 -7 L 6 -7 L 5 1 L -5 1 Z"
+                      fill="#f97316"
+                    />
+                    <path
+                      d="M -3 -7 C -3 -11 3 -11 3 -7"
+                      stroke="#ea580c"
+                      strokeWidth="1.2"
+                      fill="none"
+                    />
+                    {/* Target count */}
+                    <text
+                      x="0"
+                      y="13"
+                      textAnchor="middle"
+                      fontSize="13"
+                      fontWeight="900"
+                      fill="#1f2937"
+                      fontFamily="system-ui, -apple-system, sans-serif"
+                    >
+                      {bottle.unlockTargetCompletedBottles ?? 1}
+                    </text>
+                  </g>
+                </g>
+              )}
             </g>
           )}
 
@@ -1042,6 +1095,39 @@ export const TestTube = React.memo(forwardRef<TestTubeRef, TestTubeProps>(({
                 opacity="1"
               />
               <circle cx="38.5" cy="210" r="1.8" fill="#f1f7ff" />
+            </g>
+          )}
+
+          {/* 9. Video Empty Bottle Badge (Ad-locked bottle) */}
+          {isVideoEmptyLocked && (
+            <g
+              className="cursor-pointer transition-transform duration-200 hover:scale-110"
+              style={{ filter: 'drop-shadow(0 6px 12px rgba(0,0,0,0.45))' }}
+            >
+              {/* Pulsing Emerald Light Halo */}
+              <circle
+                cx="38.5"
+                cy="120"
+                r="22"
+                fill="rgba(34, 197, 94, 0.25)"
+                className="animate-pulse"
+              />
+              {/* Badge Disc */}
+              <circle
+                cx="38.5"
+                cy="120"
+                r="17"
+                fill="url(#video-badge-grad)"
+                stroke="#ffffff"
+                strokeWidth="2.2"
+              />
+              {/* Inner Camera Icon */}
+              <g transform="translate(38.5, 120)">
+                <rect x="-8" y="-5.5" width="10.5" height="11" rx="2" fill="#ffffff" />
+                <polygon points="3.5,-2.5 8.5,-6 8.5,6 3.5,2.5" fill="#ffffff" />
+                {/* Play triangle inside camera */}
+                <polygon points="-4.5,-2.5 -1,0 -4.5,2.5" fill="#15803d" />
+              </g>
             </g>
           )}
         </svg>
