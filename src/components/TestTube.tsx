@@ -666,20 +666,33 @@ export const TestTube = React.memo(forwardRef<TestTubeRef, TestTubeProps>(({
               />
             </clipPath>
 
-            {/* Full-flow internal bottle cavity clip for tilted pouring (connects mouth to base) */}
+            {/* Full-flow internal bottle cavity clip for tilted pouring (with upper neck air gap) */}
             <clipPath id={`tilted-chamber-clip-${index}`}>
               <path
-                d="
-                  M 26.0 5.0
-                  L 26.0 28.0
-                  C 26.0 38, 6.3 38, 6.3 47.5
-                  L 6.3 196.0
-                  A 32 14.5 0 0 0 70.3 196.0
-                  L 70.3 47.5
-                  C 70.3 38, 51.0 38, 51.0 28
-                  L 51.0 5.0
-                  Z
-                "
+                d={tiltAngle >= 0
+                  ? `
+                    M 35.0 5.0
+                    L 35.0 24.0
+                    C 35.0 34.0, 6.3 38, 6.3 47.5
+                    L 6.3 196.0
+                    A 32 14.5 0 0 0 70.3 196.0
+                    L 70.3 47.5
+                    C 70.3 38, 51.0 38, 51.0 28
+                    L 51.0 5.0
+                    Z
+                  `
+                  : `
+                    M 26.0 5.0
+                    L 26.0 28.0
+                    C 26.0 38, 6.3 38, 6.3 47.5
+                    L 6.3 196.0
+                    A 32 14.5 0 0 0 70.3 196.0
+                    L 70.3 47.5
+                    C 70.3 38, 42.0 34.0, 42.0 24.0
+                    L 42.0 5.0
+                    Z
+                  `
+                }
               />
             </clipPath>
           </defs>
