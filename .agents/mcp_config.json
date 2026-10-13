@@ -2,6 +2,12 @@
   "mcpServers": {
     "cocos": {
       "serverUrl": "http://localhost:3000/mcp"
+    },
+    "stitch": {
+      "serverUrl": "https://stitch.googleapis.com/mcp",
+      "headers": {
+        "X-Goog-Api-Key": "AQ.Ab8RN6LIzs0_OprAXMdrPwwtbMU-vqtz3SNYicJzjyU4R8l8IQ"
+      }
     }
   }
 }
