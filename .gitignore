@@ -6,3 +6,5 @@ coverage/
 *.log
 .env*
 !.env.example
+raw_assets/*
+!raw_assets/README.md

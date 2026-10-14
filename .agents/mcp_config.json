@@ -2,6 +2,16 @@
   "mcpServers": {
     "cocos": {
       "serverUrl": "http://localhost:3000/mcp"
+    },
+    "image-matting": {
+      "command": "node",
+      "args": ["${workspaceRoot}/.agents/tools/matting-server/index.js", "--stdio"]
+    },
+    "stitch": {
+      "serverUrl": "https://stitch.googleapis.com/mcp",
+      "headers": {
+        "X-Goog-Api-Key": "AQ.Ab8RN6J0r0gUg64mM6ul4LM_zzpKFMECpE-f-wGzycVp_HTBbg"
+      }
     }
   }
 }

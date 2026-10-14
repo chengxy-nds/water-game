@@ -1,0 +1,13 @@
+{
+  "name": "matting-mcp-server",
+  "version": "1.0.0",
+  "description": "Local AI Background Removal MCP Server for Antigravity IDE",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@imgly/background-removal-node": "^1.4.5"
+  }
+}
