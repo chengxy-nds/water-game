@@ -1,1399 +1,776 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Bottle, Level, PlayerStats, Difficulty } from './types/game';
-import { CURATED_LEVELS } from './data/curatedLevels';
+import { Bottle, Bag, MoveHistoryItem, ColorKey } from './types/game';
+import { getLevelConfig, MECHANIC_INTROS } from './data/levelGenerator';
+import { COLORS } from './constants/colors';
+import { audioEngine } from './audio/audioEngine';
 import {
-  canPour,
-  executePour,
-  executeLeak,
-  canLeak,
-  isPuzzleSolved,
-  isBottleReadyToCollect,
-  solveWaterSort,
-  hasAnyLegalMove,
-  TUBE_CAPACITY,
-} from './solver/waterSortSolver';
-import { generateSolvableLevel } from './generator/levelGenerator';
-import { soundManager } from './utils/audio';
-
-import { GameHeader } from './components/GameHeader';
-import { ShoppingBags } from './components/ShoppingBags';
-import { GameBoard, CompletionAnimationState, LeakAnimationState, getRowDistribution } from './components/GameBoard';
+  canSelectBottle,
+  canSelectBottleNoToast,
+  canPourInto,
+  getPourableCount,
+  pickNextNeededBagColor,
+  checkGameWon,
+  isCompleteBottle,
+} from './game/waterSortLogic';
+import { buildLiquidLayersMarkup } from './physics/liquidMarkup';
 import {
-  getBottleMouthPoint,
-  getBottlePourSpoutPoint,
-  BOTTLE_MOUTH_CENTER,
-  BOTTLE_VIEWBOX_WIDTH,
-  BOTTLE_VIEWBOX_HEIGHT,
-} from './components/TestTube';
-import { ControlBar } from './components/ControlBar';
-import { WinModal } from './components/WinModal';
-import { LevelSelectorModal } from './components/LevelSelectorModal';
-import { LevelWorkshop } from './components/LevelWorkshop';
-import { DailyChallengeModal } from './components/DailyChallengeModal';
-import { SettingsModal } from './components/SettingsModal';
-import { DeadlockModal } from './components/DeadlockModal';
-import { ResetConfirmModal } from './components/ResetConfirmModal';
-import { HintModal, HintData } from './components/HintModal';
-import { RulesModal } from './components/RulesModal';
-import { MechanicIntroModal, MechanicIntroData } from './components/MechanicIntroModal';
-import { QuickDemo } from './components/QuickDemo';
+  performLiquidPourAnimation,
+  triggerBottleVFX,
+} from './animation/pourAnimationEngine';
+import { TopBar } from './components/UI/TopBar';
+import { ModeBanner } from './components/UI/ModeBanner';
+import { ControlBar } from './components/UI/ControlBar';
+import { BagsBar } from './components/Bags/BagsBar';
+import { BottleView } from './components/Bottle/BottleView';
+import { LevelSelectModal } from './components/Modals/LevelSelectModal';
+import { WinModal } from './components/Modals/WinModal';
+import { MechanicIntroModal } from './components/Modals/MechanicIntroModal';
 
-const STATS_STORAGE_KEY = 'water_sort_player_stats_v1';
-const PREFS_STORAGE_KEY = 'water_sort_preferences_v1';
-const MECHANIC_TUTORIAL_KEY = 'water_sort_mechanics_seen_v1';
-const POUR_MOUTH_GAP_Y = 16;
-const POUR_MOUTH_OFFSET_X = 14;
-
-interface GameSnapshot {
-  bottles: Bottle[];
-  activeBagColors: (string | null)[];
-  pendingBagColors: string[];
-  collectedTubeIndices: number[];
-  collectedColors: string[];
-  unlockedBonusColor: string | null;
-}
-
-const MECHANIC_INTRO: Record<'normal' | 'masked' | 'hidden' | 'bottom_leak', MechanicIntroData> = {
-  normal: {
-    key: 'normal',
-    title: '普通瓶',
-    subtitle: '这是基础玩法：把同色液体按顶部连续段倒到空瓶或同色瓶中。',
-    bullets: [
-      '每个瓶子最多装 4 层。',
-      '只能倒出瓶顶连续同色的一段。',
-      '目标瓶必须为空或顶层颜色相同。',
-    ],
-  },
-  masked: {
-    key: 'masked',
-    title: '遮罩瓶',
-    subtitle: '遮罩瓶最初会被布盖住，直到你完成足够多的目标瓶才会揭开。',
-    bullets: [
-      '它刚开始看不见内部液体。',
-      '完成指定数量的目标瓶后，遮罩会自动掉落。',
-      '揭开后，它和普通瓶完全一样，继续按正常规则倒水。',
-    ],
-  },
-  hidden: {
-    key: 'hidden',
-    title: '隐藏瓶',
-    subtitle: '隐藏瓶底部有一层或多层颜色被遮住，玩家不能直接利用未知底层信息。',
-    bullets: [
-      '你只能看到顶部已知颜色。',
-      '底层隐藏颜色不会一次性全部暴露。',
-      '只有顶层被倒出后，下一层才会逐步显现。',
-    ],
-  },
-  bottom_leak: {
-    key: 'bottom_leak',
-    title: '底部漏水瓶',
-    subtitle: '这类瓶子不能像普通瓶一样口口倒水，必须走底部漏水机制。',
-    bullets: [
-      '它只能从底部漏出一层液体。',
-      '目标瓶必须是指定的固定目标瓶。',
-      '源瓶底部颜色必须和目标瓶顶部颜色一致。',
-    ],
-  },
-};
-
-const getSeenMechanics = (): Record<string, boolean> => {
-  try {
-    const stored = localStorage.getItem(MECHANIC_TUTORIAL_KEY);
-    return stored ? JSON.parse(stored) : {};
-  } catch {
-    return {};
-  }
-};
-
-const saveSeenMechanics = (seen: Record<string, boolean>) => {
-  try {
-    localStorage.setItem(MECHANIC_TUTORIAL_KEY, JSON.stringify(seen));
-  } catch {
-    // ignore
-  }
-};
-
-const detectLevelMechanics = (lvl: Level): Array<keyof typeof MECHANIC_INTRO> => {
-  const found: Array<keyof typeof MECHANIC_INTRO> = [];
-  if (lvl.bottles.some((b) => b.type === 'masked')) found.push('masked');
-  if (lvl.bottles.some((b) => b.type === 'hidden')) found.push('hidden');
-  if (lvl.bottles.some((b) => b.type === 'bottom_leak')) found.push('bottom_leak');
-  return found;
-};
-
-const getVisibleBottleColors = (bottles: Bottle[]) => {
-  const allColors: string[] = [];
-  bottles.forEach((b) => {
-    const firstVisibleLayer = b.type === 'hidden' ? Math.min(b.layers.length, b.hiddenBottomLayers ?? 0) : 0;
-    b.layers.slice(firstVisibleLayer).forEach((c) => {
-      if (!allColors.includes(c)) allColors.push(c);
-    });
-  });
-  return allColors;
-};
-
-const initBagPool = (lvl: Level) => {
-  const visibleColors = getVisibleBottleColors(lvl.bottles);
-  const active: (string | null)[] = [
-    visibleColors[0] || null,
-    visibleColors[1] || null,
-    visibleColors[2] || null,
-  ];
-  const pending = visibleColors.slice(3);
-  return { active, pending };
-};
-
-const getNewlyRevealedHiddenColors = (before: Bottle[], after: Bottle[]) => {
-  const revealed: string[] = [];
-  after.forEach((bottle) => {
-    if (bottle.type !== 'hidden') return;
-    const previous = before.find((item) => item.id === bottle.id);
-    if (!previous || previous.type !== 'hidden') return;
-    const oldHidden = Math.min(previous.layers.length, previous.hiddenBottomLayers ?? 0);
-    const newHidden = Math.min(bottle.layers.length, bottle.hiddenBottomLayers ?? 0);
-    for (let layerIdx = newHidden; layerIdx < oldHidden; layerIdx++) {
-      const color = bottle.layers[layerIdx];
-      if (color && !revealed.includes(color)) revealed.push(color);
-    }
-  });
-  return revealed;
-};
-
-export default function App() {
-  // Current active level (Default to Level 1)
-  const [currentLevel, setCurrentLevel] = useState<Level>(CURATED_LEVELS[0]);
-  const [bottles, setBottles] = useState<Bottle[]>(() =>
-    CURATED_LEVELS[0].bottles.map((b) => ({ ...b, layers: [...b.layers] }))
-  );
-  const [levelEntryId, setLevelEntryId] = useState(0);
-
-  // History for Undo
-  const [history, setHistory] = useState<GameSnapshot[]>([]);
-  const [movesCount, setMovesCount] = useState<number>(0);
-  const [extraTubesAdded, setExtraTubesAdded] = useState<number>(0);
-
-  // Selection & Interactions
+export const App: React.FC = () => {
+  const [currentLevelId, setCurrentLevelId] = useState<number>(1);
+  const [bottles, setBottles] = useState<Bottle[]>([]);
+  const [bags, setBags] = useState<Bag[]>([]);
+  const [packedTotal, setPackedTotal] = useState<number>(0);
+  const [pourCountTotal, setPourCountTotal] = useState<number>(0);
+  const [remainingMoves, setRemainingMoves] = useState<number | null>(null);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
-  const [hint, setHint] = useState<{ from: number; to: number } | null>(null);
-  const [isWon, setIsWon] = useState<boolean>(false);
-  const [isAutoSolving, setIsAutoSolving] = useState<boolean>(false);
+  const [shuffleUses, setShuffleUses] = useState<number>(1);
+  const [moveHistory, setMoveHistory] = useState<MoveHistoryItem[]>([]);
+  const [isAnimating, setIsAnimating] = useState<boolean>(false);
+  const [toastMsg, setToastMsg] = useState<string | null>(null);
 
-  // Lightweight Invalid Operation Feedback
-  const [shakingTubeIndex, setShakingTubeIndex] = useState<number | null>(null);
+  // 弹窗状态
+  const [levelModalOpen, setLevelModalOpen] = useState<boolean>(false);
+  const [settingsModalOpen, setSettingsModalOpen] = useState<boolean>(false);
+  const [winModalOpen, setWinModalOpen] = useState<boolean>(false);
+  const [wasGiantCatWin, setWasGiantCatWin] = useState<boolean>(false);
+  const [currentMechanicKey, setCurrentMechanicKey] = useState<string | null>(null);
 
-  // Deadlock detection state
-  const [isDeadlocked, setIsDeadlocked] = useState<boolean>(false);
+  const shownMechanicIntrosRef = useRef<Set<string>>(new Set());
+  const gridRef = useRef<HTMLDivElement>(null);
+  const bagsStageRef = useRef<HTMLDivElement>(null);
+  const fxOverlayRef = useRef<SVGSVGElement>(null);
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const sloshRafRef = useRef<number | null>(null);
+  const sloshStartRef = useRef<number>(0);
 
-  // Reset confirmation modal state
-  const [resetConfirmOpen, setResetConfirmOpen] = useState<boolean>(false);
+  const showToast = useCallback((msg: string) => {
+    setToastMsg(msg);
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    toastTimerRef.current = setTimeout(() => {
+      setToastMsg(null);
+    }, 2300);
+  }, []);
 
-  // 3-Tier Hint Modal state
-  const [activeHintData, setActiveHintData] = useState<HintData | null>(null);
-
-  // Shopping Bags Lifecycle: 3 dynamic bags on left, 1 ad video bonus bag on right
-  const [activeBagColors, setActiveBagColors] = useState<(string | null)[]>(() => initBagPool(CURATED_LEVELS[0]).active);
-  const [pendingBagColors, setPendingBagColors] = useState<string[]>(() => initBagPool(CURATED_LEVELS[0]).pending);
-  const [liftingSlotIndex, setLiftingSlotIndex] = useState<number | null>(null);
-  const [replenishingSlotIndex, setReplenishingSlotIndex] = useState<number | null>(null);
-  const [unlockedBonusColor, setUnlockedBonusColor] = useState<string | null>(null);
-
-  // Bottle Completion Celebration (Cork drop -> Whirl -> Fly -> Shopping Bag Gulp -> Hand Lift)
-  const [completionAnimation, setCompletionAnimation] = useState<CompletionAnimationState | null>(null);
-  const [collectedTubeIndices, setCollectedTubeIndices] = useState<number[]>([]);
-  const [activeGulpColor, setActiveGulpColor] = useState<string | null>(null);
-  const [collectedColors, setCollectedColors] = useState<Set<string>>(new Set());
-
-  const captureGameSnapshot = useCallback((): GameSnapshot => ({
-    bottles: bottles.map((bottle) => ({ ...bottle, layers: [...bottle.layers] })),
-    activeBagColors: [...activeBagColors],
-    pendingBagColors: [...pendingBagColors],
-    collectedTubeIndices: [...collectedTubeIndices],
-    collectedColors: [...collectedColors],
-    unlockedBonusColor,
-  }), [bottles, activeBagColors, pendingBagColors, collectedTubeIndices, collectedColors, unlockedBonusColor]);
-
-  const registerRevealedHiddenColors = useCallback((before: Bottle[], after: Bottle[]) => {
-    const colors = getNewlyRevealedHiddenColors(before, after);
-    if (colors.length === 0) return;
-
-    const nextActive = [...activeBagColors];
-    const deferred: string[] = [];
-    for (const color of colors) {
-      if (nextActive.includes(color) || pendingBagColors.includes(color) || collectedColors.has(color)) continue;
-      const emptySlot = nextActive.findIndex((slot) => !slot);
-      if (emptySlot >= 0) nextActive[emptySlot] = color;
-      else deferred.push(color);
+  const stopSelectSloshAnimation = useCallback(() => {
+    if (sloshRafRef.current) {
+      cancelAnimationFrame(sloshRafRef.current);
+      sloshRafRef.current = null;
     }
-    setActiveBagColors(nextActive);
-    if (deferred.length > 0) {
-      setPendingBagColors((previousPending) => {
-        const known = new Set([...previousPending, ...nextActive.filter(Boolean), ...collectedColors]);
-        return [...previousPending, ...deferred.filter((color) => !known.has(color))];
-      });
-    }
-  }, [activeBagColors, pendingBagColors, collectedColors]);
+  }, []);
 
-  const pourRafRef = useRef<number | null>(null);
+  const startSelectSloshAnimation = useCallback(
+    (bottleIdx: number) => {
+      stopSelectSloshAnimation();
+      sloshStartRef.current = performance.now();
 
-  // Pouring Animation state
-  const [pourAnimation, setPourAnimation] = useState<{
-    sourceIndex: number;
-    targetIndex: number;
-    colorId: string;
-    count: number;
-    phase: 'flying' | 'pouring' | 'returning';
-    tiltAngle: number;
-    translateX: number;
-    translateY: number;
-    drainCount: number;
-    riseCount: number;
-  } | null>(null);
+      const tickSlosh = (now: number) => {
+        if (isAnimating) {
+          sloshRafRef.current = null;
+          return;
+        }
+        const b = bottles[bottleIdx];
+        const liqGroup = document.getElementById(`liquid-group-${bottleIdx}`);
+        if (!b || b.removed || !liqGroup || b.layers.length === 0) return;
 
-  // Bottom-leak animation state (source bottle base → target bottle mouth)
-  const [leakAnimation, setLeakAnimation] = useState<LeakAnimationState | null>(null);
+        const dt = (now - sloshStartRef.current) / 1000;
+        if (dt > 1.35) {
+          sloshRafRef.current = null;
+          return;
+        }
+        const amp = Math.exp(-2.8 * dt) * 1.02;
+        const phase = dt * 13.5;
 
-  // Modals
-  const [levelSelectorOpen, setLevelSelectorOpen] = useState<boolean>(false);
-  const [workshopOpen, setWorkshopOpen] = useState<boolean>(false);
-  const [dailyOpen, setDailyOpen] = useState<boolean>(false);
-  const [settingsOpen, setSettingsOpen] = useState<boolean>(false);
-  const [rulesOpen, setRulesOpen] = useState<boolean>(false);
-  const [mechanicIntro, setMechanicIntro] = useState<MechanicIntroData | null>(null);
+        liqGroup.innerHTML = buildLiquidLayersMarkup(b.layers, bottleIdx, {
+          topLayerScale: 1,
+          tiltAngle: 0,
+          mysteryCount: b.mysteryCount || 0,
+          maxCap: b.maxCap || 4,
+          isGiantCat: !!b.isGiantCat,
+          sloshPhase: phase,
+          sloshAmplitude: amp,
+          currentLevelId,
+        });
 
-  // Preferences
-  const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
-  const [vibrateEnabled, setVibrateEnabled] = useState<boolean>(true);
-  const [bgmEnabled, setBgmEnabled] = useState<boolean>(false);
+        sloshRafRef.current = requestAnimationFrame(tickSlosh);
+      };
 
-  // Stats
-  const [stats, setStats] = useState<PlayerStats>(() => {
-    try {
-      const stored = localStorage.getItem(STATS_STORAGE_KEY);
-      if (stored) return JSON.parse(stored);
-    } catch {
-      // ignore
-    }
+      sloshRafRef.current = requestAnimationFrame(tickSlosh);
+    },
+    [bottles, isAnimating, currentLevelId, stopSelectSloshAnimation]
+  );
+
+  const initGame = useCallback(
+    (levelId: number) => {
+      stopSelectSloshAnimation();
+      const cfg = getLevelConfig(levelId);
+      setBottles(cfg.bottles());
+      setBags(cfg.hasBags ? JSON.parse(JSON.stringify(cfg.bags)) : []);
+      setRemainingMoves(cfg.moveLimit);
+      setPackedTotal(0);
+      setPourCountTotal(0);
+      setSelectedIndex(null);
+      setIsAnimating(false);
+      setMoveHistory([]);
+      setShuffleUses(1);
+      setWinModalOpen(false);
+      setWasGiantCatWin(false);
+
+      if (cfg.introMechanicKey && !shownMechanicIntrosRef.current.has(cfg.introMechanicKey)) {
+        shownMechanicIntrosRef.current.add(cfg.introMechanicKey);
+        setCurrentMechanicKey(cfg.introMechanicKey);
+        audioEngine.playSound('pack');
+      } else {
+        setCurrentMechanicKey(null);
+      }
+    },
+    [stopSelectSloshAnimation]
+  );
+
+  useEffect(() => {
+    initGame(currentLevelId);
+  }, [currentLevelId, initGame]);
+
+  const cloneState = useCallback((): MoveHistoryItem => {
     return {
-      completedLevels: {},
-      dailyChallengeCompleted: {},
-      hintsUsedTotal: 0,
-      totalPours: 0,
+      bottles: JSON.parse(JSON.stringify(bottles)),
+      bags: JSON.parse(JSON.stringify(bags)),
+      packedTotal,
+      pourCountTotal,
+      remainingMoves,
+      shuffleUses,
     };
-  });
+  }, [bottles, bags, packedTotal, pourCountTotal, remainingMoves, shuffleUses]);
 
-  // Load preferences
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem(PREFS_STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (parsed.soundEnabled !== undefined) {
-          setSoundEnabled(parsed.soundEnabled);
-          soundManager.enabled = parsed.soundEnabled;
-        }
-        if (parsed.vibrateEnabled !== undefined) setVibrateEnabled(parsed.vibrateEnabled);
-        if (parsed.bgmEnabled !== undefined) {
-          setBgmEnabled(parsed.bgmEnabled);
-          soundManager.setMusicEnabled(parsed.bgmEnabled);
-        }
-      }
-    } catch {
-      // ignore
-    }
-  }, []);
+  // 倾倒动画
+  const performLiquidPour = useCallback(
+    (srcIdx: number, dstIdx: number) => {
+      const srcBottle = bottles[srcIdx];
+      const dstBottle = bottles[dstIdx];
+      if (!srcBottle || !dstBottle) return;
 
-  const savePreferences = (sound: boolean, vib: boolean, bgm: boolean) => {
-    try {
-      localStorage.setItem(
-        PREFS_STORAGE_KEY,
-        JSON.stringify({ soundEnabled: sound, vibrateEnabled: vib, bgmEnabled: bgm })
-      );
-    } catch {
-      // ignore
-    }
-  };
+      const moveCount = getPourableCount(srcBottle, dstBottle);
+      if (moveCount === 0) return;
 
-  const saveStats = (newStats: PlayerStats) => {
-    setStats(newStats);
-    try {
-      localStorage.setItem(STATS_STORAGE_KEY, JSON.stringify(newStats));
-    } catch {
-      // ignore
-    }
-  };
+      const gridEl = gridRef.current;
+      const bagsStageEl = bagsStageRef.current;
+      const fxOverlayEl = fxOverlayRef.current;
+      if (!gridEl || !fxOverlayEl) return;
 
-  const startLevel = useCallback((lvl: Level) => {
-    setLevelEntryId((entryId) => entryId + 1);
-    setCurrentLevel(lvl);
-    setBottles(lvl.bottles.map((b) => ({ ...b, layers: [...b.layers] })));
-    setHistory([]);
-    setMovesCount(0);
-    setExtraTubesAdded(0);
-    setSelectedIndex(null);
-    setHint(null);
-    setIsWon(false);
-    setIsAutoSolving(false);
-    setIsDeadlocked(false);
-    setResetConfirmOpen(false);
-    setActiveHintData(null);
-    if (pourRafRef.current) {
-      cancelAnimationFrame(pourRafRef.current);
-      pourRafRef.current = null;
-    }
-    setCompletionAnimation(null);
-    setActiveGulpColor(null);
-    setCollectedTubeIndices([]);
-    setCollectedColors(new Set());
-    const bagPool = initBagPool(lvl);
-    setActiveBagColors(bagPool.active);
-    setPendingBagColors(bagPool.pending);
-    setLiftingSlotIndex(null);
-    setReplenishingSlotIndex(null);
-    setUnlockedBonusColor(null);
-  }, []);
+      setMoveHistory((prev) => [...prev, cloneState()]);
+      setIsAnimating(true);
+      stopSelectSloshAnimation();
+      setSelectedIndex(null);
 
-  useEffect(() => {
-    const seen = getSeenMechanics();
-    const introKey = (() => {
-      if (!seen.normal) return 'normal';
-      const mechs = detectLevelMechanics(currentLevel);
-      for (const key of ['masked', 'hidden', 'bottom_leak'] as const) {
-        if (mechs.includes(key) && !seen[key]) return key;
-      }
-      return null;
-    })();
+      const pourColor = srcBottle.layers[srcBottle.layers.length - 1];
+      const cfg = getLevelConfig(currentLevelId);
 
-    if (!introKey) return;
+      performLiquidPourAnimation({
+        srcIdx,
+        dstIdx,
+        bottles,
+        bags,
+        moveCount,
+        pourColor,
+        gridEl,
+        bagsStageEl,
+        fxOverlayEl,
+        currentLevelId,
+        hasBags: !!cfg.hasBags,
+        onFinish: ({
+          isDstCompleted,
+          wasGiantCat,
+          targetBagIdx,
+          revealedMysteryLayerIdx,
+          revealedMysteryColor,
+          brokenSpecials,
+        }) => {
+          setPourCountTotal((prev) => prev + 1);
 
-    setMechanicIntro(MECHANIC_INTRO[introKey]);
-    const nextSeen = { ...seen, [introKey]: true };
-    saveSeenMechanics(nextSeen);
-  }, [currentLevel]);
+          setBottles((prev) => {
+            const nextBottles = JSON.parse(JSON.stringify(prev)) as Bottle[];
+            const s = nextBottles[srcIdx];
+            const d = nextBottles[dstIdx];
 
-  const calculateFlyVector = useCallback((tubeIdx: number, colorId: string) => {
-    const tubeEl = document.getElementById(`tube-slot-${tubeIdx}`);
-    const bagEl = document.getElementById(`shopping-bag-${colorId}`);
-    const bagImage = bagEl?.querySelector<HTMLImageElement>('[data-bag-art]');
-    if (tubeEl && bagEl && bagImage?.naturalWidth && bagImage.naturalHeight) {
-      const tubeRect = tubeEl.getBoundingClientRect();
-      const imageRect = bagImage.getBoundingClientRect();
-      const imageScale = Math.min(
-        imageRect.width / bagImage.naturalWidth,
-        imageRect.height / bagImage.naturalHeight
-      );
-      const renderedHeight = bagImage.naturalHeight * imageScale;
-      const imageTop = imageRect.top + (imageRect.height - renderedHeight) / 2;
-      const targetX = imageRect.left + imageRect.width / 2;
-      const targetY = imageTop + renderedHeight * 0.62;
-      const curX = tubeRect.left + tubeRect.width * 0.5;
-      const curY = tubeRect.bottom;
-      return {
-        flyX: targetX - curX,
-        flyY: targetY - curY,
-      };
-    }
-    return { flyX: 0, flyY: -320 };
-  }, []);
-
-  const triggerWinCelebration = useCallback(
-    (finalSteps: number) => {
-      setIsWon(true);
-      setIsAutoSolving(false);
-
-      let stars = 3;
-      if (currentLevel.optimalSteps) {
-        if (finalSteps > currentLevel.optimalSteps * 1.5) stars = 1;
-        else if (finalSteps > currentLevel.optimalSteps + 2) stars = 2;
-      }
-
-      const lvlKey = String(currentLevel.id);
-      const prevRecord = stats.completedLevels[lvlKey];
-      const newStars = prevRecord ? Math.max(prevRecord.stars, stars) : stars;
-      const newBest = prevRecord ? Math.min(prevRecord.bestSteps, finalSteps) : finalSteps;
-
-      const updatedStats: PlayerStats = {
-        ...stats,
-        completedLevels: {
-          ...stats.completedLevels,
-          [lvlKey]: {
-            stars: newStars,
-            bestSteps: newBest,
-            completedAt: new Date().toISOString(),
-          },
-        },
-        totalPours: stats.totalPours + 1,
-      };
-
-      if (String(currentLevel.id).startsWith('daily-')) {
-        const todayKey = String(currentLevel.id).replace('daily-', '');
-        updatedStats.dailyChallengeCompleted = {
-          ...updatedStats.dailyChallengeCompleted,
-          [todayKey]: { stars, steps: finalSteps },
-        };
-      }
-
-      saveStats(updatedStats);
-    },
-    [currentLevel, stats]
-  );
-
-  // Bottle completed animation flow: Cork Pop -> Whirling -> Fly to Bag -> Bag Gulp -> Hand Lift-Away -> Bag Replenishment
-  const handleBottleCompleted = useCallback(
-    (
-      targetTubeIdx: number,
-      completedColor: string,
-      isPuzzleComplete: boolean,
-      finalMoves: number,
-      newBottles: Bottle[]
-    ) => {
-      // 保证该目标色已在 activeBagColors 之中展示，以保证飞入目标精准存在
-      setActiveBagColors((prevActive) => {
-        if (prevActive.includes(completedColor)) return prevActive;
-        const replaceIdx = prevActive.findIndex((c) => !c || !collectedColors.has(c));
-        const targetIdx = replaceIdx !== -1 ? replaceIdx : 0;
-        const oldColor = prevActive[targetIdx];
-        const next = [...prevActive];
-        next[targetIdx] = completedColor;
-        setPendingBagColors((prevPending) => {
-          const filtered = prevPending.filter((c) => c !== completedColor);
-          if (oldColor) filtered.push(oldColor);
-          return filtered;
-        });
-        return next;
-      });
-
-      // 1. Cork Drop: 木塞塞入瓶口
-      setTimeout(() => {
-        if (soundEnabled) soundManager.playCorkPop();
-        setCompletionAnimation({
-          tubeIndex: targetTubeIdx,
-          colorId: completedColor,
-          phase: 'cork_drop',
-          flyX: 0,
-          flyY: 0,
-        });
-      }, 300);
-
-      // 2. Whirling: 闪烁粒子光环围绕瓶身旋转
-      setTimeout(() => {
-        if (soundEnabled) soundManager.playTubeComplete();
-        setCompletionAnimation((prev) =>
-          prev ? { ...prev, phase: 'whirling' } : null
-        );
-      }, 750);
-
-      // 3. Flying: 瓶子起飞滑向对应的购物袋
-      setTimeout(() => {
-        const { flyX, flyY } = calculateFlyVector(targetTubeIdx, completedColor);
-        setCompletionAnimation((prev) =>
-          prev ? { ...prev, phase: 'flying', flyX, flyY } : null
-        );
-      }, 1450);
-
-      // 4. Bag Gulp: 购物袋弹性吞咽并将瓶子收纳
-      setTimeout(() => {
-        if (soundEnabled) soundManager.playBagCatch();
-        setActiveGulpColor(completedColor);
-        setCollectedTubeIndices((prev) => [...prev, targetTubeIdx]);
-        setCompletionAnimation(null);
-      }, 2100);
-
-      // 5. Hand Grab & Lift Away: 一只手伸出抓紧提绳，向上将该购物袋拎走飞出屏幕
-      setTimeout(() => {
-        setActiveGulpColor(null);
-        setActiveBagColors((curActive) => {
-          const slotIdx = curActive.indexOf(completedColor);
-          if (slotIdx !== -1) {
-            setLiftingSlotIndex(slotIdx);
-            if (soundEnabled) soundManager.playTubeComplete();
-          } else if (unlockedBonusColor === completedColor) {
-            setLiftingSlotIndex(3);
-            if (soundEnabled) soundManager.playTubeComplete();
-          }
-          return curActive;
-        });
-      }, 2600);
-
-      // 6. Bag Replenishment: 购物袋被拎走后，从待收集池中补充新购物袋弹入该槽位
-      setTimeout(() => {
-        setLiftingSlotIndex((currentLifting) => {
-          const slotIdx = currentLifting;
-          if (slotIdx !== null) {
-            setCollectedColors((prev) => {
-              const updated = new Set(prev).add(completedColor);
-              // 联动揭开布帘瓶：根据已收集数量 (updated.size)，解锁阈值达标的 masked 瓶子
-              setBottles((curBottles) => {
-                let changed = false;
-                const nextBottles = curBottles.map((b) => {
-                  if (b.type === 'masked' && !b.maskRevealed && (b.unlockTargetCompletedBottles ?? 1) <= updated.size) {
-                    changed = true;
-                    return { ...b, maskRevealed: true };
-                  }
-                  return b;
-                });
-                return changed ? nextBottles : curBottles;
-              });
-              return updated;
-            });
-
-            if (slotIdx === 3) {
-              // 第 4 槽位完成收集，重置该槽位
-              setUnlockedBonusColor(null);
-            } else {
-              setPendingBagColors((prevPending) => {
-                let nextColor: string | null = null;
-                let newPending = [...prevPending];
-                if (newPending.length > 0) {
-                  nextColor = newPending[0];
-                  newPending = newPending.slice(1);
-                }
-
-                setActiveBagColors((prevActive) => {
-                  const nextActive = [...prevActive];
-                  nextActive[slotIdx] = nextColor;
-                  return nextActive;
-                });
-
-                if (nextColor) {
-                  setReplenishingSlotIndex(slotIdx);
-                  setTimeout(() => {
-                    setReplenishingSlotIndex(null);
-                  }, 550);
-                }
-
-                return newPending;
-              });
+            for (let k = 0; k < moveCount; k++) {
+              s.layers.pop();
+              d.layers.push(pourColor);
             }
-          }
-          return null;
-        });
 
-        // 7. 结算胜负或死锁检测
-        if (isPuzzleComplete) {
-          triggerWinCelebration(finalMoves);
-        } else {
-          const hasMove = hasAnyLegalMove(newBottles, TUBE_CAPACITY);
-          if (!hasMove) {
-            setIsDeadlocked(true);
-          }
-        }
-      }, 3350);
-    },
-    [soundEnabled, calculateFlyVector, collectedColors, triggerWinCelebration]
-  );
-
-  const performPour = useCallback(
-    (fromIdx: number, toIdx: number) => {
-      const check = canPour(bottles[fromIdx], bottles[toIdx], TUBE_CAPACITY);
-      if (!check.valid || !check.color) return false;
-
-      // Measure exact DOM positions of both static tube slots
-      const sSlot = document.getElementById(`tube-slot-${fromIdx}`);
-      const tSlot = document.getElementById(`tube-slot-${toIdx}`);
-
-      const rowSizes = getRowDistribution(bottles.length);
-      const getTubeRowCol = (idx: number) => {
-        let accumulated = 0;
-        for (let r = 0; r < rowSizes.length; r++) {
-          if (idx < accumulated + rowSizes[r]) {
-            return { row: r, col: idx - accumulated };
-          }
-          accumulated += rowSizes[r];
-        }
-        return { row: 0, col: idx };
-      };
-
-      const fromPos = getTubeRowCol(fromIdx);
-      const toPos = getTubeRowCol(toIdx);
-
-      let isTargetRight = toPos.col >= fromPos.col;
-      let exactX = (toPos.col - fromPos.col) * 65 + (isTargetRight ? -POUR_MOUTH_OFFSET_X : POUR_MOUTH_OFFSET_X);
-      let exactY = (toPos.row - fromPos.row) * 180 - POUR_MOUTH_GAP_Y;
-      let alignForTilt = (_angle: number) => ({ x: exactX, y: exactY });
-
-      // Tilt magnitude follows smooth casual game physics: natural 56deg..84deg, prevents upside-down mouth flooding
-      const sourceUnits = bottles[fromIdx].layers.length;
-      const tiltForUnits = (units: number) => {
-        const fillRatio = Math.max(0, Math.min(1, units / TUBE_CAPACITY));
-        // 4 units (full) -> 56deg
-        // 2 units (half) -> 72deg
-        // 1 unit (1/4 remaining) -> 80deg
-        // 0 units (drained) -> 84deg (dynamic tipping without upside-down mouth clogging)
-        return 56 + Math.pow(1 - fillRatio, 0.9) * 28;
-      };
-      let tiltAngle = (isTargetRight ? 1 : -1) * tiltForUnits(sourceUnits);
-
-      if (sSlot && tSlot) {
-        const sRect = sSlot.getBoundingClientRect();
-        const tRect = tSlot.getBoundingClientRect();
-        const W = sRect.width;
-        const H = sRect.height;
-        const mouthRatioX = BOTTLE_MOUTH_CENTER.x / BOTTLE_VIEWBOX_WIDTH;
-        const mouthRatioY = BOTTLE_MOUTH_CENTER.y / BOTTLE_VIEWBOX_HEIGHT;
-
-        const sourcePivotX = sRect.left + W * mouthRatioX;
-        const sourcePivotY = sRect.top + H * mouthRatioY;
-        const targetMouthX = tRect.left + tRect.width * mouthRatioX;
-        const targetMouthY = tRect.top + tRect.height * mouthRatioY;
-
-        isTargetRight = targetMouthX >= sourcePivotX;
-        tiltAngle = (isTargetRight ? 1 : -1) * tiltForUnits(sourceUnits);
-
-        alignForTilt = (angleDegrees: number) => {
-          const isRight = angleDegrees >= 0;
-          const spoutSvgX = isRight ? 51.0 : 26.0;
-          const spoutSvgY = 5.0;
-
-          const vectorX = ((spoutSvgX - BOTTLE_MOUTH_CENTER.x) / BOTTLE_VIEWBOX_WIDTH) * W;
-          const vectorY = ((spoutSvgY - BOTTLE_MOUTH_CENTER.y) / BOTTLE_VIEWBOX_HEIGHT) * H;
-          const angleRad = (angleDegrees * Math.PI) / 180;
-          const rotatedX = vectorX * Math.cos(angleRad) - vectorY * Math.sin(angleRad);
-          const rotatedY = vectorX * Math.sin(angleRad) + vectorY * Math.cos(angleRad);
-
-          const targetSpoutTargetX = targetMouthX + (isRight ? -POUR_MOUTH_OFFSET_X : POUR_MOUTH_OFFSET_X);
-          const targetSpoutTargetY = targetMouthY - POUR_MOUTH_GAP_Y;
-
-          return {
-            x: targetSpoutTargetX - sourcePivotX - rotatedX,
-            y: targetSpoutTargetY - sourcePivotY - rotatedY,
-          };
-        };
-
-        ({ x: exactX, y: exactY } = alignForTilt(tiltAngle));
-      }
-
-      // Phase 1: Fly and align above target tube lip
-      setPourAnimation({
-        sourceIndex: fromIdx,
-        targetIndex: toIdx,
-        colorId: check.color,
-        count: check.count,
-        phase: 'flying',
-        tiltAngle,
-        translateX: exactX,
-        translateY: exactY,
-        drainCount: 0,
-        riseCount: 0,
-      });
-
-      if (vibrateEnabled) soundManager.vibrate(20);
-
-      // Phase 2: Tilt, spout water stream with mouths touching & gradual liquid transfer
-      setTimeout(() => {
-        const streamStartTime = performance.now();
-        const pourDuration = 1000; // ms for continuous fluid transfer
-        let alignedTranslateX = exactX;
-        let alignedTranslateY = exactY;
-        let settleFrames = 0;
-
-        const measureSpoutCorrection = (angle: number) => {
-          const sourceSvg = document.querySelector<SVGSVGElement>(`#tube-slot-${fromIdx} svg`);
-          const targetSvg = document.querySelector<SVGSVGElement>(`#tube-slot-${toIdx} svg`);
-          const sourceMatrix = sourceSvg?.getScreenCTM();
-          const targetMatrix = targetSvg?.getScreenCTM();
-          if (!sourceSvg || !targetSvg || !sourceMatrix || !targetMatrix) return null;
-
-          const sourcePoint = sourceSvg.createSVGPoint();
-          const sourceSpout = getBottlePourSpoutPoint(angle);
-          sourcePoint.x = sourceSpout.x;
-          sourcePoint.y = sourceSpout.y;
-          const sourceScreen = sourcePoint.matrixTransform(sourceMatrix);
-
-          const targetPoint = targetSvg.createSVGPoint();
-          targetPoint.x = getBottleMouthPoint().x;
-          targetPoint.y = getBottleMouthPoint().y;
-          const targetScreen = targetPoint.matrixTransform(targetMatrix);
-          const targetSpoutTargetX = targetScreen.x + (isTargetRight ? -POUR_MOUTH_OFFSET_X : POUR_MOUTH_OFFSET_X);
-          const targetSpoutTargetY = targetScreen.y - POUR_MOUTH_GAP_Y;
-          return {
-            x: targetSpoutTargetX - sourceScreen.x,
-            y: targetSpoutTargetY - sourceScreen.y,
-          };
-        };
-
-        setPourAnimation({
-          sourceIndex: fromIdx,
-          targetIndex: toIdx,
-          colorId: check.color!,
-          count: check.count,
-          phase: 'pouring',
-          tiltAngle,
-          translateX: exactX,
-          translateY: exactY,
-          drainCount: 0,
-          riseCount: 0,
-        });
-
-        if (vibrateEnabled) soundManager.vibrate(35);
-
-        // Smooth liquid level progression loop (rising in target, draining in source)
-        const animatePourStream = (now: number) => {
-          const elapsed = now - streamStartTime;
-          const progress = Math.min(1, Math.max(0, elapsed / pourDuration));
-          // S-curve ease for natural fluid acceleration and deceleration
-          const easeProgress =
-            progress < 0.5
-              ? 2 * progress * progress
-              : 1 - Math.pow(-2 * progress + 2, 2) / 2;
-
-          const currentAmount = check.count * easeProgress;
-          // Keep tipping the bottle up as it drains (less water → higher tilt).
-          const remainingUnits = sourceUnits - currentAmount;
-          const currentTilt = (isTargetRight ? 1 : -1) * tiltForUnits(remainingUnits);
-          const { x: curX, y: curY } = alignForTilt(currentTilt);
-
-          setPourAnimation((prev) => {
-            if (!prev || prev.phase !== 'pouring') return prev;
-            return {
-              ...prev,
-              drainCount: currentAmount,
-              riseCount: currentAmount,
-              tiltAngle: currentTilt,
-              translateX: curX,
-              translateY: curY,
-            };
-          });
-
-          if (progress >= 1) settleFrames += 1;
-          if (progress < 1 || settleFrames < 2) {
-            pourRafRef.current = requestAnimationFrame(animatePourStream);
-          }
-        };
-
-        pourRafRef.current = requestAnimationFrame(animatePourStream);
-      }, 380);
-
-      // Phase 3: Finish liquid stream, commit state change and return
-      setTimeout(() => {
-        if (pourRafRef.current) {
-          cancelAnimationFrame(pourRafRef.current);
-          pourRafRef.current = null;
-        }
-        const result = executePour(bottles, fromIdx, toIdx, TUBE_CAPACITY);
-        if (result) {
-          const finalMoves = movesCount + 1;
-          setHistory((prev) => [...prev, captureGameSnapshot()]);
-          registerRevealedHiddenColors(bottles, result.newBottles);
-          setBottles(result.newBottles);
-          setMovesCount(finalMoves);
-
-          const isPuzzleComplete = isPuzzleSolved(result.newBottles, TUBE_CAPACITY);
-
-          if (isBottleReadyToCollect(result.newBottles[toIdx], TUBE_CAPACITY)) {
-            const completedColor = result.newBottles[toIdx].layers[0];
-            handleBottleCompleted(toIdx, completedColor, isPuzzleComplete, finalMoves, result.newBottles);
-          } else {
-            // Target tube was not completed by this pour
-            if (isPuzzleComplete) {
-              triggerWinCelebration(finalMoves);
-            } else {
-              const hasMove = hasAnyLegalMove(result.newBottles, TUBE_CAPACITY);
-              if (!hasMove) {
-                setTimeout(() => {
-                  setIsDeadlocked(true);
-                }, 400);
+            // 盲盒揭晓
+            if (revealedMysteryLayerIdx !== undefined && revealedMysteryLayerIdx >= 0) {
+              s.mysteryCount = Math.max(0, s.layers.length - 1);
+              if (revealedMysteryColor && COLORS[revealedMysteryColor]) {
+                audioEngine.playSound('mystery_reveal');
+                triggerBottleVFX(srcIdx, 'mystery_reveal', {
+                  layerIdx: revealedMysteryLayerIdx,
+                  colorKey: revealedMysteryColor,
+                });
+                showToast(`✨ 星雾散尽：显露【${COLORS[revealedMysteryColor].name}】！`);
               }
             }
-          }
-        }
 
-        setPourAnimation((prev) =>
-          prev
-            ? {
-              ...prev,
-              phase: 'returning',
-              tiltAngle: 0,
-              translateX: 0,
-              translateY: -20,
-              drainCount: 0,
-              riseCount: 0,
+            // 底座震裂
+            if (brokenSpecials && brokenSpecials.length > 0) {
+              brokenSpecials.forEach((item) => {
+                const b = nextBottles[item.bIdx];
+                if (b) {
+                  b.special = 'none';
+                  audioEngine.playSound(item.wasIce ? 'ice_break' : 'stone_break');
+                  triggerBottleVFX(item.bIdx, item.wasIce ? 'ice_shatter' : 'stone_shatter');
+                  showToast(item.wasIce ? '❄️ 共振破冰：极地霜晶座已碎裂！' : '🪨 共振碎石：曜石底座已崩解！');
+                }
+              });
             }
-            : null
-        );
-      }, 1380);
 
-      // Phase 4: Settle tube back to rack
-      setTimeout(() => {
-        setPourAnimation(null);
-        setSelectedIndex(null);
-        setHint(null);
-      }, 1800);
+            if (isDstCompleted) {
+              if (cfg.hasBags) {
+                d.layers = [];
+                d.corked = false;
+                d.removed = true;
+              } else {
+                d.corked = true;
+                d.corkAnimProgress = 1.0;
+              }
 
-      return true;
-    },
-    [bottles, soundEnabled, vibrateEnabled, movesCount, handleBottleCompleted, triggerWinCelebration, registerRevealedHiddenColors, captureGameSnapshot]
-  );
+              setPackedTotal((prevPt) => {
+                const newPt = prevPt + 1;
+                // 解锁星缎礼袍、极地全冰雕、羊皮礼袋
+                nextBottles.forEach((b, bIdx) => {
+                  if (
+                    !b.removed &&
+                    ['silk_drape', 'full_ice', 'paper_bag'].includes(b.special) &&
+                    newPt >= (b.unlockOrder || 1)
+                  ) {
+                    const prevSpec = b.special;
+                    b.special = 'none';
+                    if (prevSpec === 'full_ice') {
+                      audioEngine.playSound('ice_break');
+                      triggerBottleVFX(bIdx, 'ice_shatter', { fullBody: true });
+                      showToast('🧊 礼盒契约达成：极地全冰雕瓶已破冰！');
+                    } else {
+                      audioEngine.playSound('mystery_reveal');
+                      triggerBottleVFX(bIdx, 'cover_unveil', { coverType: prevSpec });
+                      showToast(
+                        prevSpec === 'silk_drape'
+                          ? '🧣 礼盒契约达成：星缎礼袍已揭幕！'
+                          : '🛍️ 礼盒契约达成：羊皮礼袋已解封！'
+                      );
+                    }
+                  }
+                });
 
-  const performLeak = useCallback(
-    (sourceIdx: number, targetIdx: number) => {
-      const source = bottles[sourceIdx];
-      if (!canLeak(source, bottles[targetIdx], TUBE_CAPACITY)) return false;
+                return newPt;
+              });
 
-      const leakColor = source.layers[0];
+              if (cfg.hasBags) {
+                setBags((prevBags) => {
+                  const nextBags = JSON.parse(JSON.stringify(prevBags)) as Bag[];
+                  if (nextBags[targetBagIdx]) {
+                    nextBags[targetBagIdx].packedBottle = pourColor;
+                    nextBags[targetBagIdx].justPacked = true;
+                  }
+                  return nextBags;
+                });
 
-      // Bottom-leak drip animation: stream drops from source bottle base into target mouth.
-      setLeakAnimation({ sourceIndex: sourceIdx, targetIndex: targetIdx, colorId: leakColor });
-      if (vibrateEnabled) soundManager.vibrate(20);
+                setTimeout(() => {
+                  setBags((currBags) => {
+                    const nextBags = JSON.parse(JSON.stringify(currBags)) as Bag[];
+                    if (nextBags[targetBagIdx]) {
+                      nextBags[targetBagIdx].justPacked = false;
+                    }
+                    const activeColors = nextBags.filter((b) => !b.locked && b.color).map((b) => b.color);
+                    const remainingBoardColors: ColorKey[] = [];
+                    nextBottles.forEach((b) => {
+                      if (!b.removed) {
+                        b.layers.forEach((c) => {
+                          if (!remainingBoardColors.includes(c)) remainingBoardColors.push(c);
+                        });
+                      }
+                    });
+                    const unservedColor = remainingBoardColors.find((c) => !activeColors.includes(c));
+                    const stillHasSameColorOnBoard = remainingBoardColors.includes(pourColor);
 
-      setTimeout(() => {
-        setLeakAnimation(null);
-        const result = executeLeak(bottles, sourceIdx, targetIdx, TUBE_CAPACITY);
-        if (!result) return;
+                    if (!stillHasSameColorOnBoard && unservedColor && nextBags[targetBagIdx]) {
+                      nextBags[targetBagIdx].packedBottle = null;
+                      nextBags[targetBagIdx].color = unservedColor;
+                    }
+                    return nextBags;
+                  });
 
-        const finalMoves = movesCount + 1;
-        setHistory((prev) => [...prev, captureGameSnapshot()]);
-        setBottles(result.newBottles);
-        setMovesCount(finalMoves);
+                  if (wasGiantCat || checkGameWon(nextBottles, wasGiantCat)) {
+                    setWasGiantCatWin(wasGiantCat);
+                    setWinModalOpen(true);
+                  }
+                }, 680);
+              } else {
+                // 无购物袋直通凝萃模式
+                if (wasGiantCat || checkGameWon(nextBottles, wasGiantCat)) {
+                  setWasGiantCatWin(wasGiantCat);
+                  setTimeout(() => setWinModalOpen(true), 240);
+                }
+              }
+            }
 
-        const isPuzzleComplete = isPuzzleSolved(result.newBottles, TUBE_CAPACITY);
+            return nextBottles;
+          });
 
-        if (isBottleReadyToCollect(result.newBottles[targetIdx], TUBE_CAPACITY)) {
-          const completedColor = result.newBottles[targetIdx].layers[0];
-          handleBottleCompleted(targetIdx, completedColor, isPuzzleComplete, finalMoves, result.newBottles);
-        } else {
-          if (isPuzzleComplete) {
-            triggerWinCelebration(finalMoves);
-          } else if (!hasAnyLegalMove(result.newBottles, TUBE_CAPACITY)) {
-            setTimeout(() => setIsDeadlocked(true), 300);
+          if (remainingMoves !== null) {
+            setRemainingMoves((m) => {
+              const nextM = m !== null ? m - 1 : null;
+              if (nextM !== null && nextM <= 0) {
+                showToast('⚠️ 限定步数已用尽！可点击右下角撤回或重新挑战');
+              }
+              return nextM;
+            });
           }
-        }
 
-        setSelectedIndex(null);
-        setHint(null);
-      }, 900);
-
-      return true;
-    },
-    [bottles, soundEnabled, vibrateEnabled, movesCount, handleBottleCompleted, triggerWinCelebration, captureGameSnapshot]
-  );
-
-  const triggerInvalidFeedback = useCallback(
-    (tubeIdx: number) => {
-      setShakingTubeIndex(tubeIdx);
-      if (soundEnabled) soundManager.playInvalidSoft();
-      if (vibrateEnabled) soundManager.vibrate(25);
-      setTimeout(() => {
-        setShakingTubeIndex((prev) => (prev === tubeIdx ? null : prev));
-      }, 420);
-    },
-    [soundEnabled, vibrateEnabled]
-  );
-
-  const handleUnlockVideoBottle = useCallback(
-    (tubeIdx: number) => {
-      setBottles((prev) => {
-        const next = prev.map((b, i) => (i === tubeIdx ? { ...b, locked: false } : b));
-        return next;
+          setIsAnimating(false);
+        },
       });
-      setSelectedIndex(null);
-      if (soundEnabled) soundManager.playTubeComplete();
-      if (vibrateEnabled) soundManager.vibrate(25);
     },
-    [soundEnabled, vibrateEnabled]
+    [
+      bottles,
+      bags,
+      remainingMoves,
+      currentLevelId,
+      cloneState,
+      stopSelectSloshAnimation,
+      showToast,
+    ]
   );
 
-  const handleTubeClick = useCallback(
-    (clickedIdx: number) => {
-      if (isWon || pourAnimation || leakAnimation || isAutoSolving || isDeadlocked) return;
+  // 瓶子点击交互
+  const handleBottleClick = useCallback(
+    (idx: number) => {
+      if (isAnimating) return;
+      const clicked = bottles[idx];
+      if (!clicked || clicked.removed) return;
 
-      const clickedBottle = bottles[clickedIdx];
-
-      // 1. 点击视频锁定的空瓶：观看广告并解锁为空瓶
-      if (clickedBottle.type === 'video_empty' && clickedBottle.locked !== false) {
-        handleUnlockVideoBottle(clickedIdx);
+      if (clicked.special === 'ad_cam' || clicked.special === 'ad_cam_blue') {
+        setMoveHistory((prev) => [...prev, cloneState()]);
+        setBottles((prev) => {
+          const next = [...prev];
+          next[idx] = { ...next[idx], special: 'none' };
+          return next;
+        });
+        audioEngine.playSound('pack');
+        showToast('🎬 激励视频奖励：已免费开启 +1 备用琉璃空瓶！');
         return;
       }
 
-      // 2. 遮罩未掀开的瓶子不可作为源或目标操作
-      if (clickedBottle.type === 'masked' && !clickedBottle.maskRevealed) {
-        triggerInvalidFeedback(clickedIdx);
+      if (remainingMoves !== null && remainingMoves <= 0) {
+        showToast('⚠️ 剩余步数已用尽！请点击右下角撤回一步或重开本关');
         return;
       }
 
       if (selectedIndex === null) {
-        if (clickedBottle.layers.length === 0) {
-          triggerInvalidFeedback(clickedIdx);
-          return;
+        if (canSelectBottle(clicked, showToast)) {
+          setSelectedIndex(idx);
+          audioEngine.playSound('select');
+          startSelectSloshAnimation(idx);
         }
-        setSelectedIndex(clickedIdx);
-        if (soundEnabled) soundManager.playSelect();
-        if (vibrateEnabled) soundManager.vibrate(15);
-      } else if (selectedIndex === clickedIdx) {
+        return;
+      }
+
+      if (selectedIndex === idx) {
+        stopSelectSloshAnimation();
         setSelectedIndex(null);
-        if (soundEnabled) soundManager.playSelect();
+        audioEngine.playSound('select');
+        return;
+      }
+
+      const src = bottles[selectedIndex];
+      if (canPourInto(src, clicked)) {
+        stopSelectSloshAnimation();
+        performLiquidPour(selectedIndex, idx);
+      } else if (canSelectBottle(clicked, showToast)) {
+        setSelectedIndex(idx);
+        audioEngine.playSound('select');
+        startSelectSloshAnimation(idx);
       } else {
-        const sourceBottle = bottles[selectedIndex];
-        const targetBottle = bottles[clickedIdx];
-
-        // Bottom-leak: the selected bottle only leaks into its designated target.
-        if (sourceBottle.type === 'bottom_leak') {
-          const leakTargetIdx = bottles.findIndex((b) => b.id === sourceBottle.leakTargetBottleId);
-          if (clickedIdx === leakTargetIdx) {
-            if (canLeak(sourceBottle, targetBottle, TUBE_CAPACITY, selectedIndex, clickedIdx, bottles)) {
-              performLeak(selectedIndex, clickedIdx);
-            } else {
-              triggerInvalidFeedback(clickedIdx);
-            }
-            return;
-          }
-          // Clicked a non-target bottle: fall through to a normal mouth pour.
-        }
-
-        const canDoPour = canPour(sourceBottle, targetBottle, TUBE_CAPACITY).valid;
-
-        if (canDoPour) {
-          performPour(selectedIndex, clickedIdx);
-        } else {
-          const isTargetFull = targetBottle.layers.length >= TUBE_CAPACITY;
-          const isColorMismatch =
-            targetBottle.layers.length > 0 &&
-            sourceBottle.layers.length > 0 &&
-            targetBottle.layers[targetBottle.layers.length - 1] !==
-            sourceBottle.layers[sourceBottle.layers.length - 1];
-
-          if (isTargetFull || isColorMismatch) {
-            triggerInvalidFeedback(clickedIdx);
-            if (targetBottle.layers.length > 0 && !isTargetFull) {
-              setSelectedIndex(clickedIdx);
-            }
-          } else if (targetBottle.layers.length === 0) {
-            triggerInvalidFeedback(clickedIdx);
-            setSelectedIndex(null);
-          } else {
-            if (targetBottle.layers.length > 0) {
-              setSelectedIndex(clickedIdx);
-              if (soundEnabled) soundManager.playSelect();
-              if (vibrateEnabled) soundManager.vibrate(15);
-            } else {
-              triggerInvalidFeedback(clickedIdx);
-              setSelectedIndex(null);
-            }
-          }
-        }
+        stopSelectSloshAnimation();
+        setSelectedIndex(null);
       }
     },
-    [selectedIndex, bottles, isWon, pourAnimation, leakAnimation, isAutoSolving, isDeadlocked, soundEnabled, vibrateEnabled, performPour, performLeak, triggerInvalidFeedback]
+    [
+      bottles,
+      selectedIndex,
+      isAnimating,
+      remainingMoves,
+      cloneState,
+      performLiquidPour,
+      startSelectSloshAnimation,
+      stopSelectSloshAnimation,
+      showToast,
+    ]
   );
 
-  // Undo move
-  const handleUndo = () => {
-    if (history.length === 0 || isAutoSolving || !!completionAnimation || liftingSlotIndex !== null) return;
-    const previousState = history[history.length - 1];
-    setHistory((h) => h.slice(0, h.length - 1));
-    setBottles(previousState.bottles);
-    setMovesCount((m) => Math.max(0, m - 1));
-    setSelectedIndex(null);
-    setHint(null);
-    setIsDeadlocked(false);
-    if (pourRafRef.current) {
-      cancelAnimationFrame(pourRafRef.current);
-      pourRafRef.current = null;
-    }
-    setCompletionAnimation(null);
-    setActiveGulpColor(null);
+  // 礼盒袋点击
+  const handleBagClick = useCallback(
+    (bagIdx: number) => {
+      if (isAnimating) return;
+      const bag = bags[bagIdx];
+      if (!bag) return;
 
-    // Sync collected colors & tube indices with restored state
-    setActiveBagColors(previousState.activeBagColors);
-    setPendingBagColors(previousState.pendingBagColors);
-    setCollectedTubeIndices(previousState.collectedTubeIndices);
-    setCollectedColors(new Set(previousState.collectedColors));
-    setUnlockedBonusColor(previousState.unlockedBonusColor);
-
-    if (soundEnabled) soundManager.playUndo();
-    if (vibrateEnabled) soundManager.vibrate(15);
-  };
-
-  // Shuffle Item Logic: Rearrange liquids in unfinished tubes
-  const handleShuffle = () => {
-    if (isWon || isAutoSolving || pourAnimation) return;
-
-    const unfinishedIndices: number[] = [];
-    const poolOfLiquids: string[] = [];
-
-    bottles.forEach((bottle, idx) => {
-      const canShuffle = bottle.type === 'normal' || bottle.type === 'empty' || bottle.type === 'masked';
-      if (canShuffle && !isBottleReadyToCollect(bottle, TUBE_CAPACITY)) {
-        unfinishedIndices.push(idx);
-        poolOfLiquids.push(...bottle.layers);
+      if (bag.locked) {
+        setMoveHistory((prev) => [...prev, cloneState()]);
+        setBags((prev) => {
+          const next = [...prev];
+          next[bagIdx] = {
+            ...next[bagIdx],
+            locked: false,
+            color: pickNextNeededBagColor(bottles, next),
+          };
+          return next;
+        });
+        audioEngine.playSound('pack');
+        showToast('🛍️ 已为您解锁第 4 个礼盒手提袋槽位！');
+      } else if (bag.color && COLORS[bag.color]) {
+        showToast(`🛍️ 集满同色【${COLORS[bag.color].name}】药水即可自动装入此礼盒袋！`);
       }
-    });
+    },
+    [bags, bottles, isAnimating, cloneState, showToast]
+  );
 
-    if (poolOfLiquids.length === 0 || unfinishedIndices.length <= 1) return;
+  // 底部 4 大按钮逻辑（100% 对齐 demo/index.html）
+  // 1. 提示
+  const handleShuffle = useCallback(() => {
+    if (isAnimating) return;
+    const wasFree = shuffleUses > 0;
+    if (shuffleUses > 0) setShuffleUses((u) => u - 1);
 
-    // Fisher-Yates shuffle
-    const shuffled = [...poolOfLiquids];
-    for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    for (let i = 0; i < bottles.length; i++) {
+      const src = bottles[i];
+      if (!canSelectBottleNoToast(src)) continue;
+      for (let j = 0; j < bottles.length; j++) {
+        if (i === j) continue;
+        const dst = bottles[j];
+        if (canPourInto(src, dst) && dst.layers.length > 0) {
+          setSelectedIndex(i);
+          startSelectSloshAnimation(i);
+          showToast(wasFree ? '💡 工坊推演：已为您寻得最佳凝萃步！' : '🎬 激励视频推演：已为您自动执行一步！');
+          setTimeout(() => performLiquidPour(i, j), 120);
+          return;
+        }
+      }
     }
 
-    const newBottles = bottles.map((b) => ({ ...b, layers: [...b.layers] }));
-    let ptr = 0;
-    unfinishedIndices.forEach((idx) => {
-      const origCount = bottles[idx].layers.length;
-      newBottles[idx].layers = shuffled.slice(ptr, ptr + origCount);
-      ptr += origCount;
-    });
+    for (let i = 0; i < bottles.length; i++) {
+      const src = bottles[i];
+      if (!canSelectBottleNoToast(src) || new Set(src.layers).size <= 1) continue;
+      for (let j = 0; j < bottles.length; j++) {
+        if (i === j) continue;
+        const dst = bottles[j];
+        if (canPourInto(src, dst) && dst.layers.length === 0) {
+          setSelectedIndex(i);
+          startSelectSloshAnimation(i);
+          showToast('💡 工坊推演：先将顶层秘药腾挪至空瓶！');
+          setTimeout(() => performLiquidPour(i, j), 120);
+          return;
+        }
+      }
+    }
 
-    setHistory((prev) => [...prev, captureGameSnapshot()]);
-    setBottles(newBottles);
-    setSelectedIndex(null);
-    setHint(null);
-    setIsDeadlocked(false);
-    if (soundEnabled) soundManager.playSelect();
-    if (vibrateEnabled) soundManager.vibrate(30);
-  };
+    const camBottle = bottles.find((b) => !b.removed && (b.special === 'ad_cam' || b.special === 'ad_cam_blue'));
+    if (camBottle) {
+      setMoveHistory((prev) => [...prev, cloneState()]);
+      setBottles((prev) =>
+        prev.map((b) => (b.id === camBottle.id ? { ...b, special: 'none' } : b))
+      );
+      audioEngine.playSound('pack');
+      showToast('🎬 激励视频辅助：已为您开启一只备用琉璃瓶！');
+      return;
+    }
 
-  // Reset level
-  const handleConfirmReset = () => {
-    setResetConfirmOpen(false);
-    setBottles(currentLevel.bottles.map((b) => ({ ...b, layers: [...b.layers] })));
-    setHistory([]);
-    setMovesCount(0);
-    setExtraTubesAdded(0);
-    setSelectedIndex(null);
-    setHint(null);
-    setIsWon(false);
-    setIsDeadlocked(false);
-    setCompletionAnimation(null);
-    setActiveGulpColor(null);
-    setCollectedTubeIndices([]);
-    setCollectedColors(new Set());
-    const bagPool = initBagPool(currentLevel);
-    setActiveBagColors(bagPool.active);
-    setPendingBagColors(bagPool.pending);
-    setLiftingSlotIndex(null);
-    setReplenishingSlotIndex(null);
-    setUnlockedBonusColor(null);
-    if (soundEnabled) soundManager.playUndo();
-  };
+    showToast('💡 建议点击【+空瓶】开启新器皿或【撤回】调整顺序！');
+  }, [bottles, isAnimating, shuffleUses, cloneState, performLiquidPour, startSelectSloshAnimation, showToast]);
 
-  // 加空瓶道具（用于底部操作栏与死局弹窗，绝不改动购物袋）
-  const handleAddTube = () => {
-    if (bottles.length >= 21 || isAutoSolving) return;
+  // 2. +空瓶
+  const handleAddBottle = useCallback(() => {
+    if (isAnimating) return;
+    setMoveHistory((prev) => [...prev, cloneState()]);
+
+    if (remainingMoves !== null && remainingMoves <= 3) {
+      setRemainingMoves((m) => (m !== null ? m + 5 : null));
+      audioEngine.playSound('pack');
+      showToast('🎬 激励视频奖励：已为您延长 +5 步星晷步数！');
+      return;
+    }
+
+    const camBottle = bottles.find((b) => !b.removed && (b.special === 'ad_cam' || b.special === 'ad_cam_blue'));
+    if (camBottle) {
+      setBottles((prev) =>
+        prev.map((b) => (b.id === camBottle.id ? { ...b, special: 'none' } : b))
+      );
+      audioEngine.playSound('pack');
+      showToast('🎬 激励视频奖励：已免费开启 +1 备用琉璃空瓶！');
+      return;
+    }
+
+    const lockedIdx = bottles.findIndex(
+      (b) => !b.removed && !b.corked && (b.special !== 'none' || (b.mysteryCount && b.mysteryCount > 0))
+    );
+    if (lockedIdx !== -1) {
+      const lockedBottle = bottles[lockedIdx];
+      if (lockedBottle.special !== 'none') {
+        const oldSpec = lockedBottle.special;
+        setBottles((prev) =>
+          prev.map((b, idx) => (idx === lockedIdx ? { ...b, special: 'none', poursToBreak: 0 } : b))
+        );
+        if (oldSpec === 'ice_base' || oldSpec === 'full_ice') {
+          audioEngine.playSound('ice_break');
+          triggerBottleVFX(lockedIdx, 'ice_shatter', { fullBody: oldSpec === 'full_ice' });
+        } else if (oldSpec === 'stone_base') {
+          audioEngine.playSound('stone_break');
+          triggerBottleVFX(lockedIdx, 'stone_shatter');
+        } else {
+          audioEngine.playSound('mystery_reveal');
+          triggerBottleVFX(lockedIdx, 'cover_unveil', { coverType: oldSpec });
+        }
+        showToast('🎬 激励视频奖励：已为您直接解除一处器皿封印！');
+      } else {
+        const revIdx = (lockedBottle.mysteryCount || 1) - 1;
+        const revCol = lockedBottle.layers[revIdx] || 'green';
+        setBottles((prev) =>
+          prev.map((b, idx) => (idx === lockedIdx ? { ...b, mysteryCount: 0 } : b))
+        );
+        audioEngine.playSound('mystery_reveal');
+        triggerBottleVFX(lockedIdx, 'mystery_reveal', { layerIdx: revIdx, colorKey: revCol });
+        showToast('🎬 激励视频奖励：已为您驱散一整瓶星雾盲盒！');
+      }
+      return;
+    }
+
     setBottles((prev) => [
       ...prev,
-      { id: `extra-${prev.length + 1}`, type: 'empty', capacity: TUBE_CAPACITY, layers: [] },
+      { id: prev.length, maxCap: 4, layers: [], special: 'none' },
     ]);
-    setExtraTubesAdded((c) => c + 1);
-    setSelectedIndex(null);
-    setHint(null);
-    setIsDeadlocked(false);
-    if (soundEnabled) soundManager.playSelect();
-    if (vibrateEnabled) soundManager.vibrate(20);
-  };
+    audioEngine.playSound('pack');
+    showToast('🎬 激励视频奖励：已为您额外陈列 +1 备用琉璃瓶！');
+  }, [bottles, isAnimating, remainingMoves, cloneState, showToast]);
 
-  // 点击第 4 个“视频购物袋”看广告解锁新颜色（严格保证颜色不重复，绝不添加空瓶）
-  const handleUnlockBonusBag = () => {
-    if (unlockedBonusColor || isAutoSolving) return;
-
-    // 当前前 3 个袋子正在展示的有效颜色集合
-    const showingColors = new Set(activeBagColors.filter(Boolean) as string[]);
-
-    // 寻找关卡中尚未收集且当前未展示的目标颜色（严格不重复）
-    // 1. 优先从待展示池 pendingBagColors 中寻找
-    let chosenColor = pendingBagColors.find((c) => !showingColors.has(c) && !collectedColors.has(c));
-
-    // 2. 若 pending 中没有，从关卡全部出现过的颜色中寻找
-    if (!chosenColor) {
-      const allLevelColors = getVisibleBottleColors(bottles);
-      chosenColor = allLevelColors.find((c) => !showingColors.has(c) && !collectedColors.has(c));
-    }
-
-    if (!chosenColor) {
-      // 全场所有颜色都已在展示或已收集
+  // 3. 撤回
+  const handleUndo = useCallback(() => {
+    if (isAnimating) return;
+    if (moveHistory.length === 0) {
+      showToast('当前已是初始状态');
       return;
     }
+    stopSelectSloshAnimation();
+    setMoveHistory((prev) => {
+      const nextHistory = [...prev];
+      const last = nextHistory.pop();
+      if (last) {
+        setBottles(last.bottles);
+        setBags(last.bags);
+        setPackedTotal(last.packedTotal);
+        setPourCountTotal(last.pourCountTotal || 0);
+        setRemainingMoves(last.remainingMoves);
+        setShuffleUses(last.shuffleUses);
+        setSelectedIndex(null);
+        audioEngine.playSound('select');
+        showToast('↩️ 已为您回溯至上一步');
+      }
+      return nextHistory;
+    });
+  }, [isAnimating, moveHistory, stopSelectSloshAnimation, showToast]);
 
-    // 解锁第 4 槽位为该目标颜色，并从待收集池中移除，避免未来补位重复
-    setUnlockedBonusColor(chosenColor);
-    setPendingBagColors((prev) => prev.filter((c) => c !== chosenColor));
-
-    if (soundEnabled) soundManager.playSelect();
-    if (vibrateEnabled) soundManager.vibrate(25);
-  };
-
-  // Auto-Solve loop
-  const autoSolveTimerRef = useRef<NodeJS.Timeout | null>(null);
-
-  useEffect(() => {
-    if (!isAutoSolving) {
-      if (autoSolveTimerRef.current) clearInterval(autoSolveTimerRef.current);
-      return;
-    }
-
-    if (isWon) {
-      setIsAutoSolving(false);
-      return;
-    }
-
-    autoSolveTimerRef.current = setTimeout(() => {
-      const result = solveWaterSort(bottles, TUBE_CAPACITY, 25000);
-      if (result.solvable && result.moves.length > 0) {
-        const move = result.moves[0];
-        if (move.kind === 'leak') {
-          performLeak(move.from, move.to);
-        } else {
-          performPour(move.from, move.to);
+  // 一键解除全部封印
+  const handleUnlockAll = useCallback(() => {
+    setMoveHistory((prev) => [...prev, cloneState()]);
+    setBottles((prev) =>
+      prev.map((b) => {
+        if (b.removed) return b;
+        return {
+          ...b,
+          special: 'none',
+          mysteryCount: 0,
+        };
+      })
+    );
+    setBags((prev) =>
+      prev.map((bg) => {
+        if (bg.locked) {
+          return {
+            ...bg,
+            locked: false,
+            color: pickNextNeededBagColor(bottles, prev),
+          };
         }
-      } else {
-        setIsAutoSolving(false);
-      }
-    }, 2350);
+        return bg;
+      })
+    );
+    if (remainingMoves !== null) setRemainingMoves((m) => (m !== null ? m + 10 : null));
+    audioEngine.playSound('pack');
+    showToast('⚡ 星光工坊秘宝：已解除当前关全部封印与空瓶！');
+  }, [bottles, remainingMoves, cloneState, showToast]);
 
-    return () => {
-      if (autoSolveTimerRef.current) clearTimeout(autoSolveTimerRef.current);
-    };
-  }, [isAutoSolving, bottles, isWon, performPour, performLeak]);
+  const cfg = getLevelConfig(currentLevelId);
 
-  const handleNextLevel = () => {
-    const currentId = typeof currentLevel.id === 'number' ? currentLevel.id : 0;
-    const nextCurated = CURATED_LEVELS.find((l) => l.id === currentId + 1);
-    if (nextCurated) {
-      startLevel(nextCurated);
-    } else {
-      const generated = generateSolvableLevel({ numColors: 7, minSteps: 20 });
-      if (generated) {
-        startLevel(generated.level);
-      } else {
-        startLevel(CURATED_LEVELS[0]);
-      }
-    }
-  };
+  // 磨砂玻璃横幅文案
+  let bannerText = '✨ 琉璃工坊：凝萃同色秘药，满瓶即落原木塞封存';
+  let bannerProgress = `封存 ${bottles.filter((b) => b.corked).length}/${Math.max(1, bottles.filter((b) => b.layers.length > 0).length)}`;
+  if (cfg.isCatBossLevel) {
+    const catBottle = bottles.find((b) => b.isGiantCat);
+    const curCatLayers = catBottle ? catBottle.layers.length : 0;
+    const catColName = COLORS[(catBottle && catBottle.catTargetColor) || 'pink'].name;
+    bannerText = `🐱 皇家典藏：请将 8 层【${catColName}】汇入中央灵猫水晶瓶`;
+    bannerProgress = `凝萃 ${curCatLayers}/8`;
+  }
 
-  const handleGenerateProceduralLevel = (diff: Difficulty) => {
-    const numColors = diff === 'easy' ? 4 : diff === 'medium' ? 6 : 8;
-    const minSteps = diff === 'easy' ? 8 : diff === 'medium' ? 14 : 24;
-    const generated = generateSolvableLevel({ numColors, minSteps });
-    if (generated) {
-      startLevel(generated.level);
-    }
-  };
-
-  const handleHint = () => {
-    soundManager.playClick();
-    const result = solveWaterSort(bottles, TUBE_CAPACITY, 25000);
-    if (result.solvable && result.moves.length > 0) {
-      const move = result.moves[0];
-      setHint({ from: move.from, to: move.to });
-      setTimeout(() => {
-        setHint(null);
-      }, 5000);
-    }
-  };
+  const activeIntro = currentMechanicKey ? MECHANIC_INTROS[currentMechanicKey] : null;
 
   return (
-    <div className="h-[100dvh] max-h-[100dvh] w-full flex flex-col justify-between overflow-hidden relative select-none bg-[#0A0F2E]">
-      {/* Background Starry Twilight (Figma Frame 2:934 Match) */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
-        <div
-          className="absolute inset-0"
-          style={{
-            background: 'linear-gradient(180deg, #0A0F2E 0%, #0D1535 50%, #080E28 100%)',
-          }}
-        />
-        {/* Subtle twinkling stars across cosmic sky */}
-        <span className="absolute top-[8%] left-[10%] text-sky-200/50 text-xs anim-twinkle">✦</span>
-        <span className="absolute top-[5%] right-[12%] text-sky-200/40 text-sm anim-twinkle" style={{ animationDelay: '1.2s' }}>✦</span>
-        <span className="absolute top-[26%] left-[4%] text-sky-300/35 text-xs anim-twinkle" style={{ animationDelay: '0.8s' }}>✦</span>
-        <span className="absolute top-[28%] right-[8%] text-sky-300/30 text-xs anim-twinkle" style={{ animationDelay: '1.6s' }}>✦</span>
-        <span className="absolute bottom-[22%] left-[8%] text-sky-200/40 text-xs anim-twinkle" style={{ animationDelay: '0.5s' }}>✦</span>
-      </div>
+    <>
+      <div className="ambient-glow" />
 
-      {/* Main Game Interface matching Figma 2:934 (瓶中有序 · 游戏主界面) */}
-      <div className="relative z-10 flex flex-col justify-between flex-1 max-w-[450px] sm:max-w-[480px] mx-auto w-full h-full overflow-hidden">
-        {/* 1. Top Header: Settings, Level Capsule, Daily Challenge */}
-        <GameHeader
-          currentLevel={currentLevel}
-          movesCount={movesCount}
-          coins={280}
-          onOpenLevelSelector={() => setLevelSelectorOpen(true)}
-          onOpenSettings={() => setSettingsOpen(true)}
-          onOpenChallenge={() => setDailyOpen(true)}
-          onBack={() => setLevelSelectorOpen(true)}
+      <div className="app-shell">
+        {/* 1. 顶部果冻玻璃导航栏 */}
+        <TopBar
+          levelNum={currentLevelId}
+          remainingMoves={remainingMoves}
+          onOpenSettings={() => setSettingsModalOpen(true)}
+          onOpenLevelSelect={() => setLevelModalOpen(true)}
+          onQuickUnlock={handleUnlockAll}
         />
 
-        {/* 2. Top Gift Shopping Bags Rack: 3 Dynamic Bags + 1 Video Unlock Bag */}
-        <div className="pt-0 pb-1 flex-shrink-0">
-          <ShoppingBags
-            activeBagColors={activeBagColors}
-            liftingSlotIndex={liftingSlotIndex}
-            replenishingSlotIndex={replenishingSlotIndex}
-            activeGulpColor={activeGulpColor}
-            collectedColors={collectedColors}
-            onUnlockBonus={handleUnlockBonusBag}
-            bonusUnlocked={!!unlockedBonusColor}
-            unlockedBonusColor={unlockedBonusColor}
-            showBonusSlot={Number(currentLevel.id) >= 2}
-          />
+        {/* 2A. 礼盒打包模式专属：顶部 4 个高精 3D 礼盒购物袋 */}
+        {cfg.hasBags && (
+          <div ref={bagsStageRef} className="bags-stage" id="bags-stage">
+            <BagsBar bags={bags} onBagClick={handleBagClick} />
+          </div>
+        )}
+
+        {/* 2B. 无购物袋模式专属：磨砂玻璃目标进度条 */}
+        {!cfg.hasBags && (
+          <div className="mode-banner show" id="mode-banner">
+            <span id="mode-banner-text">{bannerText}</span>
+            <span className="mode-banner-tag" id="mode-banner-progress">
+              {bannerProgress}
+            </span>
+          </div>
+        )}
+
+        {/* 3. 中央自适应 2.5D 瓶子舞台 */}
+        <div className="bottles-stage">
+          <div ref={gridRef} id="bottles-grid" className={`bottles-grid ${cfg.gridClass || ''}`}>
+            {bottles.map((b, idx) => (
+              <BottleView
+                key={`bottle-${b.id}`}
+                bottle={b}
+                idx={idx}
+                isSelected={selectedIndex === idx}
+                levelId={currentLevelId}
+                onClick={() => handleBottleClick(idx)}
+              />
+            ))}
+          </div>
         </div>
 
-        {/* 3. Central Game Board (Shelves with bottles and guidance tip bar) */}
-        <main className="flex-1 min-h-0 flex flex-col items-stretch justify-center py-1 px-1 sm:px-2">
-          {/* Clean Hint callout banner if active */}
-          {hint && (
-            <div className="mb-2 px-3 py-1 rounded-full bg-amber-100 border border-amber-300 text-amber-900 text-xs font-bold flex items-center gap-1.5 shadow-sm animate-pulse mx-auto">
-              <span>💡 将 #{hint.from + 1} 瓶倒入 #{hint.to + 1} 瓶</span>
-            </div>
-          )}
-
-          {isAutoSolving && (
-            <div className="mb-2 px-3 py-1 rounded-full bg-sky-100 border border-sky-300 text-sky-900 text-xs font-bold flex items-center gap-1.5 shadow-sm animate-pulse mx-auto">
-              <span>⚡ 自动演示中...</span>
-            </div>
-          )}
-
-          <GameBoard
-            bottles={bottles}
-            levelEntryId={levelEntryId}
-            selectedIndex={selectedIndex}
-            hint={hint}
-            pourAnimation={pourAnimation}
-            leakAnimation={leakAnimation}
-            completionAnimation={completionAnimation}
-            collectedTubeIndices={collectedTubeIndices}
-            soundEnabled={soundEnabled}
-            shakingTubeIndex={shakingTubeIndex}
-            onTubeClick={handleTubeClick}
-            disabled={isWon || isDeadlocked || !!completionAnimation}
-          />
-        </main>
-
-        {/* 3. Bottom Hero Action Buttons: 4 Control Buttons */}
-        <footer className="relative z-20 pb-3 w-full flex flex-col items-center">
-          <ControlBar
-            canUndo={history.length > 0}
-            onUndo={handleUndo}
-            onRestart={() => setResetConfirmOpen(true)}
-            onHint={handleHint}
-            onAddTube={handleAddTube}
-            disabled={isWon || isDeadlocked}
-          />
-        </footer>
+        {/* 4. 底部 4 大果冻玻璃道具与选关栏 */}
+        <ControlBar
+          shuffleUses={shuffleUses}
+          onShuffle={handleShuffle}
+          onAddBottle={handleAddBottle}
+          onOpenLevelSelect={() => setLevelModalOpen(true)}
+          onUndo={handleUndo}
+        />
       </div>
 
-      {/* Deadlock Support Modal */}
-      {isDeadlocked && !isWon && (
-        <DeadlockModal
-          onUndo={handleUndo}
-          onReset={handleConfirmReset}
-          canAddTube={bottles.length < 21}
-          onAddTube={handleAddTube}
-        />
-      )}
+      {/* 全屏流体与星尘光效层 */}
+      <svg id="fx-overlay" ref={fxOverlayRef} />
 
-      {/* Reset Confirmation Modal */}
-      {resetConfirmOpen && (
-        <ResetConfirmModal
-          onConfirm={handleConfirmReset}
-          onCancel={() => setResetConfirmOpen(false)}
-        />
-      )}
+      {/* 交互 Toast 气泡 */}
+      <div className={`toast-msg ${toastMsg ? 'show' : ''}`} id="toast-msg">
+        {toastMsg}
+      </div>
 
-      {/* 3-Tier Hint Modal */}
-      {activeHintData && (
-        <HintModal
-          hint={activeHintData}
-          onUpgradeTier={() => {
-            setActiveHintData((prev) =>
-              prev ? { ...prev, tier: Math.min(3, prev.tier + 1) as 1 | 2 | 3 } : null
-            );
-          }}
-          onApplyHighlight={() => {
-            if (activeHintData) {
-              setHint({
-                from: activeHintData.fromTubeIndex,
-                to: activeHintData.toTubeIndex,
-              });
-              setTimeout(() => {
-                setHint(null);
-              }, 6000);
-            }
-          }}
-          onClose={() => setActiveHintData(null)}
-        />
-      )}
+      {/* 弹窗 1：200 关波浪形难度选关面板 */}
+      <LevelSelectModal
+        isOpen={levelModalOpen}
+        currentLevelId={currentLevelId}
+        onSelectLevel={(id) => {
+          setCurrentLevelId(id);
+          showToast(`✨ 已开启：第 ${id} 关`);
+        }}
+        onClose={() => setLevelModalOpen(false)}
+      />
 
-      {/* Victory Celebration Modal */}
-      {isWon && (
-        <WinModal
-          levelTitle={currentLevel.title}
-          movesCount={movesCount}
-          optimalSteps={currentLevel.optimalSteps}
-          onNextLevel={handleNextLevel}
-          onReplay={handleConfirmReset}
-          onSelectLevel={() => {
-            setIsWon(false);
-            setLevelSelectorOpen(true);
-          }}
-          hasNextLevel={
-            typeof currentLevel.id === 'number' && currentLevel.id < CURATED_LEVELS.length
-          }
-        />
-      )}
+      {/* 弹窗 2：商业级【新玩法 / 新特殊瓶登场图鉴】果冻玻璃弹窗 */}
+      <MechanicIntroModal
+        isOpen={!!activeIntro}
+        intro={activeIntro}
+        levelId={currentLevelId}
+        onStart={() => {
+          setCurrentMechanicKey(null);
+          audioEngine.playSound('select');
+        }}
+      />
 
-      {/* Level Selection Modal */}
-      {levelSelectorOpen && (
-        <LevelSelectorModal
-          currentLevelId={currentLevel.id}
-          stats={stats}
-          onSelectLevel={startLevel}
-          onGenerateLevel={handleGenerateProceduralLevel}
-          onClose={() => setLevelSelectorOpen(false)}
-        />
-      )}
+      {/* 弹窗 3：工坊设置/荣誉面板 */}
+      <WinModal
+        isOpen={settingsModalOpen}
+        isSettingsMode={true}
+        levelNum={currentLevelId}
+        levelTitle={cfg.title}
+        userMoves={pourCountTotal}
+        optimalMoves={cfg.optimalMoves || 17}
+        onNextLevel={() => {
+          setSettingsModalOpen(false);
+          const nextId = (currentLevelId % 200) + 1;
+          setCurrentLevelId(nextId);
+          showToast(`✨ 已开启：第 ${nextId} 关`);
+        }}
+        onRestart={() => {
+          setSettingsModalOpen(false);
+          initGame(currentLevelId);
+          showToast('🔄 当前试炼已重新陈列');
+        }}
+        onOpenLevelSelect={() => {
+          setSettingsModalOpen(false);
+          setLevelModalOpen(true);
+        }}
+        onClose={() => setSettingsModalOpen(false)}
+      />
 
-      {/* Level Workshop */}
-      {workshopOpen && (
-        <LevelWorkshop
-          onLoadCustomLevel={startLevel}
-          onClose={() => setWorkshopOpen(false)}
-        />
-      )}
-
-      {/* Daily Challenge Modal */}
-      {dailyOpen && (
-        <DailyChallengeModal
-          stats={stats}
-          onPlayDaily={startLevel}
-          onClose={() => setDailyOpen(false)}
-        />
-      )}
-
-      {/* Settings Modal */}
-      {settingsOpen && (
-        <SettingsModal
-          soundEnabled={soundEnabled}
-          vibrateEnabled={vibrateEnabled}
-          bgmEnabled={bgmEnabled}
-          onToggleSound={() => {
-            const next = !soundEnabled;
-            setSoundEnabled(next);
-            soundManager.enabled = next;
-            savePreferences(next, vibrateEnabled, bgmEnabled);
-          }}
-          onToggleVibrate={() => {
-            const next = !vibrateEnabled;
-            setVibrateEnabled(next);
-            savePreferences(soundEnabled, next, bgmEnabled);
-          }}
-          onToggleBgm={() => {
-            const next = !bgmEnabled;
-            setBgmEnabled(next);
-            soundManager.setMusicEnabled(next);
-            savePreferences(soundEnabled, vibrateEnabled, next);
-          }}
-          onClose={() => setSettingsOpen(false)}
-        />
-      )}
-
-      {rulesOpen && <RulesModal onClose={() => setRulesOpen(false)} />}
-      {mechanicIntro && (
-        <MechanicIntroModal
-          data={mechanicIntro}
-          onClose={() => setMechanicIntro(null)}
-        />
-      )}
-    </div>
+      {/* 弹窗 4：通关结算面板 */}
+      <WinModal
+        isOpen={winModalOpen}
+        isSettingsMode={false}
+        isGiantCat={wasGiantCatWin}
+        levelNum={currentLevelId}
+        levelTitle={cfg.title}
+        userMoves={pourCountTotal}
+        optimalMoves={cfg.optimalMoves || 17}
+        onNextLevel={() => {
+          setWinModalOpen(false);
+          const nextId = (currentLevelId % 200) + 1;
+          setCurrentLevelId(nextId);
+          showToast(`✨ 已开启：第 ${nextId} 关`);
+        }}
+        onRestart={() => {
+          setWinModalOpen(false);
+          initGame(currentLevelId);
+          showToast('🔄 当前试炼已重新陈列');
+        }}
+        onOpenLevelSelect={() => {
+          setWinModalOpen(false);
+          setLevelModalOpen(true);
+        }}
+      />
+    </>
   );
-}
+};
+
+export default App;
