@@ -30,7 +30,10 @@ export type BottleSpecial =
   | 'stone_base'
   | 'paper_bag'
   | 'ad_cam'
-  | 'ad_cam_blue';
+  | 'ad_cam_blue'
+  | 'color_lock'
+  | 'one_way_in'
+  | 'one_way_out';
 
 export interface Bottle {
   id: number;
@@ -42,6 +45,10 @@ export interface Bottle {
   catTargetColor?: ColorKey;
   unlockOrder?: number;
   poursToBreak?: number;
+  poursRemaining?: number;
+  requiredColor?: ColorKey | null;
+  countdownMoves?: number | null;
+  frozenTurns?: number;
   removed?: boolean;
   corked?: boolean;
   corkAnimProgress?: number;
