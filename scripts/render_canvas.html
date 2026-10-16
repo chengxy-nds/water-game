@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>Asset Exporter</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      background: transparent !important;
+      width: 1200px;
+      height: 800px;
+      overflow: hidden;
+    }
+    .grid-cell {
+      position: absolute;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: visible;
+    }
+    .btn-wrap-bottom {
+      width: 200px;
+      height: 200px;
+    }
+    .btn-wrap-bottom svg {
+      width: 168px;
+      height: 168px;
+      display: block;
+      overflow: visible;
+    }
+    .btn-wrap-top {
+      width: 200px;
+      height: 200px;
+    }
+    .btn-wrap-top svg {
+      width: 168px;
+      height: 168px;
+      display: block;
+      overflow: visible;
+    }
+    .badge-wrap {
+      width: 100px;
+      height: 100px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .medallion-badge-empty {
+      width: 56px;
+      height: 56px;
+      border-radius: 28px;
+      background: linear-gradient(145deg, rgba(255, 248, 215, 0.94) 0%, rgba(235, 178, 62, 0.94) 100%);
+      border: 4.2px solid rgba(255, 255, 255, 0.92);
+      box-shadow: 0 8px 18px rgba(85, 48, 8, 0.28);
+    }
+    .burlap-wrap {
+      width: 300px;
+      height: 140px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .burlap-wrap svg {
+      width: 280px;
+      height: 130px;
+      display: block;
+      overflow: visible;
+    }
+  </style>
+</head>
+<body>
+  <!-- 全局共享 SVG <defs> (100% 取自 v8.html) -->
+  <svg id="shared-svg-defs" width="0" height="0" style="position:absolute;width:0;height:0;overflow:hidden;pointer-events:none" aria-hidden="true">
+    <defs id="global-ui-3d-defs">
+      <filter id="btnDropShadow" x="-20%" y="-15%" width="140%" height="145%">
+        <feDropShadow dx="0" dy="5" stdDeviation="4.5" flood-color="#6e4414" flood-opacity="0.34"/>
+      </filter>
+      <filter id="rulesDropShadow" x="-20%" y="-15%" width="140%" height="145%">
+        <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#3c4c34" flood-opacity="0.34"/>
+      </filter>
+      <filter id="iconShadow" x="-25%" y="-25%" width="150%" height="150%">
+        <feDropShadow dx="0" dy="2" stdDeviation="1.6" flood-color="#8c581c" flood-opacity="0.42"/>
+      </filter>
+      <filter id="bulbGlow" x="-40%" y="-40%" width="180%" height="180%">
+        <feGaussianBlur stdDeviation="3.5" result="blur"/>
+        <feMerge>
+          <feMergeNode in="blur"/>
+          <feMergeNode in="SourceGraphic"/>
+        </feMerge>
+      </filter>
+      <linearGradient id="warmGlassBase" x1="15%" y1="5%" x2="85%" y2="95%">
+        <stop offset="0%" stop-color="#f7dfb8" stop-opacity="0.48"/>
+        <stop offset="38%" stop-color="#dfad64" stop-opacity="0.28"/>
+        <stop offset="72%" stop-color="#b87b31" stop-opacity="0.40"/>
+        <stop offset="100%" stop-color="#d89d4e" stop-opacity="0.50"/>
+      </linearGradient>
+      <linearGradient id="hintGlassBase" x1="15%" y1="5%" x2="85%" y2="95%">
+        <stop offset="0%" stop-color="#ede2be" stop-opacity="0.46"/>
+        <stop offset="45%" stop-color="#b69f62" stop-opacity="0.30"/>
+        <stop offset="80%" stop-color="#877b48" stop-opacity="0.40"/>
+        <stop offset="100%" stop-color="#a8995c" stop-opacity="0.48"/>
+      </linearGradient>
+      <linearGradient id="rulesGlassBase" x1="15%" y1="5%" x2="85%" y2="95%">
+        <stop offset="0%" stop-color="#e4efe2" stop-opacity="0.48"/>
+        <stop offset="45%" stop-color="#9cb298" stop-opacity="0.30"/>
+        <stop offset="82%" stop-color="#6b8368" stop-opacity="0.40"/>
+        <stop offset="100%" stop-color="#8da387" stop-opacity="0.50"/>
+      </linearGradient>
+      <linearGradient id="topCrescentSheen" x1="30%" y1="0%" x2="65%" y2="100%">
+        <stop offset="0%" stop-color="#ffffff" stop-opacity="0.64"/>
+        <stop offset="45%" stop-color="#fff6e4" stop-opacity="0.30"/>
+        <stop offset="100%" stop-color="#ffffff" stop-opacity="0.0"/>
+      </linearGradient>
+      <radialGradient id="innerBottomShade" cx="52%" cy="68%" r="48%">
+        <stop offset="0%" stop-color="#8a5216" stop-opacity="0.26"/>
+        <stop offset="65%" stop-color="#9c6222" stop-opacity="0.12"/>
+        <stop offset="100%" stop-color="#9c6222" stop-opacity="0.0"/>
+      </radialGradient>
+      <linearGradient id="glassRimStroke" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#ffffff" stop-opacity="0.95"/>
+        <stop offset="30%" stop-color="#fff8eb" stop-opacity="0.72"/>
+        <stop offset="65%" stop-color="#ffe7c2" stop-opacity="0.42"/>
+        <stop offset="100%" stop-color="#ffffff" stop-opacity="0.88"/>
+      </linearGradient>
+      <radialGradient id="bulb3DGrad" cx="36%" cy="32%" r="64%">
+        <stop offset="0%" stop-color="#ffffc8"/>
+        <stop offset="32%" stop-color="#ffea38"/>
+        <stop offset="72%" stop-color="#f7b718"/>
+        <stop offset="100%" stop-color="#d97f08"/>
+      </radialGradient>
+      <linearGradient id="question3DGrad" x1="25%" y1="10%" x2="75%" y2="90%">
+        <stop offset="0%" stop-color="#ffffff"/>
+        <stop offset="48%" stop-color="#d4ecff"/>
+        <stop offset="100%" stop-color="#8ec0e4"/>
+      </linearGradient>
+
+      <!-- 粗麻布桌垫渐变与纹理 -->
+      <pattern id="burlapWeaveLightPat" width="8" height="8" patternUnits="userSpaceOnUse">
+        <rect width="8" height="8" fill="#8c6236"/>
+        <rect x="0.5" y="0.6" width="3.3" height="2.9" rx="1.1" fill="#edd1a1"/>
+        <rect x="0.9" y="0.9" width="2.4" height="1.2" rx="0.5" fill="#fff0cf" opacity="0.75"/>
+        <rect x="4.4" y="0.5" width="2.9" height="3.3" rx="1.1" fill="#d9b077"/>
+        <rect x="4.8" y="0.9" width="1.3" height="2.4" rx="0.5" fill="#f7dfb2" opacity="0.65"/>
+        <rect x="0.5" y="4.4" width="2.9" height="3.3" rx="1.1" fill="#d6ac72"/>
+        <rect x="0.9" y="4.8" width="1.3" height="2.4" rx="0.5" fill="#f5dca8" opacity="0.65"/>
+        <rect x="4.5" y="4.6" width="3.3" height="2.9" rx="1.1" fill="#e8c896"/>
+        <rect x="4.9" y="4.9" width="2.4" height="1.2" rx="0.5" fill="#ffeed0" opacity="0.72"/>
+      </pattern>
+      <pattern id="burlapWeaveDarkPat" width="8" height="8" patternUnits="userSpaceOnUse">
+        <rect width="8" height="8" fill="#362718"/>
+        <rect x="0.5" y="0.6" width="3.3" height="2.9" rx="1.1" fill="#7c6348"/>
+        <rect x="0.9" y="0.9" width="2.4" height="1.2" rx="0.5" fill="#9c8062" opacity="0.65"/>
+        <rect x="4.4" y="0.5" width="2.9" height="3.3" rx="1.1" fill="#634d36"/>
+        <rect x="0.5" y="4.4" width="2.9" height="3.3" rx="1.1" fill="#5e4832"/>
+        <rect x="4.5" y="4.6" width="3.3" height="2.9" rx="1.1" fill="#755c42"/>
+        <rect x="4.9" y="4.9" width="2.4" height="1.2" rx="0.5" fill="#94785a" opacity="0.6"/>
+      </pattern>
+      <linearGradient id="burlapTopShade" x1="12%" y1="8%" x2="88%" y2="92%">
+        <stop offset="0%" stop-color="#fff8e6" stop-opacity="0.38"/>
+        <stop offset="45%" stop-color="#d49e5c" stop-opacity="0.06"/>
+        <stop offset="82%" stop-color="#5c3b18" stop-opacity="0.36"/>
+        <stop offset="100%" stop-color="#38220c" stop-opacity="0.58"/>
+      </linearGradient>
+      <linearGradient id="burlapSideWallLight" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#c4945a"/>
+        <stop offset="38%" stop-color="#8c6032"/>
+        <stop offset="78%" stop-color="#543618"/>
+        <stop offset="100%" stop-color="#331f0c"/>
+      </linearGradient>
+      <linearGradient id="burlapSideWallDark" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#69523a"/>
+        <stop offset="42%" stop-color="#473524"/>
+        <stop offset="82%" stop-color="#2b1f14"/>
+        <stop offset="100%" stop-color="#1a110a"/>
+      </linearGradient>
+      <radialGradient id="terracottaShadowGrad" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="rgba(148, 62, 14, 0.62)"/>
+        <stop offset="48%" stop-color="rgba(168, 78, 20, 0.36)"/>
+        <stop offset="78%" stop-color="rgba(185, 92, 28, 0.12)"/>
+        <stop offset="100%" stop-color="rgba(185, 92, 28, 0.0)"/>
+      </radialGradient>
+      <radialGradient id="burlapContactAOGrad" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="rgba(98, 52, 12, 0.42)"/>
+        <stop offset="60%" stop-color="rgba(115, 62, 16, 0.18)"/>
+        <stop offset="100%" stop-color="rgba(115, 62, 16, 0.0)"/>
+      </radialGradient>
+    </defs>
+  </svg>
+
+  <!-- 1. 重玩 (btn_level) @ (0, 0, 200, 200) -->
+  <div class="grid-cell btn-wrap-bottom" style="left:0; top:0;">
+    <svg viewBox="0 0 100 100" fill="none">
+      <g filter="url(#btnDropShadow)">
+        <path d="M 50,5 C 84,5 95,16 95,50 C 95,84 84,95 50,95 C 16,95 5,84 5,50 C 5,16 16,5 50,5 Z" fill="url(#warmGlassBase)" />
+        <path d="M 50,5 C 84,5 95,16 95,50 C 95,84 84,95 50,95 C 16,95 5,84 5,50 C 5,16 16,5 50,5 Z" fill="url(#innerBottomShade)" />
+        <path d="M 50,7 C 80,7 91,16 92,43 C 70,50 34,39 8,46 C 9,17 20,7 50,7 Z" fill="url(#topCrescentSheen)" />
+        <path d="M 14,34 C 16,16 27,9.5 50,9.5 C 68,9.5 79,13.5 84,24" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" opacity="0.62" />
+        <path d="M 20,86 C 30,90.5 68,90.5 80,85" stroke="#fff3d6" stroke-width="1.8" stroke-linecap="round" opacity="0.48" />
+        <path d="M 50,5 C 84,5 95,16 95,50 C 95,84 84,95 50,95 C 16,95 5,84 5,50 C 5,16 16,5 50,5 Z" stroke="url(#glassRimStroke)" stroke-width="2.5" />
+      </g>
+      <g filter="url(#iconShadow)">
+        <path d="M 41,34.5 A 18.5,18.5 0 1 1 32.5,56.5" stroke="#ffffff" stroke-width="7.2" stroke-linecap="round" fill="none"/>
+        <path d="M 47.5,24.5 L 46.5,43.5 C 46.4,45.2 44.5,46.0 43.1,45.0 L 30.8,35.8 C 29.4,34.8 29.8,32.6 31.4,32.0 L 44.8,23.2 C 46.2,22.4 47.6,23.2 47.5,24.5 Z" fill="#ffffff"/>
+      </g>
+    </svg>
+  </div>
+
+  <!-- 2. 打乱 (btn_shuffle) @ (200, 0, 200, 200) -->
+  <div class="grid-cell btn-wrap-bottom" style="left:200px; top:0;">
+    <svg viewBox="0 0 100 100" fill="none">
+      <g filter="url(#btnDropShadow)">
+        <path d="M 50,5 C 84,5 95,16 95,50 C 95,84 84,95 50,95 C 16,95 5,84 5,50 C 5,16 16,5 50,5 Z" fill="url(#warmGlassBase)" />
+        <path d="M 50,5 C 84,5 95,16 95,50 C 95,84 84,95 50,95 C 16,95 5,84 5,50 C 5,16 16,5 50,5 Z" fill="url(#innerBottomShade)" />
+        <path d="M 50,7 C 80,7 91,16 92,43 C 70,50 34,39 8,46 C 9,17 20,7 50,7 Z" fill="url(#topCrescentSheen)" />
+        <path d="M 14,34 C 16,16 27,9.5 50,9.5 C 68,9.5 79,13.5 84,24" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" opacity="0.62" />
+        <path d="M 20,86 C 30,90.5 68,90.5 80,85" stroke="#fff3d6" stroke-width="1.8" stroke-linecap="round" opacity="0.48" />
+        <path d="M 50,5 C 84,5 95,16 95,50 C 95,84 84,95 50,95 C 16,95 5,84 5,50 C 5,16 16,5 50,5 Z" stroke="url(#glassRimStroke)" stroke-width="2.5" />
+      </g>
+      <g filter="url(#iconShadow)">
+        <path d="M 24,64 H 33 C 41,64 46,59 51,48 C 56,37 61,33 69,33 H 76" stroke="#ffffff" stroke-width="6.8" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M 67,24 L 78,33 L 67,42" stroke="#ffffff" stroke-width="6.8" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M 24,33 H 33 C 38,33 42,35.5 45.5,41" stroke="#ffffff" stroke-width="6.8" stroke-linecap="round"/>
+        <path d="M 56.5,56.5 C 60,61.5 64,64 69,64 H 76" stroke="#ffffff" stroke-width="6.8" stroke-linecap="round"/>
+        <path d="M 67,55 L 78,64 L 67,73" stroke="#ffffff" stroke-width="6.8" stroke-linecap="round" stroke-linejoin="round"/>
+      </g>
+    </svg>
+  </div>
+
+  <!-- 3. 撤回 (btn_undo) @ (400, 0, 200, 200) -->
+  <div class="grid-cell btn-wrap-bottom" style="left:400px; top:0;">
+    <svg viewBox="0 0 100 100" fill="none">
+      <g filter="url(#btnDropShadow)">
+        <path d="M 50,5 C 84,5 95,16 95,50 C 95,84 84,95 50,95 C 16,95 5,84 5,50 C 5,16 16,5 50,5 Z" fill="url(#warmGlassBase)" />
+        <path d="M 50,5 C 84,5 95,16 95,50 C 95,84 84,95 50,95 C 16,95 5,84 5,50 C 5,16 16,5 50,5 Z" fill="url(#innerBottomShade)" />
+        <path d="M 50,7 C 80,7 91,16 92,43 C 70,50 34,39 8,46 C 9,17 20,7 50,7 Z" fill="url(#topCrescentSheen)" />
+        <path d="M 14,34 C 16,16 27,9.5 50,9.5 C 68,9.5 79,13.5 84,24" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" opacity="0.62" />
+        <path d="M 20,86 C 30,90.5 68,90.5 80,85" stroke="#fff3d6" stroke-width="1.8" stroke-linecap="round" opacity="0.48" />
+        <path d="M 50,5 C 84,5 95,16 95,50 C 95,84 84,95 50,95 C 16,95 5,84 5,50 C 5,16 16,5 50,5 Z" stroke="url(#glassRimStroke)" stroke-width="2.5" />
+      </g>
+      <g filter="url(#iconShadow)">
+        <path d="M 44,31 L 25.5,48.5 C 24.0,50.0 24.3,52.4 26.2,53.3 L 45.5,61.5 C 47.4,62.3 49.3,60.6 48.8,58.6 L 47.0,52.2 C 58.2,51.0 66.8,54.8 72.5,62.2 C 73.5,63.5 75.5,62.5 75.2,60.8 C 72.8,44.2 61.2,36.8 46.8,38.2 L 48.0,32.8 C 48.4,30.8 45.6,29.5 44,31 Z" fill="#ffffff"/>
+      </g>
+    </svg>
+  </div>
+
+  <!-- 4. 提示 (btn_add_bottle) @ (600, 0, 200, 200) -->
+  <div class="grid-cell btn-wrap-bottom" style="left:600px; top:0;">
+    <svg viewBox="0 0 100 100" fill="none">
+      <g filter="url(#btnDropShadow)">
+        <path d="M 50,5 C 84,5 95,16 95,50 C 95,84 84,95 50,95 C 16,95 5,84 5,50 C 5,16 16,5 50,5 Z" fill="url(#hintGlassBase)" />
+        <path d="M 50,7 C 80,7 91,16 92,43 C 70,50 34,39 8,46 C 9,17 20,7 50,7 Z" fill="url(#topCrescentSheen)" />
+        <path d="M 14,34 C 16,16 27,9.5 50,9.5 C 68,9.5 79,13.5 84,24" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" opacity="0.62" />
+        <path d="M 20,86 C 30,90.5 68,90.5 80,85" stroke="#fff3d6" stroke-width="1.8" stroke-linecap="round" opacity="0.45" />
+        <path d="M 50,5 C 84,5 95,16 95,50 C 95,84 84,95 50,95 C 16,95 5,84 5,50 C 5,16 16,5 50,5 Z" stroke="url(#glassRimStroke)" stroke-width="2.5" />
+      </g>
+      <g stroke="#ffe866" stroke-width="2.2" stroke-linecap="round" opacity="0.92">
+        <line x1="50" y1="13" x2="50" y2="20"/>
+        <line x1="33" y1="17.5" x2="36.8" y2="23.5"/>
+        <line x1="67" y1="17.5" x2="63.2" y2="23.5"/>
+        <line x1="21" y1="29" x2="27" y2="32.5"/>
+        <line x1="79" y1="29" x2="73" y2="32.5"/>
+        <line x1="17" y1="44.5" x2="24" y2="44.5"/>
+        <line x1="83" y1="44.5" x2="76" y2="44.5"/>
+        <line x1="22" y1="59.5" x2="28" y2="56"/>
+        <line x1="78" y1="59.5" x2="72" y2="56"/>
+      </g>
+      <g filter="url(#bulbGlow)">
+        <path d="M 50,24 C 38.2,24 29,33.0 29,44.2 C 29,51.4 33.0,57.6 38.8,61.2 C 40.8,62.5 42.0,64.6 42.2,67.0 L 57.8,67.0 C 58.0,64.6 59.2,62.5 61.2,61.2 C 67.0,57.6 71,51.4 71,44.2 C 71,33.0 61.8,24 50,24 Z" fill="url(#bulb3DGrad)"/>
+        <ellipse cx="42" cy="36" rx="6.5" ry="4.2" transform="rotate(-28 42 36)" fill="#ffffff" opacity="0.55"/>
+      </g>
+      <rect x="42.2" y="67.2" width="15.6" height="4.8" rx="2.2" fill="#6f7b88"/>
+      <rect x="43.4" y="72.0" width="13.2" height="4.5" rx="2.0" fill="#596573"/>
+      <path d="M 45.5,76.5 C 46.2,79.8 47.8,81.5 50,81.5 C 52.2,81.5 53.8,79.8 54.5,76.5 Z" fill="#424c58"/>
+    </svg>
+  </div>
+
+  <!-- 5. 设置 (btn_settings) @ (0, 200, 200, 200) -->
+  <div class="grid-cell btn-wrap-top" style="left:0; top:200px;">
+    <svg viewBox="0 0 100 100" fill="none">
+      <g filter="url(#btnDropShadow)">
+        <path d="M 50,5 C 84,5 95,16 95,50 C 95,84 84,95 50,95 C 16,95 5,84 5,50 C 5,16 16,5 50,5 Z" fill="url(#warmGlassBase)" />
+        <path d="M 50,5 C 84,5 95,16 95,50 C 95,84 84,95 50,95 C 16,95 5,84 5,50 C 5,16 16,5 50,5 Z" fill="url(#innerBottomShade)" />
+        <path d="M 50,7 C 80,7 91,16 92,43 C 70,50 34,39 8,46 C 9,17 20,7 50,7 Z" fill="url(#topCrescentSheen)" />
+        <path d="M 14,34 C 16,16 27,9.5 50,9.5 C 68,9.5 79,13.5 84,24" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" opacity="0.65" />
+        <path d="M 20,86 C 30,90.5 68,90.5 80,85" stroke="#fff3d6" stroke-width="1.8" stroke-linecap="round" opacity="0.48" />
+        <path d="M 50,5 C 84,5 95,16 95,50 C 95,84 84,95 50,95 C 16,95 5,84 5,50 C 5,16 16,5 50,5 Z" stroke="url(#glassRimStroke)" stroke-width="2.5" />
+      </g>
+      <g filter="url(#iconShadow)">
+        <rect x="30" y="31" width="40" height="7.6" rx="3.8" fill="#ffffff"/>
+        <rect x="30" y="46.2" width="40" height="7.6" rx="3.8" fill="#ffffff"/>
+        <rect x="30" y="61.4" width="40" height="7.6" rx="3.8" fill="#ffffff"/>
+      </g>
+    </svg>
+  </div>
+
+  <!-- 6. 规则/问号 (btn_power) @ (200, 200, 200, 200) -->
+  <div class="grid-cell btn-wrap-top" style="left:200px; top:200px;">
+    <svg viewBox="0 0 100 100" fill="none">
+      <g filter="url(#rulesDropShadow)">
+        <path d="M 50,5 C 83,5 95,17 95,50 C 95,83 83,95 50,95 C 17,95 5,83 5,50 C 5,17 17,5 50,5 Z" fill="url(#rulesGlassBase)" />
+        <path d="M 50,7 C 78,7 89,16 91,38 C 74,47 36,38 9,42 C 11,17 22,7 50,7 Z" fill="url(#topCrescentSheen)" />
+        <path d="M 16,32 C 18,16 30,10 50,10 C 66,10 77,14 82,24" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" opacity="0.65" />
+        <path d="M 50,5 C 83,5 95,17 95,50 C 95,83 83,95 50,95 C 17,95 5,83 5,50 C 5,17 17,5 50,5 Z" stroke="url(#glassRimStroke)" stroke-width="2.4" />
+      </g>
+      <g filter="url(#iconShadow)">
+        <path d="M 38.5,35.5 C 38.5,27.5 44.5,23 52,23 C 59.5,23 65.5,27.8 65.5,35 C 65.5,40.5 62,43.8 57.2,46.8 C 53.8,48.9 52.5,51.2 52.5,55.5"
+              stroke="url(#question3DGrad)" stroke-width="8.5" stroke-linecap="round" fill="none"/>
+        <circle cx="52.2" cy="70.5" r="5.2" fill="url(#question3DGrad)"/>
+      </g>
+    </svg>
+  </div>
+
+  <!-- 7. 角标空底图 (badge_gold_new) @ (400, 200, 100, 100) -->
+  <div class="grid-cell badge-wrap" style="left:400px; top:200px;">
+    <div class="medallion-badge-empty"></div>
+  </div>
+
+  <!-- 8. 普通麻布垫 (burlap_coaster_normal) @ (0, 400, 300, 140) -->
+  <div class="grid-cell burlap-wrap" style="left:0; top:400px;">
+    <svg viewBox="0 0 100 46">
+      <ellipse cx="42" cy="34" rx="45" ry="11.5" transform="rotate(-5, 42, 34)" fill="url(#terracottaShadowGrad)" />
+      <ellipse cx="48" cy="31" rx="38" ry="8.5" fill="rgba(115, 48, 8, 0.36)" />
+      <path d="M 11,19.5 C 11,13 25,10 50,10 C 75,10 89,13 89,19.5 L 87.5,27.5 C 86,35.5 72,39.5 50,39.5 C 28,39.5 14,35.5 12.5,27.5 Z" fill="url(#burlapSideWallLight)" />
+      <path d="M 11,19.5 C 11,13 25,10 50,10 C 75,10 89,13 89,19.5 L 87.5,27.5 C 86,35.5 72,39.5 50,39.5 C 28,39.5 14,35.5 12.5,27.5 Z" fill="url(#burlapWeaveLightPat)" opacity="0.28" />
+      <path d="M 50,7.5 C 76,7.5 89,11.5 89,19.2 C 89,26.8 76,31.2 50,31.2 C 24,31.2 11,26.8 11,19.2 C 11,11.5 24,7.5 50,7.5 Z" fill="url(#burlapWeaveLightPat)" />
+      <path d="M 50,7.5 C 76,7.5 89,11.5 89,19.2 C 89,26.8 76,31.2 50,31.2 C 24,31.2 11,26.8 11,19.2 C 11,11.5 24,7.5 50,7.5 Z" fill="url(#burlapTopShade)" stroke="rgba(255, 248, 225, 0.68)" stroke-width="1.1" />
+      <ellipse cx="50" cy="18.5" rx="28" ry="6.2" fill="url(#burlapContactAOGrad)" opacity="0.72" />
+    </svg>
+  </div>
+
+  <!-- 9. 机关麻布垫 (burlap_coaster_special) @ (300, 400, 300, 140) -->
+  <div class="grid-cell burlap-wrap" style="left:300px; top:400px;">
+    <svg viewBox="0 0 100 46">
+      <ellipse cx="42" cy="34" rx="45" ry="11.5" transform="rotate(-5, 42, 34)" fill="url(#terracottaShadowGrad)" />
+      <ellipse cx="48" cy="31" rx="38" ry="8.5" fill="rgba(115, 48, 8, 0.36)" />
+      <path d="M 11,19.5 C 11,13 25,10 50,10 C 75,10 89,13 89,19.5 L 87.5,27.5 C 86,35.5 72,39.5 50,39.5 C 28,39.5 14,35.5 12.5,27.5 Z" fill="url(#burlapSideWallLight)" />
+      <path d="M 11,19.5 C 11,13 25,10 50,10 C 75,10 89,13 89,19.5 L 87.5,27.5 C 86,35.5 72,39.5 50,39.5 C 28,39.5 14,35.5 12.5,27.5 Z" fill="url(#burlapWeaveLightPat)" opacity="0.28" />
+      <path d="M 50,7.5 C 76,7.5 89,11.5 89,19.2 C 89,26.8 76,31.2 50,31.2 C 24,31.2 11,26.8 11,19.2 C 11,11.5 24,7.5 50,7.5 Z" fill="url(#burlapWeaveLightPat)" />
+      <path d="M 50,7.5 C 76,7.5 89,11.5 89,19.2 C 89,26.8 76,31.2 50,31.2 C 24,31.2 11,26.8 11,19.2 C 11,11.5 24,7.5 50,7.5 Z" fill="url(#burlapTopShade)" stroke="rgba(255, 248, 225, 0.68)" stroke-width="1.1" />
+      <g transform="translate(50, 19.5)">
+        <ellipse cx="0" cy="0" rx="22" ry="6.2" fill="none" stroke="#fffdf7" stroke-width="1.9" stroke-dasharray="1.8 3.2" stroke-linecap="round" opacity="0.88"/>
+        <ellipse cx="0" cy="0" rx="17" ry="4.6" fill="none" stroke="#fffdf7" stroke-width="1.5" stroke-dasharray="1.5 2.8" stroke-linecap="round" opacity="0.78"/>
+      </g>
+      <ellipse cx="50" cy="18.5" rx="28" ry="6.2" fill="url(#burlapContactAOGrad)" opacity="0.72" />
+    </svg>
+  </div>
+
+  <!-- 10. 金星麻布垫 (burlap_coaster_star) @ (600, 400, 300, 140) -->
+  <div class="grid-cell burlap-wrap" style="left:600px; top:400px;">
+    <svg viewBox="0 0 100 46">
+      <ellipse cx="42" cy="34" rx="45" ry="11.5" transform="rotate(-5, 42, 34)" fill="url(#terracottaShadowGrad)" />
+      <ellipse cx="48" cy="31" rx="38" ry="8.5" fill="rgba(115, 48, 8, 0.36)" />
+      <path d="M 11,19.5 C 11,13 25,10 50,10 C 75,10 89,13 89,19.5 L 87.5,27.5 C 86,35.5 72,39.5 50,39.5 C 28,39.5 14,35.5 12.5,27.5 Z" fill="url(#burlapSideWallDark)" />
+      <path d="M 11,19.5 C 11,13 25,10 50,10 C 75,10 89,13 89,19.5 L 87.5,27.5 C 86,35.5 72,39.5 50,39.5 C 28,39.5 14,35.5 12.5,27.5 Z" fill="url(#burlapWeaveDarkPat)" opacity="0.28" />
+      <path d="M 50,7.5 C 76,7.5 89,11.5 89,19.2 C 89,26.8 76,31.2 50,31.2 C 24,31.2 11,26.8 11,19.2 C 11,11.5 24,7.5 50,7.5 Z" fill="url(#burlapWeaveDarkPat)" />
+      <path d="M 50,7.5 C 76,7.5 89,11.5 89,19.2 C 89,26.8 76,31.2 50,31.2 C 24,31.2 11,26.8 11,19.2 C 11,11.5 24,7.5 50,7.5 Z" fill="url(#burlapTopShade)" stroke="rgba(255, 232, 185, 0.35)" stroke-width="1.1" />
+      <g transform="translate(50, 21) scale(1, 0.52)">
+        <path d="M0,-14 L4.2,-4.5 L14.5,-3.2 L6.8,3.8 L8.8,14 L0,8.8 L-8.8,14 L-6.8,3.8 L-14.5,-3.2 L-4.2,-4.5 Z"
+              fill="#ffee44" stroke="#d97706" stroke-width="1.6" stroke-linejoin="round"
+              style="filter:drop-shadow(0 2px 4px rgba(255, 200, 20, 0.65));"/>
+      </g>
+      <ellipse cx="50" cy="18.5" rx="28" ry="6.2" fill="url(#burlapContactAOGrad)" opacity="0.72" />
+    </svg>
+  </div>
+</body>
+</html>
