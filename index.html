@@ -180,22 +180,14 @@
       filter: brightness(0.96);
     }
     .frosted-top-label {
-      display: block;
-      margin-top: 3px;
-      font-size: clamp(12px, 1.85vh, 14px);
-      font-weight: 700;
-      color: #ffffff;
-      letter-spacing: 0.4px;
-      text-shadow:
-        0 1.5px 4px rgba(85, 58, 18, 0.48),
-        0 0 8px rgba(110, 75, 22, 0.22);
+      display: none !important;
     }
 
-    /* 顶部中央大字号纯白数字与副标题（100%提取自参考图 HTML .moves-count & .moves-label） */
+    /* 顶部中央精致流金玻璃关卡铭牌（字号精致小巧、配高定玻璃背景与双层亮边、稳固不跳动） */
     .top-center-group {
       position: absolute;
       left: 50%;
-      top: 2px;
+      top: 10px;
       transform: translateX(-50%);
       display: flex;
       flex-direction: column;
@@ -204,15 +196,47 @@
       cursor: pointer;
       pointer-events: auto;
       z-index: 16;
-      padding: 2px 18px;
     }
     .zen-big-num-wrap {
       position: relative;
       display: inline-flex;
       align-items: center;
       justify-content: center;
+      gap: 7px;
+      padding: 6px 20px 6.5px;
+      border-radius: 999px;
+      background: linear-gradient(160deg, rgba(255, 246, 222, 0.46) 0%, rgba(222, 168, 86, 0.30) 52%, rgba(168, 112, 38, 0.44) 100%);
+      border: 1.6px solid rgba(255, 250, 236, 0.86);
+      box-shadow:
+        inset 0 2px 3px rgba(255, 255, 255, 0.78),
+        inset 0 -2.5px 5px rgba(105, 62, 14, 0.26),
+        0 5px 14px rgba(92, 56, 12, 0.24);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      overflow: hidden;
     }
-    /* 清新Q弹圆润字体风格（去除生硬描边糊字，保留干净圆润笔画与柔和暖金立体阴影） */
+    /* 关卡胶囊顶部斜向玻璃反光弧（与左右两侧超椭圆玻璃按钮质感呼应） */
+    .zen-big-num-wrap::before {
+      content: "";
+      position: absolute;
+      top: 2px;
+      left: 10px;
+      right: 10px;
+      height: 44%;
+      border-radius: 999px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.52) 0%, rgba(255, 255, 255, 0) 100%);
+      pointer-events: none;
+    }
+    /* 胶囊两侧精致暖金星芒点缀 */
+    .zen-big-num-wrap::after {
+      content: "";
+      position: absolute;
+      inset: 1.5px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 236, 185, 0.32);
+      pointer-events: none;
+    }
+    /* 清新Q弹圆润字体风格 */
     .zen-big-num,
     .level-pill,
     .casual-header-pill,
@@ -226,80 +250,33 @@
       font-family: "Fredoka", "Quicksand", "SF Pro Rounded", ui-rounded, "Hiragino Maru Gothic ProN", "Rounded Mplus 1c", "YouYuan", "幼圆", "PingFang SC", "Microsoft YaHei", sans-serif;
     }
     .zen-big-num {
-      font-size: clamp(22px, 3.4vh, 27px);
-      font-weight: 800;
-      line-height: 1.15;
-      letter-spacing: 1.2px;
+      font-size: clamp(15.5px, 2.25vh, 18px);
+      font-weight: 700;
+      line-height: 1.1;
+      letter-spacing: 1.0px;
       color: #ffffff;
       -webkit-text-stroke: 0px transparent;
       text-shadow:
-        0 2px 0 rgba(155, 102, 24, 0.38),
-        0 4px 10px rgba(110, 68, 12, 0.26);
-      transition: transform 0.24s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.22s ease;
+        0 1.5px 0 rgba(135, 85, 18, 0.45),
+        0 2px 6px rgba(95, 58, 10, 0.28);
       position: relative;
       z-index: 2;
       white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
     }
-    /* 封存满瓶时的大数字璀璨金辉脉冲特效 */
-    @keyframes zenSealBurstAnim {
-      0%   { transform: scale(1); color: #ffffff; }
-      35%  { transform: scale(1.28) translateY(-2px); color: #fff8a6; text-shadow: 0 0 28px rgba(255, 248, 150, 0.98), 0 0 12px #ffffff, 0 4px 10px rgba(120, 72, 10, 0.45); }
-      70%  { transform: scale(0.96); color: #fffbeb; }
-      100% { transform: scale(1); color: #ffffff; }
+    .zen-big-num::before,
+    .zen-big-num::after {
+      content: "✦";
+      font-size: 11px;
+      color: #ffefa6;
+      text-shadow: 0 1px 3px rgba(120, 72, 10, 0.5);
+      opacity: 0.92;
     }
-    .zen-big-num.pulse {
-      animation: zenSealBurstAnim 0.52s cubic-bezier(0.22, 1, 0.36, 1);
-    }
-    /* 步数减少或步进时的轻盈弹性跳动特效 */
-    @keyframes zenStepTickAnim {
-      0%   { transform: scale(1); }
-      30%  { transform: scale(1.16) translateY(-1.5px); color: #fde68a; text-shadow: 0 0 22px rgba(253, 224, 71, 0.85), 0 3px 8px rgba(120, 82, 20, 0.4); }
-      100% { transform: scale(1); color: #ffffff; }
-    }
-    .zen-big-num.step-tick {
-      animation: zenStepTickAnim 0.34s cubic-bezier(0.34, 1.56, 0.64, 1);
-    }
-    .zen-big-num.danger-low {
-      color: #fecdd3;
-      text-shadow: 0 0 20px rgba(244, 63, 94, 0.85), 0 3px 8px rgba(136, 19, 55, 0.5);
-    }
-    /* 大数字旁飘起的 +1 瓶 / -1 步 浮字特效 */
-    .zen-float-delta {
-      position: absolute;
-      left: calc(100% + 6px);
-      top: 4px;
-      font-size: 14px;
-      font-weight: 900;
-      color: #fff8a6;
-      text-shadow: 0 2px 6px rgba(95, 52, 8, 0.55);
-      white-space: nowrap;
-      pointer-events: none;
-      animation: zenFloatDeltaAnim 0.78s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-      z-index: 5;
-    }
-    @keyframes zenFloatDeltaAnim {
-      0%   { opacity: 0; transform: translateY(6px) scale(0.7); }
-      25%  { opacity: 1; transform: translateY(0px) scale(1.08); }
-      100% { opacity: 0; transform: translateY(-16px) scale(0.95); }
-    }
+    /* 已封存数量文案直接隐藏 */
     .level-pill {
-      font-size: clamp(12.5px, 1.95vh, 14.5px);
-      font-weight: 700;
-      color: rgba(255, 252, 240, 0.95);
-      -webkit-text-stroke: 0px transparent;
-      margin-top: 3px;
-      letter-spacing: 0.5px;
-      text-shadow:
-        0 1.5px 0 rgba(145, 92, 18, 0.35),
-        0 2px 6px rgba(95, 58, 10, 0.26);
-      white-space: nowrap;
-      background: transparent;
-      border: none;
-      padding: 0;
-      transition: transform 0.24s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.22s ease;
-    }
-    .level-pill.sub-pulse {
-      animation: zenStepTickAnim 0.42s cubic-bezier(0.34, 1.56, 0.64, 1);
+      display: none !important;
     }
 
     /* ==================== 2. 顶部 4 个 3D 礼盒袋 & 模式横幅 ==================== */
@@ -748,15 +725,7 @@
       filter: brightness(0.96);
     }
     .medallion-label {
-      display: block;
-      margin-top: 4px;
-      font-size: clamp(13px, 1.95vh, 15.5px);
-      font-weight: 700;
-      color: #ffffff;
-      letter-spacing: 0.3px;
-      text-shadow:
-        0 1.5px 4px rgba(95, 65, 22, 0.48),
-        0 0 8px rgba(120, 85, 30, 0.2);
+      display: none !important;
     }
 
     /* 温润半透明暖金次数角标 */
@@ -1908,11 +1877,11 @@
         <stop offset="78%" stop-color="rgba(185, 92, 28, 0.12)"/>
         <stop offset="100%" stop-color="rgba(185, 92, 28, 0.0)"/>
       </radialGradient>
-      <!-- 瓶底与麻布软垫接触处的深褐环境光遮蔽 (AO Contact Shadow) -->
+      <!-- 瓶底与麻布软垫接触处的暖琥珀柔和遮蔽影（杜绝空瓶底部发灰发脏） -->
       <radialGradient id="burlapContactAOGrad" cx="50%" cy="50%" r="50%">
-        <stop offset="0%" stop-color="rgba(36, 20, 6, 0.72)"/>
-        <stop offset="58%" stop-color="rgba(52, 30, 10, 0.35)"/>
-        <stop offset="100%" stop-color="rgba(52, 30, 10, 0.0)"/>
+        <stop offset="0%" stop-color="rgba(98, 52, 12, 0.42)"/>
+        <stop offset="60%" stop-color="rgba(115, 62, 16, 0.18)"/>
+        <stop offset="100%" stop-color="rgba(115, 62, 16, 0.0)"/>
       </radialGradient>
       <!-- 3D 黄色旋转箭头（顶面高光渐变 + 底部温暖琥珀3D立体厚度渐变，完全复刻参考图） -->
       <linearGradient id="arrowYellowTop3D" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -2226,7 +2195,7 @@
           </svg>
           <span>缩放</span>
         </div>
-        <div class="casual-toggle" id="toggle-zoom" data-key="zoom">
+        <div class="casual-toggle on" id="toggle-zoom" data-key="zoom">
           <span class="casual-toggle-check">✔</span>
           <div class="casual-toggle-knob"></div>
         </div>
@@ -2642,12 +2611,45 @@
         <radialGradient id="rightShoulderSoftGrad" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="rgba(255, 255, 255, 0.48)"/><stop offset="55%" stop-color="rgba(255, 250, 235, 0.20)"/><stop offset="100%" stop-color="rgba(255, 250, 235, 0.0)"/></radialGradient>
         <filter id="naturalGlassBlur" x="-15%" y="-10%" width="130%" height="120%"><feGaussianBlur stdDeviation="1.05"/></filter>
         <filter id="warmCastShadowBlur" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="4.6"/></filter>
-        <linearGradient id="naturalRimGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="rgba(255, 255, 255, 0.92)"/><stop offset="22%" stop-color="rgba(254, 243, 199, 0.82)"/><stop offset="55%" stop-color="rgba(255, 255, 255, 0.68)"/><stop offset="88%" stop-color="rgba(254, 240, 180, 0.84)"/><stop offset="100%" stop-color="#ffffff"/></linearGradient>
+        <linearGradient id="naturalRimGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="rgba(255, 255, 255, 0.85)"/><stop offset="25%" stop-color="rgba(255, 248, 225, 0.65)"/><stop offset="65%" stop-color="rgba(255, 255, 255, 0.48)"/><stop offset="90%" stop-color="rgba(255, 244, 210, 0.52)"/><stop offset="100%" stop-color="rgba(255, 250, 235, 0.38)"/></linearGradient>
         <linearGradient id="windowShoulderGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="rgba(255, 255, 255, 0.52)"/><stop offset="50%" stop-color="rgba(255, 253, 245, 0.62)"/><stop offset="90%" stop-color="rgba(255, 248, 225, 0.30)"/><stop offset="100%" stop-color="rgba(255, 248, 225, 0.05)"/></linearGradient>
         <linearGradient id="rightPillarSheen" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="rgba(255, 255, 255, 0.38)"/><stop offset="45%" stop-color="rgba(255, 252, 240, 0.22)"/><stop offset="85%" stop-color="rgba(255, 248, 225, 0.08)"/><stop offset="100%" stop-color="rgba(255, 255, 255, 0.0)"/></linearGradient>
         <linearGradient id="leftWallSheen" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="rgba(255, 255, 255, 0.28)"/><stop offset="65%" stop-color="rgba(255, 250, 235, 0.10)"/><stop offset="100%" stop-color="rgba(255, 250, 235, 0.0)"/></linearGradient>
-        <linearGradient id="glassBodyGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="rgba(255, 252, 242, 0.30)"/><stop offset="22%" stop-color="rgba(255, 248, 232, 0.15)"/><stop offset="58%" stop-color="rgba(255, 246, 225, 0.12)"/><stop offset="84%" stop-color="rgba(255, 254, 248, 0.34)"/><stop offset="100%" stop-color="rgba(255, 250, 235, 0.28)"/></linearGradient>
-        <linearGradient id="baseCushionGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="rgba(255, 250, 235, 0.52)"/><stop offset="28%" stop-color="rgba(255, 245, 218, 0.36)"/><stop offset="55%" stop-color="rgba(255, 242, 210, 0.32)"/><stop offset="84%" stop-color="rgba(255, 252, 240, 0.56)"/><stop offset="94%" stop-color="rgba(255, 255, 255, 0.78)"/><stop offset="100%" stop-color="rgba(255, 248, 228, 0.52)"/></linearGradient>
+        <linearGradient id="glassBodyGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="rgba(255, 252, 242, 0.24)"/><stop offset="22%" stop-color="rgba(255, 248, 232, 0.09)"/><stop offset="58%" stop-color="rgba(255, 246, 225, 0.06)"/><stop offset="84%" stop-color="rgba(255, 254, 248, 0.26)"/><stop offset="100%" stop-color="rgba(255, 250, 235, 0.20)"/></linearGradient>
+        <!-- 借鉴参考图3 (image_6ee02d) 的 3D 沉底厚玻璃折射渐变：深邃玻璃内折射暗部 + 两侧高折射冷暖焦散亮翼 -->
+        <linearGradient id="baseCushionGrad" x1="0%" y1="0%" x2="100%" y2="12%">
+          <stop offset="0%" stop-color="rgba(255, 252, 240, 0.62)"/>
+          <stop offset="14%" stop-color="rgba(165, 215, 255, 0.34)"/>
+          <stop offset="32%" stop-color="rgba(28, 36, 58, 0.44)"/>
+          <stop offset="52%" stop-color="rgba(18, 26, 48, 0.52)"/>
+          <stop offset="72%" stop-color="rgba(42, 56, 88, 0.38)"/>
+          <stop offset="88%" stop-color="rgba(195, 232, 255, 0.58)"/>
+          <stop offset="100%" stop-color="rgba(255, 252, 240, 0.68)"/>
+        </linearGradient>
+        <linearGradient id="glassBaseInnerFloorGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="rgba(255, 255, 255, 0.55)"/>
+          <stop offset="25%" stop-color="rgba(160, 212, 255, 0.28)"/>
+          <stop offset="50%" stop-color="rgba(30, 42, 68, 0.35)"/>
+          <stop offset="78%" stop-color="rgba(175, 224, 255, 0.42)"/>
+          <stop offset="100%" stop-color="rgba(255, 255, 255, 0.62)"/>
+        </linearGradient>
+        <linearGradient id="glassBaseRimHighlight" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="rgba(255, 255, 255, 0.15)"/>
+          <stop offset="18%" stop-color="rgba(255, 255, 255, 0.78)"/>
+          <stop offset="50%" stop-color="rgba(190, 230, 255, 0.42)"/>
+          <stop offset="82%" stop-color="rgba(255, 255, 255, 0.88)"/>
+          <stop offset="100%" stop-color="rgba(255, 255, 255, 0.18)"/>
+        </linearGradient>
+        <linearGradient id="glassWallSideRefractL" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="rgba(255, 255, 255, 0.42)"/>
+          <stop offset="60%" stop-color="rgba(175, 220, 255, 0.16)"/>
+          <stop offset="100%" stop-color="rgba(255, 255, 255, 0.0)"/>
+        </linearGradient>
+        <linearGradient id="glassWallSideRefractR" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="rgba(255, 255, 255, 0.0)"/>
+          <stop offset="40%" stop-color="rgba(175, 220, 255, 0.18)"/>
+          <stop offset="100%" stop-color="rgba(255, 255, 255, 0.48)"/>
+        </linearGradient>
         <linearGradient id="ikeaCorkTopGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fef9c3"/><stop offset="45%" stop-color="#facc15"/><stop offset="100%" stop-color="#d97706"/></linearGradient>
         <linearGradient id="ikeaCorkSideGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#b45309"/><stop offset="25%" stop-color="#fde047"/><stop offset="55%" stop-color="#f59e0b"/><stop offset="82%" stop-color="#fef08a"/><stop offset="100%" stop-color="#92400e"/></linearGradient>
         <linearGradient id="ikeaCorkPlugGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#78350f"/><stop offset="45%" stop-color="#d97706"/><stop offset="80%" stop-color="#f59e0b"/><stop offset="100%" stop-color="#652b0d"/></linearGradient>
@@ -2678,7 +2680,7 @@
       defsEl.innerHTML = d;
     }
 
-    const userSettings = { sound: true, vibrate: true, music: true, zoom: false };
+    const userSettings = { sound: true, vibrate: true, music: true, zoom: true };
     let speedLevel = 0;
     let speedPoints = 10;
     let isSpeed2x = false;
@@ -3950,13 +3952,7 @@
           <ellipse cx="50" cy="3.1" rx="8.4" ry="1.5" fill="none" stroke="#c99c68" stroke-width="0.65" opacity="0.55"/>
           <path d="M 38.2,4.5 A 11.8,2.4 0 0,0 61.8,4.5" fill="none" stroke="#fff9ed" stroke-width="1.0" stroke-linecap="round" opacity="0.85"/>
           ${isSeated ? `<path d="M 32.4,9.5 A 17.8,3.5 0 0,0 67.6,9.5" fill="none" stroke="#b8d8ff" stroke-width="1.3" stroke-linecap="round" opacity="0.9"/>` : ''}
-          ${showCompleteBadge ? `
-            <g transform="translate(74, 42)">
-              <circle cx="0" cy="0" r="12" fill="url(#checkGreenGrad)" stroke="#ffffff" stroke-width="1.6"/>
-              <ellipse cx="0" cy="-5.5" rx="7.5" ry="3.2" fill="rgba(255,255,255,0.45)"/>
-              <polyline points="-5.2,0.5 -1.4,4.5 5.8,-3.8" fill="none" stroke="#ffffff" stroke-width="3.0" stroke-linecap="round" stroke-linejoin="round"/>
-            </g>
-          ` : ''}
+          <!-- 按用户要求：去掉满瓶后的绿色对号徽章，保持纯净高定软木塞与星级麻布底座质感 -->
         </g>
       `;
     }
@@ -4101,7 +4097,7 @@
 
           <!-- 5. 水瓶底部与麻布垫接触的深色 AO 接触影（瓶子拿起时自动缩小变淡） -->
           <g class="burlap-contact-ao" style="transform-origin: 50px 18.5px; transition: transform 0.24s ease, opacity 0.24s ease;">
-            <ellipse cx="50" cy="18.5" rx="31" ry="7.2" fill="url(#burlapContactAOGrad)" />
+            <ellipse cx="50" cy="18.5" rx="28" ry="6.2" fill="url(#burlapContactAOGrad)" opacity="0.72" />
           </g>
         </svg>
       `;
@@ -4197,7 +4193,7 @@
                 <circle cx="48" cy="86.8" r="1.4" fill="#ffffff" opacity="0.88" />
               </g>
               <path d="M 8,193 A 42,10.5 0 0,0 92,193 L 91,199.5 A 41,11.5 0 0,1 9,199.5 Z" fill="url(#baseCushionGrad)" />
-              <path d="M 10,198 A 40,10.5 0 0,0 90,198" fill="none" stroke="#68b5ff" stroke-width="2.0" stroke-linecap="round" />
+              <path d="M 12,197.5 A 39,10.2 0 0,0 88,197.5" fill="none" stroke="url(#glassBaseRimHighlight)" stroke-width="1.2" stroke-linecap="round" />
               <path d="${catClipPath}" fill="none" stroke="#0b2260" stroke-width="3.2" stroke-linejoin="round" opacity="0.7" />
               <path d="${catClipPath}" fill="none" stroke="#5ca4ff" stroke-width="2.4" stroke-linejoin="round" />
               <g class="capacity-tag-badge" transform="translate(50, 146)">
@@ -4582,19 +4578,21 @@
 
       if (b.corked) {
         const animP = typeof b.corkAnimProgress === 'number' ? b.corkAnimProgress : 1.0;
-        overGlassFX += `<g id="cork-fx-${idx}">${renderRibbonAndDroppingCorkMarkup(idx, animP, neckOffsetY, bBotY, cfg.hasBags && animP < 0.99)}</g>`;
+        overGlassFX += `<g id="cork-fx-${idx}">${renderRibbonAndDroppingCorkMarkup(idx, animP, neckOffsetY, bBotY, animP < 0.99)}</g>`;
       }
 
-      // 修复问题 1 & 3：修长瓶颈直通瓶口上沿 (neckLipTopY)，倾倒时液面直达瓶口不断流
+      // 借鉴参考图3 (image_6ee02d)：内壁与内底微缩，留出真实的玻璃侧壁厚度 (1.5px) 与沉底厚玻璃底座 (4.2px)
+      const innerBotY = bBotY - 1.8;
+      const outerBotY = bBotY + 2.4;
       const smoothClipPath = `
         M 37.2,${neckLipTopY}
         L 62.8,${neckLipTopY}
         L 62.8,${shoulderTopY}
-        C 75.5,${shoulderTopY + 4.2} 81.3,${shoulderTopY + 13.0} 81.3,${shoulderBotY}
-        L 81.3,${bBotY}
-        A 31.3,8.0 0 0,1 18.7,${bBotY}
-        L 18.7,${shoulderBotY}
-        C 18.7,${shoulderTopY + 13.0} 24.5,${shoulderTopY + 4.2} 37.2,${shoulderTopY}
+        C 74.8,${shoulderTopY + 4.2} 80.2,${shoulderTopY + 13.0} 80.2,${shoulderBotY}
+        L 80.2,${innerBotY}
+        A 30.2,7.5 0 0,1 19.8,${innerBotY}
+        L 19.8,${shoulderBotY}
+        C 19.8,${shoulderTopY + 13.0} 25.2,${shoulderTopY + 4.2} 37.2,${shoulderTopY}
         Z
       `;
 
@@ -4603,8 +4601,8 @@
         L 63.6,${neckStemTopY}
         L 63.6,${shoulderTopY}
         C 76.4,${shoulderTopY + 3.8} 82.2,${shoulderTopY + 12.5} 82.2,${shoulderBotY}
-        L 82.2,${bBotY}
-        A 32.2,8.6 0 0,1 17.8,${bBotY}
+        L 82.2,${outerBotY}
+        A 32.2,8.8 0 0,1 17.8,${outerBotY}
         L 17.8,${shoulderBotY}
         C 17.8,${shoulderTopY + 12.5} 23.6,${shoulderTopY + 3.8} 36.4,${shoulderTopY}
         Z
@@ -4633,10 +4631,14 @@
 
           <g id="bottle-body-wrap-${idx}" ${b.special === "paper_bag" ? `clip-path="url(#bag-neck-only-${idx})"` : ""}>
             <path d="${smoothOuterBodyPath}" fill="url(#glassBodyGrad)" />
-            <ellipse cx="50" cy="${bBotY - 0.5}" rx="29.6" ry="6.6"
-                     fill="rgba(155, 208, 255, 0.20)" stroke="rgba(135, 195, 255, 0.48)" stroke-width="1.2" />
-            <ellipse cx="50" cy="${bBotY + 0.3}" rx="25.2" ry="4.6"
-                     fill="rgba(215, 238, 255, 0.18)" />
+
+            <!-- 左右两侧玻璃壁厚度折射光带（体现真实玻璃瓶壁厚度） -->
+            <rect x="17.8" y="${shoulderBotY}" width="2.4" height="${innerBotY - shoulderBotY}" fill="url(#glassWallSideRefractL)" opacity="0.78" />
+            <rect x="79.8" y="${shoulderBotY}" width="2.4" height="${innerBotY - shoulderBotY}" fill="url(#glassWallSideRefractR)" opacity="0.82" />
+
+            <!-- 1. 瓶底内壁椭圆台面（参考图3标志性的玻璃内底椭圆环，空瓶与满瓶皆具立体纵深） -->
+            <ellipse cx="50" cy="${innerBotY}" rx="30.2" ry="6.6"
+                     fill="rgba(22, 32, 58, 0.16)" stroke="url(#glassBaseInnerFloorGrad)" stroke-width="1.15" />
 
             <g clip-path="url(#bclip-${idx})" id="liquid-group-${idx}">
               ${liquidsHTML}
@@ -4645,7 +4647,7 @@
             <g clip-path="url(#bclip-${idx})">
               <ellipse cx="34" cy="${37.5 + neckOffsetY}" rx="13.5" ry="9.2" fill="url(#leftShoulderDomeGrad)" />
               <rect x="21.0" y="${pillarTopY}" width="5.5" height="${pillarH}" rx="2.7" fill="url(#leftWallSheen)" />
-              <!-- 参考图2 (101f7498) 纤细修长瓶肩反光块 + 右侧垂直高光柱 -->
+              <!-- 纤细修长瓶肩反光块 + 右侧垂直高光柱 -->
               <path class="shoulder-sheen"
                     d="M 53.8,${28.2 + neckOffsetY}
                        C 64.8,${30.2 + neckOffsetY} 72.0,${35.5 + neckOffsetY} 74.5,${42.8 + neckOffsetY}
@@ -4661,34 +4663,48 @@
               ${insideGlassDecorFX}
             </g>
 
-            <path d="M 17.8,${bBotY - 0.5} A 32.2,8.4 0 0,0 82.2,${bBotY - 0.5} L 81.6,${bBotY + 4.0} A 31.6,9.2 0 0,1 18.4,${bBotY + 4.0} Z"
+            <!-- 2. 借鉴参考图3 (image_6ee02d) 的 3D 沉底厚玻璃结构：内底与外底之间的厚实水晶玻璃折射层 -->
+            <path d="M 19.6,${innerBotY}
+                     A 30.4,7.5 0 0,0 80.4,${innerBotY}
+                     L 82.2,${outerBotY}
+                     A 32.2,8.8 0 0,1 17.8,${outerBotY}
+                     Z"
                   fill="url(#baseCushionGrad)" />
-            <path d="M 19.0,${bBotY + 3.0} A 31.0,8.8 0 0,0 81.0,${bBotY + 3.0}"
-                  fill="none" stroke="rgba(255, 255, 255, 0.78)" stroke-width="1.5" stroke-linecap="round" opacity="0.88" />
-            <path d="M 27.5,${bBotY + 6.2} A 22.5,4.8 0 0,0 72.5,${bBotY + 6.2}"
-                  fill="none" stroke="rgba(254, 243, 199, 0.72)" stroke-width="1.1" stroke-linecap="round" opacity="0.72" />
 
-            <path d="${smoothClipPath}"
-                  fill="none" stroke="rgba(255, 255, 255, 0.38)" stroke-width="1.1" stroke-linejoin="round" />
+            <!-- 3. 厚底玻璃内部月牙形焦散反光弧（左翼与右翼晶莹聚光、中央深邃通透） -->
+            <path d="M 20.5,${innerBotY + 1.4}
+                     A 29.8,7.8 0 0,0 79.5,${innerBotY + 1.4}
+                     A 30.8,8.5 0 0,1 20.5,${innerBotY + 1.4} Z"
+                  fill="url(#glassBaseRimHighlight)" opacity="0.68" />
 
-            <!-- 外层3D纤细修长琉璃轮廓线（对齐参考图2 101f7498） -->
+            <!-- 4. 药水底面与玻璃内底交界处的晶莹折光弦线 -->
+            <path d="M 19.8,${innerBotY} A 30.2,7.5 0 0,0 80.2,${innerBotY}"
+                  fill="none" stroke="url(#glassBaseRimHighlight)" stroke-width="1.25" stroke-linecap="round" />
+
+            <!-- 5. 瓶底最下沿的高折射亮白与冰蓝双层琉璃底边弧（对标参考图3底部亮弧） -->
+            <path d="M 18.4,${outerBotY - 0.3} A 31.6,8.6 0 0,0 81.6,${outerBotY - 0.3}"
+                  fill="none" stroke="url(#glassBaseRimHighlight)" stroke-width="1.55" stroke-linecap="round" />
+            <path d="M 26.0,${outerBotY + 4.8} A 25.0,5.2 0 0,0 74.0,${outerBotY + 4.8}"
+                  fill="none" stroke="rgba(255, 255, 255, 0.52)" stroke-width="0.95" stroke-linecap="round" />
+
+            <!-- 外层3D纤细修长琉璃轮廓线 -->
             <path d="M 32.0,${neckLipTopY}
                      C 30.2,${13.4 + neckOffsetY} 31.4,${18.2 + neckOffsetY} 36.4,${20.4 + neckOffsetY}
                      C 37.5,${22.2 + neckOffsetY} 37.5,${24.4 + neckOffsetY} 36.4,${shoulderTopY}
                      C 23.6,${shoulderTopY + 4.2} 17.8,${shoulderTopY + 13.0} 17.8,${shoulderBotY}
-                     L 17.8,${bBotY}
-                     A 32.2,8.6 0 0,0 82.2,${bBotY}
+                     L 17.8,${outerBotY}
+                     A 32.2,8.8 0 0,0 82.2,${outerBotY}
                      L 82.2,${shoulderBotY}
                      C 82.2,${shoulderTopY + 13.0} 76.4,${shoulderTopY + 4.2} 63.6,${shoulderTopY}
                      C 62.5,${24.4 + neckOffsetY} 62.5,${22.2 + neckOffsetY} 63.6,${20.4 + neckOffsetY}
                      C 68.6,${18.2 + neckOffsetY} 69.8,${13.4 + neckOffsetY} 68.0,${neckLipTopY}"
                   fill="none" stroke="${(b.special === 'ad_cam' || b.special === 'ad_cam_blue') ? '#d884ff' : 'url(#naturalRimGrad)'}"
-                  stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" />
+                  stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" />
 
             ${cfg.isVariedHeight ? `
-              <g class="capacity-tag-badge" transform="translate(50, 184)">
-                <rect x="-16" y="-8" width="32" height="14" rx="7" fill="rgba(8, 22, 64, 0.78)" stroke="#7ec0ff" stroke-width="1" />
-                <text x="0" y="2.5" text-anchor="middle" fill="#d8eeff" font-size="9.5" font-weight="900">${maxCap}层</text>
+              <g class="capacity-tag-badge" transform="translate(50, ${35 + neckOffsetY})">
+                <rect x="-15" y="-7.5" width="30" height="13" rx="6.5" fill="rgba(28, 38, 68, 0.62)" stroke="rgba(255, 255, 255, 0.72)" stroke-width="0.9" />
+                <text x="0" y="2.4" text-anchor="middle" fill="#ffffff" font-size="9" font-weight="800">${maxCap}层</text>
               </g>
             ` : ''}
 
@@ -5383,10 +5399,15 @@
       }
       const sRect = srcEl.getBoundingClientRect();
       const dRect = dstEl.getBoundingClientRect();
-      const sx = sRect.left + sRect.width * 0.5;
-      const sy = sRect.top + 6;
-      const dx = dRect.left + dRect.width * 0.5;
-      const dy = dRect.top + 8;
+      /* 关键修复：读取水瓶真实瓶口锚点 (#mouth-center-idx) 的屏幕坐标，精准适配 2层矮瓶 / 4层中瓶 / 6层高瓶 / 8层长管瓶的实际高度！ */
+      const srcMouthEl = document.getElementById(`mouth-center-${activeHintPair.srcIdx}`);
+      const dstMouthEl = document.getElementById(`mouth-center-${activeHintPair.dstIdx}`);
+      const sMouthRect = srcMouthEl ? srcMouthEl.getBoundingClientRect() : null;
+      const dMouthRect = dstMouthEl ? dstMouthEl.getBoundingClientRect() : null;
+      const sx = (sMouthRect && sMouthRect.width >= 0) ? (sMouthRect.left + sMouthRect.width * 0.5) : (sRect.left + sRect.width * 0.5);
+      const sy = (sMouthRect && sMouthRect.height >= 0) ? (sMouthRect.top + sMouthRect.height * 0.5) : (sRect.top + 8);
+      const dx = (dMouthRect && dMouthRect.width >= 0) ? (dMouthRect.left + dMouthRect.width * 0.5) : (dRect.left + dRect.width * 0.5);
+      const dy = (dMouthRect && dMouthRect.height >= 0) ? (dMouthRect.top + dMouthRect.height * 0.5) : (dRect.top + 10);
       const winW = window.innerWidth || 390;
 
       const deltaX = dx - sx;
@@ -5423,19 +5444,21 @@
         sBadge = { x: sx - sideDir * 18, y: sy - 18 };
         dBadge = { x: dx - sideDir * 18, y: dy - 20 };
       } else {
-        // 左右横向或大对角线倒水时：自上方拱起优美弧线
+        // 左右横向或大对角线倒水时：起点与终点严格锚定两个水瓶的真实瓶口高度 (sx, sy) 与 (dx, dy)
         const spanX = Math.abs(deltaX);
-        const archH = Math.max(48, Math.min(95, spanX * 0.36));
+        const archH = Math.max(44, Math.min(88, spanX * 0.34));
         const ctrlX = (sx + dx) * 0.5;
-        const ctrlY = Math.min(sy, dy) - archH;
+        // 若两瓶之间隔着高瓶，控制点自然拱起越过中间瓶口，同时起止点100%精准落在矮瓶/高瓶的真实瓶口上
+        const highestSlotTop = Math.min(sRect.top, dRect.top);
+        const ctrlY = Math.min(Math.min(sy, dy) - archH, highestSlotTop - 18);
 
         arrowX = dx;
         arrowY = dy;
         path = `M ${sx.toFixed(1)},${sy.toFixed(1)} Q ${ctrlX.toFixed(1)},${ctrlY.toFixed(1)} ${arrowX.toFixed(1)},${arrowY.toFixed(1)}`;
         angDeg = (Math.atan2(dy - ctrlY, dx - ctrlX) * 180) / Math.PI;
 
-        sBadge = { x: sx, y: sy - 16 };
-        dBadge = { x: dx, y: dy - 18 };
+        sBadge = { x: sx, y: sy - 18 };
+        dBadge = { x: dx, y: dy - 20 };
       }
 
       sBadge.x = Math.max(30, Math.min(winW - 30, sBadge.x));
@@ -6726,7 +6749,7 @@
             dstBottle.corked = true;
             dstBottle.corkAnimProgress = 0;
             if (typeof emitBonusStarsFromScreen === 'function') {
-              emitBonusStarsFromScreen(dstRect.left + dstRect.width * 0.5, dstRect.top + dstRect.height * 0.35, 6);
+              emitBonusStarsFromScreen(dstRect, pourColorKey, 7);
             }
             releaseObsoleteColorLocks();
             renderAll();
@@ -6749,8 +6772,9 @@
             const neckOff = getNeckOffsetY(dstCap, !!dstBottle.isGiantCat);
 
             const corkStart = performance.now();
-            const useBagSpiral = !!cfg.hasBags;
-            const corkDur = (useBagSpiral ? 680 : 480) / getSpeedMultiplier();
+            const hasBagMode = !!cfg.hasBags;
+            const useBagSpiral = true;
+            const corkDur = 640 / getSpeedMultiplier();
             let slamSoundPlayed = false;
             let packSoundPlayed = false;
 
@@ -6803,7 +6827,7 @@
                 requestAnimationFrame(stepCorkAnim);
               } else {
                 dstBottle.corkAnimProgress = 1.0;
-                if (useBagSpiral) {
+                if (hasBagMode) {
                   const matchedBagIdx = findMatchingOpenBagIndex(pourColorKey);
                   if (matchedBagIdx !== -1) {
                     packCompletedBottleIntoBag(dstIdx, pourColorKey, matchedBagIdx);
@@ -7956,72 +7980,89 @@
       }, 780);
     }
 
-    // 步数减少时的文字跳动与 -1 浮字特效
+    // 步数更新或满瓶封存时保持「第 X 关」文字稳固不动（仅在飞星抵达时绽放柔和金光圈）
     function triggerTopNumberStepEffect(deltaText = '-1') {
-      const numEl = document.getElementById('zen-header-big-num');
-      const subEl = document.getElementById('level-pill-title');
-      if (numEl) {
-        numEl.classList.remove('step-tick', 'pulse');
-        void numEl.offsetWidth;
-        numEl.classList.add('step-tick');
-        setTimeout(() => numEl.classList.remove('step-tick'), 360);
-      }
-      if (subEl) {
-        subEl.classList.remove('sub-pulse');
-        void subEl.offsetWidth;
-        subEl.classList.add('sub-pulse');
-        setTimeout(() => subEl.classList.remove('sub-pulse'), 420);
-      }
-      spawnFloatingDeltaText(deltaText, '#fde68a');
+      // 按用户要求：步数更新时「第 X 关」文字保持静止不动
     }
 
-    // 封存满瓶时的璀璨金光脉冲 + 光环扩散 + +1 浮字特效
     function pulseTopBigNumber() {
-      const numEl = document.getElementById('zen-header-big-num');
-      const subEl = document.getElementById('level-pill-title');
-      if (!numEl) return;
-      numEl.classList.remove('pulse', 'step-tick');
-      void numEl.offsetWidth;
-      numEl.classList.add('pulse');
-      if (subEl) {
-        subEl.classList.remove('sub-pulse');
-        void subEl.offsetWidth;
-        subEl.classList.add('sub-pulse');
-        setTimeout(() => subEl.classList.remove('sub-pulse'), 460);
-      }
-      spawnFloatingDeltaText('+1 ✨', '#fff8a6');
-
-      const rect = numEl.getBoundingClientRect();
+      const wrapEl = document.getElementById('zen-big-num-wrap');
+      if (!wrapEl) return;
+      const rect = wrapEl.getBoundingClientRect();
       topShockwaves.push({
         x: rect.left + rect.width * 0.5,
         y: rect.top + rect.height * 0.5,
-        r: 10,
-        maxR: 54,
-        alpha: 0.9
+        r: 12,
+        maxR: 48,
+        alpha: 0.82
       });
-      setTimeout(() => numEl.classList.remove('pulse'), 540);
     }
 
-    // 当完成一瓶水封存时，发射飞向顶部中央大数字的璀璨飞星
-    function emitBonusStarsFromScreen(startX, startY, count = 6) {
-      const numEl = document.getElementById('zen-header-big-num');
-      const rect = numEl ? numEl.getBoundingClientRect() : null;
-      const endX = rect ? (rect.left + rect.width * 0.5) : ((window.innerWidth || 412) * 0.5);
-      const endY = rect ? (rect.top + rect.height * 0.45) : 36;
+    // 当完成一瓶水封存时：
+    // 1) 若当前关有对应颜色的礼袋，飞星沿优雅弧线汇入对应礼袋；
+    // 2) 若当前关无礼袋（常规关），飞星自瓶口礼花般绽放，盘旋注入瓶底的「3D星级麻布软垫」点亮金星底座（绝不飞向「第 X 关」标题）！
+    function emitBonusStarsFromScreen(dstRect, colorKey, count = 7) {
+      if (!dstRect) return;
+      const startX = dstRect.left + dstRect.width * 0.5;
+      const startY = dstRect.top + dstRect.height * 0.16;
 
-      for (let i = 0; i < count; i++) {
-        flyingBonusStars.push({
-          t: -i * 0.06,
-          startX,
-          startY,
-          ctrlX: startX - 45 + (Math.random() - 0.5) * 85,
-          ctrlY: (startY + endY) * 0.45,
-          endX,
-          endY,
-          size: 9.0 + Math.random() * 4.5,
-          rot: Math.random() * Math.PI,
-          pulseOnArrive: (i === count - 1)
+      const cfg = getLevelConfig(currentLevelId);
+      let targetBagEl = null;
+      if (cfg.hasBags && colorKey) {
+        const matchedBagIdx = findMatchingOpenBagIndex(colorKey);
+        if (matchedBagIdx !== -1) {
+          const bagsStageEl = document.getElementById('bags-stage');
+          targetBagEl = bagsStageEl ? bagsStageEl.children[matchedBagIdx] : null;
+        }
+      }
+
+      if (targetBagEl) {
+        const bagRect = targetBagEl.getBoundingClientRect();
+        const endX = bagRect.left + bagRect.width * 0.48;
+        const endY = bagRect.top + bagRect.height * 0.42;
+        for (let i = 0; i < count; i++) {
+          flyingBonusStars.push({
+            t: -i * 0.055,
+            startX,
+            startY,
+            ctrlX: (startX + endX) * 0.5 + (Math.random() - 0.5) * 90,
+            ctrlY: Math.min(startY, endY) - 45 - Math.random() * 35,
+            endX,
+            endY,
+            size: 8.5 + Math.random() * 4.0,
+            rot: Math.random() * Math.PI,
+            drawRibbon: (i === 0),
+            shockwaveTarget: { x: endX, y: endY, maxR: 38 }
+          });
+        }
+      } else {
+        // 无购物袋关卡：瓶口绽放金星礼花，沿瓶身两侧优雅盘旋落入瓶底的「3D星级麻布底座」并点亮底座金星光环！
+        const coasterX = dstRect.left + dstRect.width * 0.5;
+        const coasterY = dstRect.bottom - 2;
+        topShockwaves.push({
+          x: startX,
+          y: startY,
+          r: 6,
+          maxR: 36,
+          alpha: 0.88
         });
+        for (let i = 0; i < count; i++) {
+          const side = (i % 2 === 0) ? 1 : -1;
+          const spreadX = side * (26 + (i >> 1) * 12 + Math.random() * 14);
+          flyingBonusStars.push({
+            t: -i * 0.045,
+            startX,
+            startY,
+            ctrlX: startX + spreadX,
+            ctrlY: startY - 22 + (i / count) * (dstRect.height * 0.55),
+            endX: coasterX + (Math.random() - 0.5) * 22,
+            endY: coasterY,
+            size: 8.0 + Math.random() * 4.2,
+            rot: Math.random() * Math.PI,
+            drawRibbon: false,
+            shockwaveTarget: (i === count - 1) ? { x: coasterX, y: coasterY, maxR: 42 } : null
+          });
+        }
       }
     }
 
@@ -8082,57 +8123,30 @@
         bgStarCtx.restore();
       });
 
-      // 2. 绘制顶部大数字左侧的优雅金弧与上升星流（避开下方副标题文字，绝不遮挡「第 X 关」）
-      const numEl = document.getElementById('zen-header-big-num');
-      const rect = numEl ? numEl.getBoundingClientRect() : null;
-      const topLeftPt = {
-        x: rect ? (rect.left - 10) : (w * 0.42),
-        y: rect ? (rect.top + rect.height * 0.35) : 34
-      };
-      const arcStartPt = {
-        x: topLeftPt.x - 42,
-        y: topLeftPt.y + 48
-      };
+      // 2. 当有飞向礼袋的飞星时，绘制连接水瓶与礼袋的流光金弧
+      if (flyingBonusStars.length > 0 && flyingBonusStars[0].drawRibbon) {
+        const refStar = flyingBonusStars[0];
+        const ribbonAlpha = Math.sin(Math.max(0, Math.min(1, refStar.t)) * Math.PI) * 0.72;
+        if (ribbonAlpha > 0.02) {
+          bgStarCtx.save();
+          const ribbonGrad = bgStarCtx.createLinearGradient(refStar.startX, refStar.startY, refStar.endX, refStar.endY);
+          ribbonGrad.addColorStop(0, 'rgba(255, 232, 110, 0.0)');
+          ribbonGrad.addColorStop(0.4, `rgba(255, 238, 125, ${(ribbonAlpha * 0.75).toFixed(2)})`);
+          ribbonGrad.addColorStop(0.8, `rgba(255, 248, 175, ${ribbonAlpha.toFixed(2)})`);
+          ribbonGrad.addColorStop(1, 'rgba(255, 250, 190, 0.0)');
+          bgStarCtx.strokeStyle = ribbonGrad;
+          bgStarCtx.lineWidth = 2.4;
+          bgStarCtx.shadowColor = 'rgba(255, 225, 80, 0.75)';
+          bgStarCtx.shadowBlur = 8;
+          bgStarCtx.beginPath();
+          bgStarCtx.moveTo(refStar.startX, refStar.startY);
+          bgStarCtx.quadraticCurveTo(refStar.ctrlX, refStar.ctrlY, refStar.endX, refStar.endY);
+          bgStarCtx.stroke();
+          bgStarCtx.restore();
+        }
+      }
 
-      bgStarCtx.save();
-      const ribbonGrad = bgStarCtx.createLinearGradient(arcStartPt.x, arcStartPt.y, topLeftPt.x, topLeftPt.y - 8);
-      ribbonGrad.addColorStop(0, 'rgba(255, 232, 110, 0.0)');
-      ribbonGrad.addColorStop(0.35, 'rgba(255, 235, 125, 0.65)');
-      ribbonGrad.addColorStop(0.75, 'rgba(255, 245, 160, 0.82)');
-      ribbonGrad.addColorStop(1, 'rgba(255, 250, 190, 0.0)');
-
-      bgStarCtx.strokeStyle = ribbonGrad;
-      bgStarCtx.lineWidth = 2.4;
-      bgStarCtx.shadowColor = 'rgba(255, 225, 80, 0.8)';
-      bgStarCtx.shadowBlur = 8;
-      bgStarCtx.beginPath();
-      bgStarCtx.moveTo(arcStartPt.x, arcStartPt.y);
-      bgStarCtx.bezierCurveTo(
-        arcStartPt.x - 24, arcStartPt.y - 26,
-        topLeftPt.x - 36, topLeftPt.y - 12,
-        topLeftPt.x - 4, topLeftPt.y - 6
-      );
-      bgStarCtx.stroke();
-      bgStarCtx.restore();
-
-      streamStars.forEach(st => {
-        st.t += st.speed;
-        st.rot += st.rotSpeed;
-        if (st.t >= 1.0) st.t = 0;
-        const t = st.t;
-        const p0x = arcStartPt.x + (st.branch ? -6 : 4);
-        const p0y = arcStartPt.y + (st.branch ? 4 : -2);
-        const p1x = arcStartPt.x - (st.branch ? 28 : 14);
-        const p1y = arcStartPt.y - 28;
-        const p2x = topLeftPt.x - (st.branch ? 10 : 2);
-        const p2y = topLeftPt.y - 4;
-        const sx = (1 - t) * (1 - t) * p0x + 2 * (1 - t) * t * p1x + t * t * p2x;
-        const sy = (1 - t) * (1 - t) * p0y + 2 * (1 - t) * t * p1y + t * t * p2y;
-        const alpha = Math.sin(t * Math.PI) * 0.88;
-        drawGlowingStar2D(bgStarCtx, sx, sy, st.size * (1 - t * 0.35), st.rot, alpha);
-      });
-
-      // 3. 绘制顶部大数字的金光扩散冲击波环
+      // 3. 绘制瓶口/麻布底座/礼袋处的金光扩散冲击波环
       for (let i = topShockwaves.length - 1; i >= 0; i--) {
         const sw = topShockwaves[i];
         sw.r += (sw.maxR - sw.r) * 0.16;
@@ -8150,20 +8164,29 @@
         bgStarCtx.restore();
       }
 
-      // 4. 绘制满瓶触发的奖励飞星
+      // 4. 绘制满瓶触发的飞星（汇入礼袋或盘旋落入瓶底星级麻布软垫）
       for (let i = flyingBonusStars.length - 1; i >= 0; i--) {
         const bs = flyingBonusStars[i];
         bs.t += 0.036;
         if (bs.t < 0) continue;
         if (bs.t >= 1.0) {
-          if (bs.pulseOnArrive) pulseTopBigNumber();
+          if (bs.shockwaveTarget) {
+            topShockwaves.push({
+              x: bs.shockwaveTarget.x,
+              y: bs.shockwaveTarget.y,
+              r: 8,
+              maxR: bs.shockwaveTarget.maxR || 40,
+              alpha: 0.9
+            });
+          }
           flyingBonusStars.splice(i, 1);
           continue;
         }
         const t = bs.t;
         const x = (1 - t) * (1 - t) * bs.startX + 2 * (1 - t) * t * bs.ctrlX + t * t * bs.endX;
         const y = (1 - t) * (1 - t) * bs.startY + 2 * (1 - t) * t * bs.ctrlY + t * t * bs.endY;
-        drawGlowingStar2D(bgStarCtx, x, y, bs.size, bs.rot + t * 4, 1.0);
+        const alpha = Math.sin(t * Math.PI * 0.92 + 0.08);
+        drawGlowingStar2D(bgStarCtx, x, y, bs.size * (1 - t * 0.25), bs.rot + t * 4, alpha);
       }
 
       // 5. 绘制通关礼花与金星喷发
