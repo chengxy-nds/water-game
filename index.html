@@ -9,11 +9,29 @@
       --safe-top: env(safe-area-inset-top, 0px);
       --safe-bottom: env(safe-area-inset-bottom, 0px);
       --app-max-w: 460px;
-      /* 默认主题：火山灰 Volcanic Ash 高级哑光灰紫石板色 */
+      /* 默认主题：晨曦流金 Zen Amber & Sage（100%还原参考图高级暖金渐变至柔雾鼠尾草绿艺术背景） */
+      --stage-bg:
+        radial-gradient(circle at 46% 13%, rgba(255, 244, 180, 0.45) 0%, rgba(238, 178, 78, 0.18) 34%, rgba(0, 0, 0, 0) 66%),
+        linear-gradient(115deg, #d79646 0%, #e5a143 28%, #df9b3d 52%, #b0914d 78%, #778355 100%);
+      --stage-glow: radial-gradient(ellipse at 48% 16%, rgba(255, 245, 190, 0.42) 0%, rgba(235, 175, 70, 0.12) 48%, rgba(120, 80, 20, 0) 76%);
+      --dock-bg: transparent;
+      --dock-border: rgba(255, 255, 255, 0.65);
+    }
+
+    body[data-theme="zen_amber"] {
+      --stage-bg:
+        radial-gradient(circle at 46% 13%, rgba(255, 244, 180, 0.45) 0%, rgba(238, 178, 78, 0.18) 34%, rgba(0, 0, 0, 0) 66%),
+        linear-gradient(115deg, #d79646 0%, #e5a143 28%, #df9b3d 52%, #b0914d 78%, #778355 100%);
+      --stage-glow: radial-gradient(ellipse at 48% 16%, rgba(255, 245, 190, 0.42) 0%, rgba(235, 175, 70, 0.12) 48%, rgba(120, 80, 20, 0) 76%);
+      --dock-bg: transparent;
+      --dock-border: rgba(255, 255, 255, 0.65);
+    }
+
+    body[data-theme="volcanic"] {
       --stage-bg: linear-gradient(180deg, #989aa9 0%, #8a8d9e 64%, #6a6e82 64.1%, #62667a 100%);
       --stage-glow: radial-gradient(ellipse at 50% 24%, rgba(255, 255, 255, 0.18) 0%, rgba(15, 23, 42, 0) 70%);
-      --dock-bg: linear-gradient(180deg, #7e89d2 0%, #6873be 100%);
-      --dock-border: #b4befa;
+      --dock-bg: linear-gradient(180deg, #5863b8 0%, #3d468f 100%);
+      --dock-border: #9aa7ff;
     }
 
     body[data-theme="taro"] {
@@ -38,10 +56,10 @@
     }
 
     body[data-theme="starlight"] {
-      --stage-bg: radial-gradient(circle at 50% 18%, #162a54 0%, #0c1833 52%, #070d1e 100%);
-      --stage-glow: radial-gradient(ellipse at 50% 20%, rgba(72, 165, 255, 0.24) 0%, rgba(15, 32, 68, 0) 72%);
-      --dock-bg: linear-gradient(180deg, #2b4582 0%, #1a2c59 100%);
-      --dock-border: #6ba8ff;
+      --stage-bg: radial-gradient(ellipse at 50% 18%, #191d52 0%, #0d1030 52%, #07081c 100%);
+      --stage-glow: radial-gradient(ellipse at 50% 16%, rgba(124, 58, 237, 0.22) 0%, rgba(30, 58, 138, 0.12) 45%, rgba(7, 8, 28, 0) 75%);
+      --dock-bg: linear-gradient(180deg, #2a3180 0%, #171b4d 100%);
+      --dock-border: #434ea8;
     }
 
     body[data-theme="emerald"] {
@@ -103,146 +121,126 @@
       justify-content: space-between;
       gap: clamp(2px, 0.7dvh, 8px);
       padding: calc(var(--safe-top) + 6px) clamp(6px, 2vw, 12px) 0;
-      overflow: hidden;
+      overflow: visible;
       z-index: 2;
     }
 
-    /* ==================== 1. 顶部导航栏 ==================== */
+    /* 背景流金星轨与暖光萤火微粒层（100%还原参考图顶部金色星芒弧线与空气感微粒） */
+    .starfield-bg {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100dvh;
+      pointer-events: none;
+      z-index: 1;
+      opacity: 0.95;
+    }
+
+    /* ==================== 1. 极简高定顶部栏（对标参考图：中央大字号纯白数字与小字副标题 + 磨砂玻璃圆角方钮） ==================== */
     .top-bar {
       width: 100%;
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       justify-content: space-between;
-      padding: 0 4px;
-      height: clamp(40px, 6.2dvh, 48px);
+      padding: 6px 10px 2px;
+      min-height: clamp(68px, 10.2dvh, 84px);
       flex-shrink: 0;
       position: relative;
-      z-index: 10;
+      z-index: 15;
     }
 
-    .top-gear-btn {
+    /* 左右两侧磨砂玻璃圆角方框按钮组（对标参考图右上角 ? Rules 磨砂玻璃按钮） */
+    .frosted-top-action {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      cursor: pointer;
+      transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+      flex-shrink: 0;
+      z-index: 18;
+    }
+    .frosted-top-action:active {
+      transform: scale(0.92);
+    }
+    .frosted-top-box {
       position: relative;
-      width: clamp(40px, 5.8dvh, 46px);
-      height: clamp(40px, 5.8dvh, 46px);
-      border-radius: 50%;
-      background: radial-gradient(circle at 36% 26%, #7ce8ff 0%, #2eb0ff 48%, #1568cf 88%, #0d4699 100%);
-      border: 3px solid #ffffff;
-      outline: 1.8px solid #164e9e;
+      width: clamp(44px, 6.4dvh, 50px);
+      height: clamp(44px, 6.4dvh, 50px);
+      border-radius: 16px;
+      background: linear-gradient(145deg, rgba(255, 255, 255, 0.34) 0%, rgba(255, 255, 255, 0.14) 58%, rgba(255, 244, 214, 0.24) 100%);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1.6px solid rgba(255, 255, 255, 0.72);
       box-shadow:
-        0 4px 0 #104088,
-        0 6px 12px rgba(0, 0, 0, 0.36),
-        inset 0 3px 4px rgba(255, 255, 255, 0.85),
-        inset 0 -3px 5px rgba(8, 45, 110, 0.65);
+        0 6px 16px rgba(72, 48, 12, 0.18),
+        inset 0 2px 3px rgba(255, 255, 255, 0.78),
+        inset 0 -2px 4px rgba(95, 65, 20, 0.15);
       display: flex;
       align-items: center;
       justify-content: center;
-      cursor: pointer;
-      transition: transform 0.12s;
-      flex-shrink: 0;
     }
-    .top-gear-btn::before {
+    .frosted-top-box::before {
       content: "";
       position: absolute;
       top: 4px;
-      left: 7px;
-      width: 12px;
+      left: 6px;
+      width: 14px;
       height: 5px;
       border-radius: 50%;
-      background: rgba(255, 255, 255, 0.72);
-      transform: rotate(-28deg);
+      background: rgba(255, 255, 255, 0.55);
+      transform: rotate(-20deg);
       pointer-events: none;
     }
-    .top-gear-btn:active {
-      transform: scale(0.92) translateY(2px);
+    .frosted-top-label {
+      font-size: 12px;
+      font-weight: 800;
+      color: #ffffff;
+      letter-spacing: 0.6px;
+      text-shadow: 0 1.5px 4px rgba(72, 45, 10, 0.38);
+      line-height: 1;
     }
 
+    /* 顶部中央大字号纯白数字与副标题（对标参考图中央「12 / Moves left」无框极简高级排版） */
     .top-center-group {
       position: absolute;
       left: 50%;
-      top: 50%;
-      transform: translate(-50%, -50%);
+      top: 2px;
+      transform: translateX(-50%);
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
+      cursor: pointer;
       pointer-events: auto;
+      z-index: 16;
+      padding: 2px 18px;
+      transition: transform 0.14s ease;
     }
-
-    .level-pill {
-      background: rgba(54, 56, 70, 0.86);
-      border: 1.5px solid rgba(255, 255, 255, 0.25);
-      border-radius: 20px;
-      padding: 4px clamp(16px, 4vw, 24px);
-      font-size: clamp(14px, 2.2dvh, 17px);
+    .top-center-group:active {
+      transform: translateX(-50%) scale(0.95);
+    }
+    .zen-big-num {
+      font-size: clamp(34px, 5.2dvh, 44px);
       font-weight: 900;
-      letter-spacing: 0.8px;
+      line-height: 1.02;
       color: #ffffff;
-      -webkit-text-stroke: 3.2px #1c202e;
-      paint-order: stroke fill;
-      text-shadow: 0 2px 0 #141722;
-      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.26), inset 0 1px 1px rgba(255,255,255,0.25);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      cursor: pointer;
+      letter-spacing: -0.5px;
+      text-shadow:
+        0 3px 12px rgba(115, 65, 10, 0.35),
+        0 0 18px rgba(255, 240, 150, 0.35);
     }
-
-    /* 顶部居中关卡胶囊 */
     .level-pill {
-      background: rgba(54, 56, 70, 0.86);
-      border: 1.5px solid rgba(255, 255, 255, 0.25);
-      border-radius: 20px;
-      padding: 5px clamp(18px, 4.5vw, 26px);
-      font-size: clamp(14px, 2.2dvh, 17px);
-      font-weight: 900;
+      margin-top: 2px;
+      background: transparent;
+      border: none;
+      padding: 0;
+      font-size: clamp(13px, 1.95dvh, 15px);
+      font-weight: 800;
       letter-spacing: 0.8px;
-      color: #ffffff;
-      -webkit-text-stroke: 3.2px #1c202e;
-      paint-order: stroke fill;
-      text-shadow: 0 2px 0 #141722;
-      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.26), inset 0 1px 1px rgba(255,255,255,0.25);
+      color: rgba(255, 255, 255, 0.96);
+      text-shadow: 0 1.5px 5px rgba(95, 52, 8, 0.42);
       white-space: nowrap;
-      cursor: pointer;
-    }
-
-    .top-right-group {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      flex-shrink: 0;
-    }
-
-    .joystick-pill-btn {
-      width: 34px;
-      height: 32px;
-      border-radius: 12px;
-      background: rgba(235, 238, 246, 0.82);
-      border: 1.5px solid rgba(255, 255, 255, 0.9);
-      box-shadow: 0 2.5px 0 rgba(40, 50, 75, 0.25), 0 4px 8px rgba(0, 0, 0, 0.18);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      transition: transform 0.12s;
-    }
-    .joystick-pill-btn:active { transform: scale(0.92); }
-
-    .minigame-capsule {
-      height: 32px;
-      padding: 0 10px;
-      border-radius: 16px;
-      background: rgba(235, 238, 246, 0.82);
-      border: 1.5px solid rgba(255, 255, 255, 0.9);
-      box-shadow: 0 2.5px 0 rgba(40, 50, 75, 0.25), 0 4px 8px rgba(0, 0, 0, 0.18);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      cursor: pointer;
-      color: #1e2433;
-    }
-    .minigame-capsule-div {
-      width: 1px;
-      height: 14px;
-      background: rgba(30, 36, 51, 0.25);
     }
 
     /* ==================== 2. 顶部 4 个 3D 礼盒袋 & 模式横幅 ==================== */
@@ -574,28 +572,20 @@
       letter-spacing: 0.3px;
     }
 
-    /* ==================== 4. 底部方格底座 + 原版 4 大倒水功能按钮（提示 / +空瓶 / 关卡 / 撤回）立体圆章风格 ==================== */
+    /* ==================== 4. 底部无底板悬浮磨砂玻璃圆角方框按钮栏（精简为3枚核心道具：打乱 / 撤回 / 提示） ==================== */
     .bottom-dock-wrap {
-      width: calc(100% + 24px);
-      margin-left: -12px;
-      margin-right: -12px;
-      padding: 10px clamp(18px, 6vw, 36px) calc(var(--safe-bottom) + 8px);
-      background: var(--dock-bg);
-      background-image:
-        linear-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px),
-        var(--dock-bg);
-      background-size: 20px 20px, 20px 20px, 100% 100%;
-      border-top: 4px solid var(--dock-border);
-      border-radius: 26px 26px 0 0;
-      box-shadow:
-        0 -6px 18px rgba(0, 0, 0, 0.28),
-        inset 0 2.5px 3px rgba(255, 255, 255, 0.52);
+      width: 100%;
+      max-width: 340px;
+      margin: 0 auto calc(var(--safe-bottom) + 12px);
+      padding: 4px clamp(18px, 5vw, 28px) 22px;
+      background: transparent;
+      border: none;
+      box-shadow: none;
       display: flex;
       align-items: center;
-      justify-content: space-around;
-      gap: clamp(16px, 5vw, 36px);
-      height: clamp(68px, 10.8dvh, 82px);
+      justify-content: center;
+      gap: clamp(26px, 7.5vw, 42px);
+      height: auto;
       flex-shrink: 0;
       position: relative;
       z-index: 25;
@@ -623,89 +613,92 @@
       animation: bottleStaggerEnter 0.50s cubic-bezier(0.22, 1.25, 0.36, 1) both;
     }
 
+    /* 高定半透明磨砂玻璃圆角方框按钮 */
     .medallion-btn {
       position: relative;
-      width: clamp(56px, 8.8dvh, 66px);
-      height: clamp(56px, 8.8dvh, 66px);
-      margin-top: -24px;
-      border-radius: 50%;
-      background: radial-gradient(circle at 38% 26%, #7eeeff 0%, #33adff 46%, #166bd4 86%, #0d489c 100%);
-      border: 3.5px solid #ffffff;
-      outline: 2px solid #164f9c;
+      width: clamp(58px, 8.4dvh, 66px);
+      height: clamp(58px, 8.4dvh, 66px);
+      margin-top: 0;
+      border-radius: 20px;
+      background: linear-gradient(145deg, rgba(255, 255, 255, 0.34) 0%, rgba(255, 255, 255, 0.13) 56%, rgba(255, 242, 210, 0.24) 100%);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1.8px solid rgba(255, 255, 255, 0.74);
+      outline: none;
       box-shadow:
-        0 5px 0 #0f3d82,
-        0 8px 15px rgba(0, 0, 0, 0.44),
-        inset 0 4px 5px rgba(255, 255, 255, 0.85),
-        inset 0 -5px 7px rgba(8, 42, 102, 0.72);
+        0 8px 20px rgba(92, 52, 10, 0.22),
+        0 2px 5px rgba(70, 38, 6, 0.15),
+        inset 0 2px 4px rgba(255, 255, 255, 0.82),
+        inset 0 -3px 6px rgba(135, 82, 18, 0.16);
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      transition: transform 0.12s;
+      transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.15s, box-shadow 0.15s;
     }
-    /* 圆章左上角高光月牙反射 */
+    /* 磨砂玻璃左上角柔光折射弧 */
     .medallion-btn::before {
       content: "";
       position: absolute;
       top: 5px;
-      left: 9px;
-      width: 16px;
-      height: 7px;
+      left: 7px;
+      width: 18px;
+      height: 6px;
       border-radius: 50%;
-      background: rgba(255, 255, 255, 0.74);
-      transform: rotate(-26deg);
+      background: rgba(255, 255, 255, 0.52);
+      transform: rotate(-20deg);
       pointer-events: none;
     }
     .medallion-btn:active {
-      transform: translateY(4px) scale(0.95);
+      transform: translateY(2px) scale(0.93);
+      background: linear-gradient(145deg, rgba(255, 255, 255, 0.42) 0%, rgba(255, 255, 255, 0.20) 100%);
       box-shadow:
-        0 1.5px 0 #0f3d82,
-        0 4px 8px rgba(0, 0, 0, 0.35),
-        inset 0 3px 4px rgba(255, 255, 255, 0.7);
+        0 4px 10px rgba(92, 52, 10, 0.18),
+        inset 0 2px 4px rgba(255, 255, 255, 0.85);
     }
 
+    /* 按钮下方无描边纯净白字标签 */
     .medallion-label {
       position: absolute;
-      bottom: -11px;
+      bottom: -23px;
       left: 50%;
       transform: translateX(-50%);
-      font-size: clamp(13px, 1.95dvh, 15px);
-      font-weight: 900;
+      font-size: clamp(12.5px, 1.85dvh, 14px);
+      font-weight: 800;
       color: #ffffff;
       white-space: nowrap;
       letter-spacing: 0.6px;
-      -webkit-text-stroke: 4px #14223d;
-      paint-order: stroke fill;
-      text-shadow: 0 2.5px 0 #0c1526, 0 4px 6px rgba(0, 0, 0, 0.45);
+      -webkit-text-stroke: 0px transparent;
+      text-shadow: 0 1.5px 4px rgba(85, 48, 8, 0.42);
       z-index: 4;
+      pointer-events: none;
     }
 
+    /* 优雅磨砂暖金次数角标 */
     .medallion-badge {
       position: absolute;
-      top: -4px;
-      right: -4px;
-      min-width: 22px;
-      height: 22px;
-      padding: 0 4px;
-      border-radius: 11px;
-      background: radial-gradient(circle at 35% 28%, #ff8670 0%, #f44336 52%, #c62828 100%);
-      border: 2.2px solid #ffffff;
-      outline: 1.5px solid #8e1410;
+      top: -5px;
+      right: -5px;
+      bottom: auto;
+      min-width: 20px;
+      height: 20px;
+      padding: 0 5px;
+      border-radius: 10px;
+      background: linear-gradient(145deg, rgba(255, 248, 215, 0.95) 0%, rgba(245, 190, 75, 0.95) 100%);
+      border: 1.5px solid #ffffff;
+      outline: none;
       box-shadow:
-        0 2.5px 0 #7f100c,
-        0 4px 7px rgba(0, 0, 0, 0.42),
-        inset 0 1.5px 2px rgba(255, 255, 255, 0.75);
+        0 3px 7px rgba(85, 48, 8, 0.28),
+        inset 0 1px 1.5px rgba(255, 255, 255, 0.9);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 900;
-      color: #ffffff;
-      -webkit-text-stroke: 2px #7a100c;
-      paint-order: stroke fill;
+      color: #6b3e08;
       line-height: 1;
-      z-index: 5;
+      z-index: 6;
     }
 
     #fx-overlay {
@@ -719,26 +712,24 @@
 
     .toast-msg {
       position: fixed;
-      top: 13.5%;
+      top: 14%;
       left: 50%;
       transform: translateX(-50%) translateY(-12px) scale(0.94);
-      background: linear-gradient(180deg, rgba(30, 52, 104, 0.96) 0%, rgba(15, 28, 64, 0.98) 100%);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      border: 2.2px solid #84c5ff;
-      outline: 1.5px solid #0f2350;
-      color: #ffffff;
-      padding: 7px 18px 7px 9px;
+      background: linear-gradient(145deg, rgba(72, 52, 24, 0.84) 0%, rgba(48, 36, 16, 0.90) 100%);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1.6px solid rgba(255, 242, 195, 0.72);
+      outline: none;
+      color: #fffdf7;
+      padding: 8px 18px 8px 10px;
       border-radius: 28px;
-      font-size: clamp(12.5px, 1.85dvh, 14.5px);
-      font-weight: 900;
+      font-size: clamp(12.5px, 1.85dvh, 14px);
+      font-weight: 800;
       letter-spacing: 0.4px;
-      text-shadow: 0 2px 0 #091533, 0 2px 6px rgba(0, 0, 0, 0.5);
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
       box-shadow:
-        0 4.5px 0 #0b1c42,
-        0 10px 24px rgba(0, 0, 0, 0.52),
-        inset 0 2px 2px rgba(255, 255, 255, 0.42),
-        inset 0 -2px 4px rgba(10, 22, 54, 0.8);
+        0 10px 28px rgba(55, 32, 6, 0.32),
+        inset 0 1.5px 2px rgba(255, 255, 255, 0.35);
       z-index: 220;
       opacity: 0;
       pointer-events: none;
@@ -757,9 +748,9 @@
       width: 28px;
       height: 28px;
       border-radius: 50%;
-      background: radial-gradient(circle at 35% 28%, #7eeeff 0%, #2998ff 52%, #1252b3 100%);
-      border: 1.8px solid #ffffff;
-      box-shadow: 0 2px 0 #0a2d6e, inset 0 1.5px 2px rgba(255, 255, 255, 0.8);
+      background: radial-gradient(circle at 35% 28%, #fde68a 0%, #d97706 75%, #92400e 100%);
+      border: 1.5px solid rgba(255, 255, 255, 0.85);
+      box-shadow: 0 2px 5px rgba(65, 32, 5, 0.3), inset 0 1.5px 2px rgba(255, 255, 255, 0.8);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -770,13 +761,13 @@
       text-overflow: ellipsis;
     }
 
-    /* ==================== 5. 100% 复刻参考图1的高立体感 3D 弹窗体系 ==================== */
+    /* ==================== 5. 与主界面完全统一的【高定暖金香槟磨砂玻璃弹窗体系】 ==================== */
     .modal-mask {
       position: fixed;
       inset: 0;
-      background: rgba(14, 18, 30, 0.76);
-      backdrop-filter: blur(5px);
-      -webkit-backdrop-filter: blur(5px);
+      background: rgba(44, 30, 12, 0.46);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -792,21 +783,23 @@
       pointer-events: auto;
     }
 
-    /* 3D 厚底白卡 + 皇家蓝立体外框 + 底部浅蓝灰内倒角 (#dfe8f6) */
+    /* 高定暖象牙磨砂玻璃卡片（告别蓝框卡通感，与晨曦流金主页浑然一体） */
     .casual-modal-card {
       position: relative;
-      width: min(90vw, 348px);
-      background: #ffffff;
-      border: 6px solid #2389eb;
-      border-radius: 34px;
-      padding: 38px 18px 24px;
+      width: min(90vw, 352px);
+      background: linear-gradient(155deg, rgba(255, 251, 242, 0.94) 0%, rgba(244, 232, 208, 0.92) 100%);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 2px solid rgba(255, 255, 255, 0.88);
+      border-radius: 28px;
+      padding: 36px 18px 22px;
       text-align: center;
-      color: #1c528a;
+      color: #5c3d18;
       box-shadow:
-        0 9px 0 #1459b3,
-        0 20px 42px rgba(0, 0, 0, 0.58),
-        inset 0 -8px 0 #dfe8f6,
-        inset 0 2px 0 #ffffff;
+        0 20px 46px rgba(68, 38, 6, 0.32),
+        0 4px 12px rgba(68, 38, 6, 0.16),
+        inset 0 2px 3px rgba(255, 255, 255, 0.92),
+        inset 0 -3px 6px rgba(190, 150, 92, 0.22);
       transform: scale(0.92);
       transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
@@ -814,46 +807,44 @@
       transform: scale(1);
     }
 
-    /* 3D 饱满无边框天蓝标题胶囊（100%复刻参考图1【速度升级】/【刷新】柔和球面高光与深蓝3D底座） */
+    /* 暖金琥珀磨砂标题胶囊（无黑描边，温润高级） */
     .casual-header-pill {
       position: absolute;
-      top: -26px;
+      top: -22px;
       left: 50%;
       transform: translateX(-50%);
-      min-width: 206px;
-      padding: 8px 32px 9px;
-      border-radius: 28px;
-      background: linear-gradient(180deg, #42f5ff 0%, #29beff 38%, #1b87f0 80%, #156be0 100%);
-      border: none;
+      min-width: 176px;
+      padding: 7px 28px 8px;
+      border-radius: 22px;
+      background: linear-gradient(145deg, #e5a344 0%, #c88022 100%);
+      border: 1.8px solid rgba(255, 255, 255, 0.88);
       box-shadow:
-        0 5.5px 0 #1052b5,
-        0 9px 16px rgba(8, 40, 102, 0.36),
-        inset 0 3px 4px rgba(255, 255, 255, 0.72),
-        inset 0 -3px 5px rgba(10, 62, 150, 0.45);
-      font-size: 23px;
-      font-weight: 900;
+        0 6px 16px rgba(98, 52, 8, 0.26),
+        inset 0 2px 3px rgba(255, 255, 255, 0.65),
+        inset 0 -2px 4px rgba(120, 62, 8, 0.25);
+      font-size: 19px;
+      font-weight: 800;
       color: #ffffff;
       letter-spacing: 2px;
-      -webkit-text-stroke: 4.6px #104282;
-      paint-order: stroke fill;
-      text-shadow: 0 2.5px 0 #0a2956, 0 4px 6px rgba(0, 0, 0, 0.25);
+      -webkit-text-stroke: 0px transparent;
+      text-shadow: 0 1.5px 4px rgba(85, 45, 6, 0.38);
       white-space: nowrap;
       z-index: 5;
     }
 
-    /* 清爽自然关闭圆钮（去除厚重黑红底座阴影，保持轻盈干净） */
+    /* 磨砂玻璃圆角方框关闭钮（与主界面磨砂方钮造型一致） */
     .casual-close-btn {
       position: absolute;
-      top: -13px;
-      right: -11px;
-      width: 38px;
-      height: 38px;
-      border-radius: 50%;
-      background: linear-gradient(180deg, #ff7866 0%, #f44a3a 100%);
-      border: 2.5px solid #ffffff;
+      top: -12px;
+      right: -10px;
+      width: 36px;
+      height: 36px;
+      border-radius: 13px;
+      background: linear-gradient(145deg, rgba(216, 126, 78, 0.94) 0%, rgba(182, 88, 45, 0.96) 100%);
+      border: 1.8px solid rgba(255, 255, 255, 0.88);
       box-shadow:
-        0 2px 6px rgba(160, 28, 18, 0.18),
-        inset 0 1.5px 2px rgba(255, 230, 225, 0.65);
+        0 5px 12px rgba(95, 42, 12, 0.24),
+        inset 0 1.5px 2px rgba(255, 255, 255, 0.58);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -865,33 +856,32 @@
       filter: none;
     }
     .casual-close-btn:active {
-      transform: scale(0.93);
-      box-shadow: 0 1px 3px rgba(160, 28, 18, 0.15);
+      transform: scale(0.92);
     }
 
-    /* 粉紫+天蓝柔和放射光芒舞台框 */
+    /* 晨曦暖金柔光放射舞台框 */
     .pastel-sunburst-box {
       position: relative;
       width: 100%;
-      height: 166px;
+      height: 162px;
       border-radius: 20px;
       overflow: hidden;
-      background: linear-gradient(180deg, #fad6f8 0%, #e5dcf8 50%, #c6e2fc 100%);
+      background: linear-gradient(180deg, #faeed7 0%, #f1dec0 55%, #e4ca9e 100%);
+      border: 1.5px solid rgba(255, 255, 255, 0.82);
       margin-bottom: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
       box-shadow:
-        inset 0 3px 8px rgba(255, 255, 255, 0.88),
-        inset 0 -3px 6px rgba(145, 175, 220, 0.35),
-        0 2px 0 #e6eef8;
+        inset 0 3px 8px rgba(255, 255, 255, 0.82),
+        inset 0 -3px 6px rgba(168, 122, 62, 0.22);
     }
     .pastel-sunburst-rays {
       position: absolute;
       inset: -50px;
       background: repeating-conic-gradient(
         from 0deg,
-        rgba(255, 255, 255, 0.46) 0deg 14deg,
+        rgba(255, 255, 255, 0.42) 0deg 14deg,
         rgba(255, 255, 255, 0.0) 14deg 28deg
       );
       animation: spinRays 18s linear infinite;
@@ -914,281 +904,247 @@
       50% { transform: translateY(-6px); }
     }
 
-    /* 3D 荧光青柠绿果冻胶囊大按钮（去除浅绿细线框，加入左上高光豆与厚实深绿3D底座，100%对标参考图1） */
+    /* 高定鼠尾草绿磨砂玻璃胶囊主按钮（呼应主界面右侧鼠尾草绿渐变，无黑边） */
     .casual-green-btn {
       position: relative;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 10px;
-      min-width: 184px;
-      padding: 12px 30px 13px;
-      border-radius: 22px;
-      background: linear-gradient(180deg, #82ff14 0%, #5ee800 32%, #44c800 78%, #34a600 100%);
-      border: none;
+      gap: 9px;
+      min-width: 176px;
+      padding: 11px 28px 12px;
+      border-radius: 20px;
+      background: linear-gradient(145deg, #8aa858 0%, #6d8c3e 100%);
+      border: 1.8px solid rgba(255, 255, 255, 0.86);
       box-shadow:
-        0 6.5px 0 #217500,
-        0 11px 20px rgba(0, 0, 0, 0.35),
-        inset 0 3.5px 2.5px rgba(235, 255, 175, 0.88),
-        inset 0 -3.5px 4px rgba(25, 95, 0, 0.45);
-      font-size: 22px;
-      font-weight: 900;
+        0 6px 16px rgba(68, 88, 28, 0.28),
+        inset 0 2px 3px rgba(255, 255, 255, 0.58),
+        inset 0 -2px 4px rgba(45, 62, 16, 0.25);
+      font-size: 18px;
+      font-weight: 800;
       color: #ffffff;
-      letter-spacing: 1.5px;
-      -webkit-text-stroke: 4.5px #145200;
-      paint-order: stroke fill;
-      text-shadow: 0 2.5px 0 #0d3800, 0 4px 6px rgba(0, 0, 0, 0.28);
+      letter-spacing: 1.2px;
+      -webkit-text-stroke: 0px transparent;
+      text-shadow: 0 1.5px 4px rgba(42, 58, 14, 0.38);
       cursor: pointer;
       transition: transform 0.12s, box-shadow 0.12s;
     }
-    /* 左上角标志性的椭圆亮白果冻高光点 */
     .casual-green-btn::before {
       content: "";
       position: absolute;
-      top: 5px;
+      top: 4px;
       left: 10px;
-      width: 16px;
-      height: 6.5px;
+      width: 15px;
+      height: 5px;
       border-radius: 50%;
-      background: rgba(255, 255, 255, 0.82);
+      background: rgba(255, 255, 255, 0.55);
       transform: rotate(-18deg);
       pointer-events: none;
     }
     .casual-green-btn svg {
-      filter: drop-shadow(0 2px 0 #145200);
+      filter: drop-shadow(0 1.5px 2px rgba(42, 58, 14, 0.35));
       flex-shrink: 0;
     }
     .casual-green-btn:active {
-      transform: translateY(4px);
-      box-shadow:
-        0 2.5px 0 #1b5e00,
-        0 5px 10px rgba(0, 0, 0, 0.30),
-        inset 0 3px 2px rgba(235, 255, 175, 0.8);
+      transform: translateY(2px) scale(0.96);
     }
 
-    /* 3D 冰青薄荷色果冻胶囊大按钮（对标参考图5【继续游戏】） */
+    /* 高定流金琥珀磨砂胶囊次按钮（呼应主界面左侧暖金渐变，无黑边） */
     .casual-cyan-btn {
       position: relative;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
-      min-width: 184px;
-      padding: 12px 30px 13px;
-      border-radius: 22px;
-      background: linear-gradient(180deg, #6effeb 0%, #2bf0da 32%, #12d1bb 78%, #07ad9a 100%);
-      border: none;
+      min-width: 176px;
+      padding: 11px 28px 12px;
+      border-radius: 20px;
+      background: linear-gradient(145deg, #e29f42 0%, #c47e22 100%);
+      border: 1.8px solid rgba(255, 255, 255, 0.86);
       box-shadow:
-        0 6.5px 0 #007d6f,
-        0 11px 20px rgba(0, 0, 0, 0.35),
-        inset 0 3.5px 2.5px rgba(225, 255, 250, 0.88),
-        inset 0 -3.5px 4px rgba(0, 105, 92, 0.45);
-      font-size: 21px;
-      font-weight: 900;
+        0 6px 16px rgba(112, 62, 10, 0.26),
+        inset 0 2px 3px rgba(255, 255, 255, 0.58),
+        inset 0 -2px 4px rgba(95, 48, 6, 0.25);
+      font-size: 18px;
+      font-weight: 800;
       color: #ffffff;
-      letter-spacing: 1.5px;
-      -webkit-text-stroke: 4.5px #00594d;
-      paint-order: stroke fill;
-      text-shadow: 0 2.5px 0 #003d34, 0 4px 6px rgba(0, 0, 0, 0.28);
+      letter-spacing: 1.2px;
+      -webkit-text-stroke: 0px transparent;
+      text-shadow: 0 1.5px 4px rgba(85, 45, 6, 0.38);
       cursor: pointer;
       transition: transform 0.12s, box-shadow 0.12s;
     }
     .casual-cyan-btn::before {
       content: "";
       position: absolute;
-      top: 5px;
+      top: 4px;
       left: 10px;
-      width: 16px;
-      height: 6.5px;
+      width: 15px;
+      height: 5px;
       border-radius: 50%;
-      background: rgba(255, 255, 255, 0.85);
+      background: rgba(255, 255, 255, 0.55);
       transform: rotate(-18deg);
       pointer-events: none;
     }
     .casual-cyan-btn:active {
-      transform: translateY(4px);
-      box-shadow: 0 2.5px 0 #00695c;
+      transform: translateY(2px) scale(0.96);
     }
 
-    /* 暂停弹窗的 4 行 3D 凹槽设置栏与立体拨动开关 */
+    /* 设置弹窗的 4 行亚麻暖沙凹槽栏与温润拨动开关 */
     .pause-setting-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      background: linear-gradient(180deg, #eaf1f8 0%, #f3f7fc 100%);
-      border: 1.8px solid #d5e1f0;
-      border-radius: 18px;
-      padding: 10px 14px;
-      margin-bottom: 10px;
+      background: rgba(232, 215, 185, 0.52);
+      border: 1.5px solid rgba(255, 255, 255, 0.78);
+      border-radius: 16px;
+      padding: 9px 14px;
+      margin-bottom: 9px;
       box-shadow:
-        inset 0 2.5px 4px rgba(135, 160, 190, 0.22),
-        0 2px 0 #ffffff;
+        inset 0 2px 4px rgba(138, 96, 42, 0.12),
+        0 1.5px 0 rgba(255, 255, 255, 0.7);
     }
     .pause-setting-left {
       display: flex;
       align-items: center;
       gap: 10px;
-      font-size: 18px;
-      font-weight: 900;
-      color: #31659c;
-      text-shadow: 0 1px 0 #ffffff;
+      font-size: 16px;
+      font-weight: 800;
+      color: #5c3d18;
+      text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);
     }
     .pause-setting-left svg {
-      filter: drop-shadow(0 2px 0 rgba(49, 101, 156, 0.25));
+      stroke: #7c5224 !important;
+      filter: drop-shadow(0 1px 1px rgba(255, 255, 255, 0.6));
     }
 
     .casual-toggle {
       position: relative;
-      width: 80px;
-      height: 36px;
-      border-radius: 18px;
-      background: linear-gradient(180deg, #8fa6c2 0%, #a4b9d1 100%);
-      border: 2.2px solid #6b829e;
+      width: 74px;
+      height: 34px;
+      border-radius: 17px;
+      background: linear-gradient(180deg, #cbb89d 0%, #d8c8b0 100%);
+      border: 1.6px solid rgba(255, 255, 255, 0.82);
       box-shadow:
-        inset 0 3px 5px rgba(25, 45, 70, 0.32),
-        0 2px 0 #ffffff;
+        inset 0 2.5px 4px rgba(92, 62, 24, 0.24),
+        0 1.5px 0 rgba(255, 255, 255, 0.8);
       cursor: pointer;
       transition: all 0.2s ease;
     }
     .casual-toggle.on {
-      background: linear-gradient(180deg, #52d400 0%, #76ff03 100%);
-      border-color: #2e8500;
+      background: linear-gradient(145deg, #8aa858 0%, #6d8c3e 100%);
+      border-color: rgba(255, 255, 255, 0.88);
       box-shadow:
-        inset 0 3px 5px rgba(20, 80, 0, 0.35),
-        0 2px 0 #ffffff;
+        inset 0 2px 4px rgba(42, 60, 14, 0.28),
+        0 1.5px 0 rgba(255, 255, 255, 0.8);
     }
     .casual-toggle-knob {
       position: absolute;
       top: 2px;
       left: 2.5px;
-      width: 28px;
-      height: 28px;
+      width: 26px;
+      height: 26px;
       border-radius: 50%;
-      background: radial-gradient(circle at 38% 30%, #ffffff 0%, #f2f6fb 70%, #dce5f0 100%);
-      border: 1.5px solid #b0c0d4;
+      background: radial-gradient(circle at 38% 30%, #ffffff 0%, #fdfaf3 70%, #efe4d0 100%);
+      border: 1.5px solid rgba(255, 255, 255, 0.95);
       box-shadow:
-        0 3px 0 #95a8c0,
-        0 4px 6px rgba(0, 0, 0, 0.30),
-        inset 0 2px 2px #ffffff;
+        0 2px 5px rgba(72, 45, 12, 0.28),
+        inset 0 1.5px 2px #ffffff;
       transition: left 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
     .casual-toggle.on .casual-toggle-knob {
-      left: 45px;
-      border-color: #3ca600;
-      box-shadow:
-        0 3px 0 #2b8000,
-        0 4px 6px rgba(0, 0, 0, 0.30),
-        inset 0 2px 2px #ffffff;
+      left: 42px;
     }
     .casual-toggle-check {
       position: absolute;
       top: 50%;
       transform: translateY(-50%);
-      font-size: 16px;
+      font-size: 14px;
       font-weight: 900;
     }
     .casual-toggle.on .casual-toggle-check {
-      left: 13px;
+      left: 12px;
       color: #ffffff;
-      filter: drop-shadow(0 1.5px 0 #257800);
     }
     .casual-toggle:not(.on) .casual-toggle-check {
-      right: 13px;
-      color: #526c88;
-      filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.5));
+      right: 12px;
+      color: #7c684e;
     }
 
     .pause-bottom-actions {
-      margin-top: 16px;
-      width: min(90vw, 348px);
+      margin-top: 14px;
+      width: min(90vw, 352px);
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 14px;
+      gap: 12px;
     }
     .pause-mid-row {
       width: 100%;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 14px;
+      gap: 12px;
     }
+    /* 底部弹窗磨砂玻璃方钮（与主界面磨砂玻璃圆角方框风格完全统一） */
     .casual-square-btn {
       position: relative;
-      width: 66px;
-      height: 64px;
-      border-radius: 20px;
+      width: 62px;
+      height: 58px;
+      border-radius: 18px;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       cursor: pointer;
       transition: transform 0.12s;
-      font-size: 13px;
-      font-weight: 900;
+      font-size: 12px;
+      font-weight: 800;
       color: #ffffff;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      -webkit-text-stroke: 0px transparent;
+      text-shadow: 0 1.5px 3px rgba(75, 40, 8, 0.38);
     }
     .casual-square-btn::before {
       content: "";
       position: absolute;
-      top: 5px;
-      left: 8px;
-      width: 13px;
-      height: 5.5px;
+      top: 4px;
+      left: 7px;
+      width: 14px;
+      height: 5px;
       border-radius: 50%;
-      background: rgba(255, 255, 255, 0.78);
+      background: rgba(255, 255, 255, 0.55);
       transform: rotate(-20deg);
       pointer-events: none;
     }
-    .casual-square-btn:active { transform: translateY(4px); }
+    .casual-square-btn:active { transform: translateY(2px) scale(0.94); }
     .casual-square-btn.yellow {
-      background: linear-gradient(180deg, #ffe566 0%, #ffc400 45%, #ff9800 100%);
-      border: 2.2px solid #b56600;
+      background: linear-gradient(145deg, rgba(232, 165, 68, 0.88) 0%, rgba(198, 125, 32, 0.92) 100%);
+      border: 1.8px solid rgba(255, 255, 255, 0.84);
       box-shadow:
-        0 6px 0 #995200,
-        0 10px 16px rgba(0, 0, 0, 0.35),
-        inset 0 3.5px 2px rgba(255, 255, 210, 0.88),
-        inset 0 -4px 4px rgba(160, 82, 0, 0.45);
-      -webkit-text-stroke: 3.5px #7a4100;
-      paint-order: stroke fill;
-      text-shadow: 0 2px 0 #592e00;
+        0 6px 14px rgba(92, 52, 10, 0.25),
+        inset 0 2px 3px rgba(255, 255, 255, 0.65);
     }
     .casual-square-btn.pink {
-      background: linear-gradient(180deg, #ff9ec6 0%, #f45b96 45%, #d81b60 100%);
-      border: 2.2px solid #8c0d3c;
+      background: linear-gradient(145deg, rgba(216, 122, 82, 0.88) 0%, rgba(182, 85, 48, 0.92) 100%);
+      border: 1.8px solid rgba(255, 255, 255, 0.84);
       box-shadow:
-        0 6px 0 #750930,
-        0 10px 16px rgba(0, 0, 0, 0.35),
-        inset 0 3.5px 2px rgba(255, 225, 240, 0.88),
-        inset 0 -4px 4px rgba(130, 12, 55, 0.48);
-      -webkit-text-stroke: 3.5px #6e092d;
-      paint-order: stroke fill;
-      text-shadow: 0 2px 0 #4a051e;
+        0 6px 14px rgba(92, 42, 14, 0.25),
+        inset 0 2px 3px rgba(255, 255, 255, 0.65);
     }
 
-    /* 商店专属：3D 粉白遮阳篷与灯泡招牌 */
+    /* 商店专属：与高定暖金磨砂弹窗统一 */
     .shop-modal-card {
-      padding-top: 58px;
-      border-color: #1496f5;
-      box-shadow:
-        0 9px 0 #096bc2,
-        0 20px 42px rgba(0, 0, 0, 0.56),
-        inset 0 -8px 0 #dfe8f6;
+      padding-top: 38px;
     }
     .shop-awning-header {
-      position: absolute;
-      top: -50px;
-      left: -12px;
-      right: -12px;
-      height: 96px;
-      pointer-events: none;
-      z-index: 6;
-      filter: drop-shadow(0 6px 8px rgba(20, 45, 90, 0.25));
+      display: none;
     }
     .shop-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 12px;
+      gap: 10px;
       max-height: min(50dvh, 330px);
       overflow-y: auto;
       scrollbar-width: none;
@@ -1196,18 +1152,17 @@
     }
     .shop-grid::-webkit-scrollbar { display: none; }
     .shop-item-card {
-      background: linear-gradient(180deg, #dff3fc 0%, #d2ecfa 100%);
-      border: 2.5px solid #ffffff;
-      outline: 2px solid #b3d2e8;
-      border-radius: 20px;
-      padding: 12px 10px 10px;
+      background: linear-gradient(155deg, rgba(255, 255, 255, 0.78) 0%, rgba(242, 228, 202, 0.72) 100%);
+      border: 1.8px solid rgba(255, 255, 255, 0.9);
+      outline: none;
+      border-radius: 18px;
+      padding: 11px 10px 9px;
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 6px;
       box-shadow:
-        0 4px 0 #a9c6dc,
-        0 6px 12px rgba(20, 60, 110, 0.12),
+        0 4px 12px rgba(95, 58, 14, 0.12),
         inset 0 2px 3px #ffffff;
       cursor: pointer;
       transition: transform 0.12s;
@@ -1215,14 +1170,13 @@
     .shop-item-card:active { transform: scale(0.96); }
     .shop-swatch {
       position: relative;
-      width: 66px;
-      height: 62px;
+      width: 64px;
+      height: 58px;
       border-radius: 14px;
-      border: 2.5px solid #555e70;
+      border: 2px solid rgba(255, 255, 255, 0.92);
       box-shadow:
-        0 3px 0 rgba(40, 50, 70, 0.22),
-        inset 0 3.5px 0 rgba(255, 255, 255, 0.48),
-        inset 0 -3px 0 rgba(0, 0, 0, 0.12);
+        0 3px 8px rgba(72, 42, 10, 0.18),
+        inset 0 2px 3px rgba(255, 255, 255, 0.48);
       overflow: visible;
       display: flex;
       align-items: center;
@@ -1239,79 +1193,69 @@
       position: absolute;
       top: -8px;
       right: -10px;
-      width: 30px;
-      height: 28px;
+      width: 28px;
+      height: 26px;
       z-index: 4;
-      filter: drop-shadow(0 2.5px 2px rgba(0, 0, 0, 0.28));
+      filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.22));
     }
     .shop-item-name {
-      font-size: 15px;
-      font-weight: 900;
-      color: #1c496e;
-      text-shadow: 0 1px 0 #ffffff;
+      font-size: 14px;
+      font-weight: 800;
+      color: #5c3d18;
     }
     .shop-action-btn {
       width: 100%;
-      padding: 6.5px 0;
+      padding: 6px 0;
       border-radius: 11px;
-      font-size: 13px;
-      font-weight: 900;
+      font-size: 12.5px;
+      font-weight: 800;
       color: #ffffff;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 4px;
+      -webkit-text-stroke: 0px transparent;
       transition: transform 0.12s;
     }
     .shop-action-btn.in-use {
-      background: linear-gradient(180deg, #76d4ff 0%, #42abf7 50%, #2992e6 100%);
-      border: 1.8px solid #1c71bd;
-      box-shadow:
-        0 3.5px 0 #165ea3,
-        inset 0 2px 2px rgba(255, 255, 255, 0.78);
-      -webkit-text-stroke: 2.6px #144d87;
-      paint-order: stroke fill;
-      text-shadow: 0 1.5px 0 #0d3661;
+      background: linear-gradient(145deg, #8aa858 0%, #6d8c3e 100%);
+      border: 1.5px solid rgba(255, 255, 255, 0.85);
+      box-shadow: 0 3px 8px rgba(68, 88, 28, 0.22);
     }
     .shop-action-btn.unlock-gold {
-      background: linear-gradient(180deg, #ffe047 0%, #fbbd08 50%, #eb9800 100%);
-      border: 1.8px solid #b06500;
-      box-shadow:
-        0 3.5px 0 #915000,
-        inset 0 2px 2px rgba(255, 255, 210, 0.85);
-      -webkit-text-stroke: 2.6px #783f00;
-      paint-order: stroke fill;
-      text-shadow: 0 1.5px 0 #542b00;
+      background: linear-gradient(145deg, #e5a344 0%, #c88022 100%);
+      border: 1.5px solid rgba(255, 255, 255, 0.85);
+      box-shadow: 0 3px 8px rgba(110, 62, 10, 0.22);
     }
 
-    /* 速度升级弹窗专属 3D 进度条与粗描边字（对标参考图1） */
+    /* 速度升级弹窗 */
     .speed-level-title {
-      font-size: 20px;
-      font-weight: 900;
-      color: #ffffff;
-      -webkit-text-stroke: 4.2px #1a3c66;
-      paint-order: stroke fill;
-      text-shadow: 0 2.5px 0 #102745;
+      font-size: 18px;
+      font-weight: 800;
+      color: #5c3d18;
+      -webkit-text-stroke: 0px transparent;
+      text-shadow: none;
       margin-bottom: 7px;
-      letter-spacing: 0.8px;
+      letter-spacing: 0.6px;
     }
     .speed-level-title span {
-      color: #ffe600;
+      color: #c87816;
+      font-weight: 900;
     }
     .speed-prog-bar {
       position: relative;
       width: 88%;
       height: 20px;
       margin: 0 auto 12px;
-      background: linear-gradient(180deg, #8baae0 0%, #a3c0f0 100%);
-      border: 1.8px solid #7596cf;
+      background: rgba(218, 198, 168, 0.65);
+      border: 1.5px solid rgba(255, 255, 255, 0.85);
       border-radius: 10px;
       overflow: hidden;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: inset 0 2.5px 4px rgba(25, 55, 105, 0.28);
+      box-shadow: inset 0 2px 4px rgba(95, 62, 20, 0.18);
     }
     .speed-prog-fill {
       position: absolute;
@@ -1319,70 +1263,67 @@
       top: 0;
       bottom: 0;
       width: 0%;
-      background: linear-gradient(180deg, #76ff03 0%, #42c900 100%);
+      background: linear-gradient(90deg, #8aa858 0%, #a3be6c 100%);
       border-radius: 9px;
       transition: width 0.3s ease;
-      box-shadow: inset 0 2px 2px rgba(255, 255, 255, 0.7);
     }
     .speed-prog-txt {
       position: relative;
       z-index: 2;
-      font-size: 12px;
-      font-weight: 900;
-      color: #ffffff;
-      -webkit-text-stroke: 2.8px #264878;
-      paint-order: stroke fill;
-      text-shadow: 0 1.5px 0 #183054;
+      font-size: 11.5px;
+      font-weight: 800;
+      color: #5c3d18;
+      -webkit-text-stroke: 0px transparent;
+      text-shadow: 0 1px 0 rgba(255, 255, 255, 0.7);
     }
     .speed-cur-line {
-      font-size: 18px;
-      font-weight: 900;
-      color: #194d82;
+      font-size: 16px;
+      font-weight: 800;
+      color: #5c3d18;
       margin-bottom: 12px;
       letter-spacing: 0.5px;
     }
     .speed-cur-line b {
-      color: #ff6d00;
-      font-size: 21px;
+      color: #c87816;
+      font-size: 20px;
       margin: 0 4px;
     }
     .speed-foot-tip {
-      background: #e7eef8;
-      border-top: 1.5px solid #d5e1f2;
+      background: rgba(232, 215, 185, 0.52);
+      border-top: 1.5px solid rgba(255, 255, 255, 0.75);
       border-radius: 0 0 26px 26px;
-      margin: 0 -18px -24px;
+      margin: 0 -18px -22px;
       padding: 10px 0 12px;
-      font-size: 13px;
-      font-weight: 900;
-      color: #526c88;
+      font-size: 12.5px;
+      font-weight: 800;
+      color: #7c582c;
     }
 
-    /* 200关选关面板与通关结算卡片 */
+    /* 200关选关面板与通关结算卡片（高定暖金亚麻配色） */
     .chapter-tabs {
       display: grid;
       grid-template-columns: repeat(5, minmax(0, 1fr));
-      gap: 4px;
+      gap: 5px;
       margin: 4px 0 10px;
     }
     .chapter-tab-btn {
       min-width: 0;
       padding: 6px 2px;
       border-radius: 11px;
-      background: #e3f2fd;
-      border: 1.5px solid #90caf9;
-      box-shadow: 0 2px 0 #64b5f6;
-      color: #1565c0;
+      background: rgba(235, 220, 192, 0.65);
+      border: 1.5px solid rgba(255, 255, 255, 0.82);
+      color: #6e491e;
       font-size: 10.5px;
-      font-weight: 900;
+      font-weight: 800;
       cursor: pointer;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
     .chapter-tab-btn.active {
-      background: linear-gradient(180deg, #29b6f6 0%, #0288d1 100%);
-      border-color: #01579b;
-      box-shadow: 0 2px 0 #014377;
+      background: linear-gradient(145deg, #e29f42 0%, #c47e22 100%);
+      border-color: rgba(255, 255, 255, 0.9);
+      box-shadow: 0 3px 8px rgba(112, 62, 10, 0.24);
       color: #ffffff;
     }
     .level-grid-scroll {
@@ -1394,17 +1335,17 @@
       margin-bottom: 10px;
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 6px;
+      gap: 7px;
     }
     .level-grid-scroll::-webkit-scrollbar { display: none; }
     .level-cell {
       min-width: 0;
       overflow: hidden;
-      padding: 7px 3px 6px;
+      padding: 8px 4px 6px;
       border-radius: 14px;
-      background: #eef6fc;
-      border: 1.8px solid #b3d4f0;
-      box-shadow: 0 3px 0 #9bc4e8;
+      background: rgba(255, 255, 255, 0.72);
+      border: 1.5px solid rgba(255, 255, 255, 0.92);
+      box-shadow: 0 3px 8px rgba(95, 58, 14, 0.10);
       cursor: pointer;
       display: flex;
       flex-direction: column;
@@ -1414,44 +1355,43 @@
     }
     .level-cell:active { transform: scale(0.94); }
     .level-cell.active {
-      background: linear-gradient(180deg, #4fc3f7 0%, #1976d2 100%);
-      border-color: #0d47a1;
+      background: linear-gradient(145deg, #8aa858 0%, #6d8c3e 100%);
+      border-color: rgba(255, 255, 255, 0.95);
       color: #ffffff;
-      box-shadow: 0 3px 0 #0d47a1;
+      box-shadow: 0 4px 10px rgba(68, 88, 28, 0.25);
     }
     .level-cell.boss-cell {
-      background: #fce4ec;
-      border-color: #f48fb1;
-      box-shadow: 0 3px 0 #e91e63;
+      background: rgba(254, 240, 215, 0.88);
+      border-color: #eab308;
     }
-    .level-cell-num { font-size: 13px; font-weight: 900; color: #15458a; }
+    .level-cell-num { font-size: 13px; font-weight: 800; color: #5c3d18; }
     .level-cell.active .level-cell-num { color: #ffffff; }
-    .level-cell-tag { font-size: 9.5px; font-weight: 800; color: #d97706; white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+    .level-cell-tag { font-size: 9.5px; font-weight: 800; color: #b46914; white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
     .level-cell.active .level-cell-tag { color: #fef08a; }
-    .level-cell-wave { font-size: 8.5px; color: #f59e0b; letter-spacing: -0.5px; }
+    .level-cell-wave { font-size: 8.5px; color: #d97706; letter-spacing: -0.5px; }
 
     .win-scorecard {
       display: grid;
       grid-template-columns: 1fr 1px 1fr 1px 1fr;
       align-items: center;
-      background: #eef5fc;
-      border: 2px solid #bfd8f2;
+      background: rgba(235, 220, 192, 0.52);
+      border: 1.5px solid rgba(255, 255, 255, 0.82);
       border-radius: 18px;
       padding: 10px 6px;
       margin-bottom: 10px;
-      box-shadow: inset 0 2px 4px rgba(140, 170, 205, 0.2);
+      box-shadow: inset 0 2px 4px rgba(138, 96, 42, 0.12);
     }
-    .score-divider { width: 1px; height: 32px; background: #bfd8f2; }
-    .score-col-label { font-size: 11px; font-weight: 800; color: #546e8a; margin-bottom: 2px; }
-    .score-col-val { font-size: 19px; font-weight: 900; color: #1c528a; }
-    .score-col-val.cyan { color: #0284c7; }
-    .score-col-val.amber { color: #ea580c; }
+    .score-divider { width: 1px; height: 32px; background: rgba(180, 145, 95, 0.35); }
+    .score-col-label { font-size: 11px; font-weight: 800; color: #7c582c; margin-bottom: 2px; }
+    .score-col-val { font-size: 18px; font-weight: 900; color: #5c3d18; }
+    .score-col-val.cyan { color: #5f8033; }
+    .score-col-val.amber { color: #c87816; }
 
     @media (max-height: 700px) {
       .bags-stage { height: 104px; }
       .bottles-grid { row-gap: clamp(18px, 3.6dvh, 30px); }
       .bottles-grid.layout-21 { row-gap: clamp(6px, 1.2dvh, 12px); }
-      .bottom-dock-wrap { height: 62px; }
+      .bottom-dock-wrap { padding: 2px 16px 20px; margin-bottom: 6px; }
     }
 
     @keyframes bombPulseAnim {
@@ -1464,46 +1404,45 @@
 
     .pause-feature-bar {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-      margin-top: 2px;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-top: 4px;
     }
     .pause-feature-btn {
-      background: linear-gradient(180deg, #eaf2fb 0%, #d8e6f6 100%);
-      border: 2px solid #b4cde8;
+      background: linear-gradient(155deg, rgba(255, 255, 255, 0.78) 0%, rgba(242, 228, 202, 0.70) 100%);
+      border: 1.5px solid rgba(255, 255, 255, 0.90);
       border-radius: 16px;
-      padding: 8px 6px 6px;
+      padding: 8px 4px 6px;
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 4px;
       cursor: pointer;
-      box-shadow: 0 3.5px 0 #95b6dc, inset 0 2px 2px #ffffff;
+      box-shadow: 0 4px 10px rgba(95, 58, 14, 0.12), inset 0 1.5px 2px #ffffff;
       transition: transform 0.12s;
     }
     .pause-feature-btn:active {
-      transform: translateY(2px) scale(0.96);
+      transform: translateY(2px) scale(0.95);
     }
     .pause-feature-btn.active-2x {
-      background: linear-gradient(180deg, #fff59d 0%, #fdd835 100%);
-      border-color: #f57f17;
-      box-shadow: 0 3.5px 0 #c66900, inset 0 2px 2px #ffffff;
+      background: linear-gradient(145deg, #f7df94 0%, #e5b346 100%);
+      border-color: #ffffff;
     }
     .pause-feature-icon {
-      width: 36px;
-      height: 30px;
+      width: 34px;
+      height: 28px;
       border-radius: 10px;
-      background: #ffffff;
-      border: 1.5px solid #c2d7ee;
+      background: rgba(255, 255, 255, 0.85);
+      border: 1.2px solid rgba(218, 195, 158, 0.65);
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 2px 4px rgba(25, 65, 120, 0.12);
+      box-shadow: 0 2px 4px rgba(95, 58, 14, 0.08);
     }
     .pause-feature-label {
-      font-size: 13px;
-      font-weight: 900;
-      color: #1c528a;
+      font-size: 12px;
+      font-weight: 800;
+      color: #5c3d18;
     }
 
     .bottle-slot.hint-source-slot {
@@ -1592,7 +1531,7 @@
     }
   </style>
 </head>
-<body data-theme="volcanic">
+<body data-theme="zen_amber">
   <!-- 全局共享 SVG <defs>（大幅缩减 DOM 体积 + 提供 3D 弹窗高光渐变） -->
   <svg id="shared-svg-defs" width="0" height="0" style="position:absolute;width:0;height:0;overflow:hidden;pointer-events:none" aria-hidden="true">
     <defs id="global-bottle-defs"></defs>
@@ -1663,41 +1602,100 @@
       </linearGradient>
     </defs>
   </svg>
-
   <div class="ambient-glow"></div>
+  <!-- 高定流金星轨与暖光萤火微粒层（100%还原参考图顶部金色星芒弧线与空气感微粒） -->
+  <svg class="starfield-bg" viewBox="0 0 460 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <defs>
+      <filter id="goldStarGlow" x="-40%" y="-40%" width="180%" height="180%">
+        <feGaussianBlur stdDeviation="3.2" result="blur"/>
+        <feMerge>
+          <feMergeNode in="blur"/>
+          <feMergeNode in="SourceGraphic"/>
+        </feMerge>
+      </filter>
+      <linearGradient id="shootingArcGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+        <stop offset="0%" stop-color="#fffbeb" stop-opacity="0.0"/>
+        <stop offset="45%" stop-color="#fde047" stop-opacity="0.55"/>
+        <stop offset="100%" stop-color="#ffffff" stop-opacity="0.95"/>
+      </linearGradient>
+      <radialGradient id="goldenOrbAura" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="rgba(255, 248, 190, 0.18)"/>
+        <stop offset="68%" stop-color="rgba(255, 230, 110, 0.08)"/>
+        <stop offset="100%" stop-color="rgba(255, 215, 70, 0.0)"/>
+      </radialGradient>
+    </defs>
+
+    <!-- 顶部中央偏左的流金星轨弧线与五角星群（复刻参考图「12 Moves left」旁边的金色飞星轨迹） -->
+    <g filter="url(#goldStarGlow)">
+      <path d="M 188,155 C 152,118 148,74 176,58" fill="none" stroke="url(#shootingArcGrad)" stroke-width="2.6" stroke-linecap="round"/>
+      <path d="M 198,136 C 174,108 172,82 194,68" fill="none" stroke="url(#shootingArcGrad)" stroke-width="1.8" stroke-linecap="round" opacity="0.8"/>
+      <!-- 璀璨五角星群 -->
+      <polygon points="0,-9 2.6,-2.8 9.2,-2.2 4.1,2.2 5.6,8.8 0,5.2 -5.6,8.8 -4.1,2.2 -9.2,-2.2 -2.6,-2.8"
+               fill="#fffbeb" stroke="#fde047" stroke-width="0.8" transform="translate(176, 58) rotate(-15) scale(0.95)"/>
+      <polygon points="0,-9 2.6,-2.8 9.2,-2.2 4.1,2.2 5.6,8.8 0,5.2 -5.6,8.8 -4.1,2.2 -9.2,-2.2 -2.6,-2.8"
+               fill="#fef08a" transform="translate(192, 68) rotate(12) scale(0.75)"/>
+      <polygon points="0,-9 2.6,-2.8 9.2,-2.2 4.1,2.2 5.6,8.8 0,5.2 -5.6,8.8 -4.1,2.2 -9.2,-2.2 -2.6,-2.8"
+               fill="#fffbeb" transform="translate(238, 108) rotate(8) scale(0.88)"/>
+      <polygon points="0,-9 2.6,-2.8 9.2,-2.2 4.1,2.2 5.6,8.8 0,5.2 -5.6,8.8 -4.1,2.2 -9.2,-2.2 -2.6,-2.8"
+               fill="#fde047" transform="translate(236, 152) rotate(-10) scale(1.05)"/>
+      <polygon points="0,-9 2.6,-2.8 9.2,-2.2 4.1,2.2 5.6,8.8 0,5.2 -5.6,8.8 -4.1,2.2 -9.2,-2.2 -2.6,-2.8"
+               fill="#fef9c3" transform="translate(264, 66) rotate(22) scale(0.48)"/>
+    </g>
+
+    <!-- 舞台上方柔和金色光晕圈（还原参考图中央柔光球氛围） -->
+    <circle cx="228" cy="245" r="76" fill="url(#goldenOrbAura)" stroke="rgba(255, 240, 155, 0.28)" stroke-width="1.2"/>
+
+    <!-- 散落的暖金萤火微粒 -->
+    <circle cx="48" cy="112" r="1.8" fill="#fffbeb" opacity="0.55"/>
+    <circle cx="395" cy="138" r="1.6" fill="#fef08a" opacity="0.52"/>
+    <circle cx="428" cy="182" r="1.3" fill="#fffbeb" opacity="0.42"/>
+    <circle cx="32" cy="485" r="2.2" fill="#fffbeb" opacity="0.65"/>
+    <circle cx="418" cy="540" r="1.6" fill="#fef08a" opacity="0.48"/>
+    <circle cx="62" cy="740" r="1.5" fill="#fffbeb" opacity="0.45"/>
+    <circle cx="388" cy="790" r="1.8" fill="#fef08a" opacity="0.52"/>
+  </svg>
 
   <div class="app-shell">
-    <!-- 1. 顶部导航栏 -->
+    <!-- 1. 极简高定顶部导航栏（100%还原参考图：左上磨砂破局钮 + 中央大字号纯白关卡/步数 + 右上磨砂 ? 规则钮） -->
     <div class="top-bar">
-      <div class="top-gear-btn" id="settings-btn" title="暂停与设置">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="#ffffff" style="filter:drop-shadow(0 2px 0 #0d47a1);">
-          <path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c-0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62-0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c-0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/>
-        </svg>
-      </div>
-
-      <div class="top-center-group">
-        <div class="level-pill" id="level-pill-title" title="点击打开200关选单">第 1 关</div>
-      </div>
-
-      <div class="top-right-group">
-        <div class="joystick-pill-btn" id="quick-unlock-btn" title="一键解锁当前关所有机关">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1e2433" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="6" r="3.2" fill="#38bdf8"/>
-            <line x1="12" y1="9.2" x2="12" y2="15"/>
-            <path d="M6,18 C6,15.5 18,15.5 18,18 C18,20 6,20 6,18 Z" fill="#cbd5e1"/>
+      <!-- 左上：磨砂玻璃圆角方框【设置】按钮（原底部菜单功能移至此处） -->
+      <div class="frosted-top-action" id="settings-btn" title="打开设置与菜单">
+        <div class="frosted-top-box">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" style="filter:drop-shadow(0 1.5px 3px rgba(80,45,8,0.28));">
+            <line x1="5" y1="7.5" x2="19" y2="7.5" stroke="#ffffff" stroke-width="2.8" stroke-linecap="round"/>
+            <line x1="5" y1="12.0" x2="19" y2="12.0" stroke="#ffffff" stroke-width="2.8" stroke-linecap="round"/>
+            <line x1="5" y1="16.5" x2="19" y2="16.5" stroke="#ffffff" stroke-width="2.8" stroke-linecap="round"/>
           </svg>
         </div>
+        <span class="frosted-top-label">设置</span>
+      </div>
 
+      <!-- 居中：大字号无框纯白数字 + 关卡副标题（点击打开200关选单） -->
+      <div class="top-center-group" id="top-center-level-trigger" title="点击打开200关选单">
+        <div class="zen-big-num" id="zen-header-big-num">1</div>
+        <div class="level-pill" id="level-pill-title">第 1 关</div>
+      </div>
+
+      <!-- 右上：100%还原参考图右上角磨砂玻璃【? 规则】按钮（点击打开关卡选单与玩法图鉴） -->
+      <div class="frosted-top-action" id="rules-help-btn" title="查看玩法说明与200关选单">
+        <div class="frosted-top-box">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" style="filter:drop-shadow(0 1.5px 3px rgba(60,45,15,0.28));">
+            <path d="M9.2 9.0C9.2 7.2 10.6 6.0 12.3 6.0C13.9 6.0 15.2 7.1 15.2 8.7C15.2 10.0 14.4 10.8 13.2 11.5C12.3 12.0 12.0 12.6 12.0 13.6"
+                  stroke="#ffffff" stroke-width="2.8" stroke-linecap="round"/>
+            <circle cx="12.0" cy="17.5" r="1.6" fill="#ffffff"/>
+          </svg>
+        </div>
+        <span class="frosted-top-label">规则</span>
       </div>
     </div>
 
     <!-- 2A. 礼盒打包模式专属：顶部 4 个高精 3D 礼盒袋 -->
     <div class="bags-stage" id="bags-stage"></div>
 
-    <!-- 2B. 目标与步数状态栏（步骤移至此处与完成进度并排，带⏰倒计时提醒） -->
+    <!-- 2B. 特殊BOSS或限步提示栏（常规关卡自动隐藏，保持参考图极简呼吸感） -->
     <div class="mode-banner" id="mode-banner">
       <div class="mode-banner-left">
-        <span id="mode-banner-text">🎯 将相同颜色的水倒满整瓶</span>
+        <span id="mode-banner-text">🎯 将同色水归类装满</span>
         <span class="mode-banner-tag" id="mode-banner-progress">完成 0/7</span>
       </div>
       <div class="moves-counter-pill" id="moves-counter-pill">
@@ -1713,83 +1711,64 @@
       </div>
     </div>
 
-    <!-- 3. 中央自适应 2.5D 瓶子舞台 + 两侧轻量辅助按钮（左：速度x2 & 速度升级，右：主题商店） -->
+    <!-- 3. 中央自适应 2.5D 瓶子舞台 -->
     <div class="bottles-stage" id="bottles-stage">
       <div class="bottles-grid" id="bottles-grid"></div>
     </div>
 
+    <!-- 4. 底部 4 枚高定磨砂玻璃圆角方框按钮（100%对标参考图：菜单 / 打乱 / 撤回 / 提示） -->
     <div class="bottom-dock-wrap">
-      <!-- 按钮 1：提示（3D金黄发光灵感灯泡，推演最优解） -->
-      <div class="medallion-btn" id="hint-btn" title="智能提示下一步">
-        <svg width="36" height="36" viewBox="0 0 100 100" style="filter:drop-shadow(0 3px 3px rgba(8,35,85,0.45));">
-          <defs>
-            <radialGradient id="bulbGlassGrad" cx="35%" cy="32%" r="68%">
-              <stop offset="0%" stop-color="#fffde7"/>
-              <stop offset="35%" stop-color="#fff176"/>
-              <stop offset="75%" stop-color="#fbc02d"/>
-              <stop offset="100%" stop-color="#f57f17"/>
-            </radialGradient>
-            <linearGradient id="bulbBaseGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stop-color="#78909c"/>
-              <stop offset="35%" stop-color="#cfd8dc"/>
-              <stop offset="70%" stop-color="#eceff1"/>
-              <stop offset="100%" stop-color="#607d8b"/>
-            </linearGradient>
-          </defs>
-          <!-- 灯泡柔和辉光 -->
-          <circle cx="50" cy="40" r="32" fill="rgba(254, 240, 138, 0.22)"/>
-          <!-- 3D灯泡圆顶与收腰主体 -->
-          <path d="M 50,11 C 31,11 20,26 20,43 C 20,55 31,64 35,72 L 65,72 C 69,64 80,55 80,43 C 80,26 69,11 50,11 Z"
-                fill="url(#bulbGlassGrad)" stroke="#b45309" stroke-width="3.2" stroke-linejoin="round"/>
-          <!-- 标志性月牙高光 -->
-          <path d="M 31,25 C 26,33 26,46 31,54" fill="none" stroke="#ffffff" stroke-width="4.5" stroke-linecap="round" opacity="0.92"/>
-          <circle cx="34" cy="22" r="2.8" fill="#ffffff" opacity="0.95"/>
-          <!-- 内部发光发热钨丝 -->
-          <path d="M 41,68 L 41,50 L 46,42 L 50,50 L 54,42 L 59,50 L 59,68"
-                fill="none" stroke="#ffffff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"
-                style="filter:drop-shadow(0 0 3px #ffffff);"/>
-          <!-- 金属螺纹接口底座 -->
-          <rect x="35" y="72" width="30" height="6.5" rx="2.5" fill="url(#bulbBaseGrad)" stroke="#37474f" stroke-width="1.8"/>
-          <rect x="38" y="78.5" width="24" height="5.5" rx="2" fill="url(#bulbBaseGrad)" stroke="#37474f" stroke-width="1.8"/>
-          <rect x="41" y="84" width="18" height="5.5" rx="2" fill="url(#bulbBaseGrad)" stroke="#37474f" stroke-width="1.8"/>
-          <path d="M 44,89.5 L 56,89.5 C 56,95 44,95 44,89.5 Z" fill="#263238"/>
-        </svg>
-        <div class="medallion-badge" id="hint-count">3</div>
-        <span class="medallion-label">提示</span>
-      </div>
 
-      <!-- 按钮 2：打乱（双向旋转箭头，重新调整瓶子里剩余水，总数不变） -->
-      <div class="medallion-btn" id="shuffle-btn" title="打乱重排场上剩余药水（总数不变）">
-        <svg width="36" height="36" viewBox="0 0 120 120" style="filter:drop-shadow(0 3px 3px rgba(8,35,85,0.45));">
-          <!-- 上方 3D 黄色旋转箭头 -->
-          <path d="M24,60 C24,32 50,18 76,27 L82,15 L98,43 L66,52 L71,41 C53,35 40,43 40,60 Z"
-                fill="url(#arrowYellowSide3D)" stroke="#4d2600" stroke-width="6" stroke-linejoin="round" transform="translate(0, 4.5)"/>
-          <path d="M24,60 C24,32 50,18 76,27 L82,15 L98,43 L66,52 L71,41 C53,35 40,43 40,60 Z"
-                fill="url(#arrowYellowTop3D)" stroke="#5c3000" stroke-width="4.5" stroke-linejoin="round"/>
-          <path d="M30,53 C32,35 50,24 73,31" fill="none" stroke="#ffffff" stroke-width="4.2" stroke-linecap="round" opacity="0.88"/>
-          <!-- 下方 3D 玫粉旋转箭头 -->
-          <path d="M96,60 C96,88 70,102 44,93 L38,105 L22,77 L54,68 L49,79 C67,85 80,77 80,60 Z"
-                fill="url(#arrowPinkSide3D)" stroke="#4a0724" stroke-width="6" stroke-linejoin="round" transform="translate(0, 4.5)"/>
-          <path d="M96,60 C96,88 70,102 44,93 L38,105 L22,77 L54,68 L49,79 C67,85 80,77 80,60 Z"
-                fill="url(#arrowPinkTop3D)" stroke="#5e0a2e" stroke-width="4.5" stroke-linejoin="round"/>
-          <path d="M90,67 C88,85 70,96 47,89" fill="none" stroke="#ffd6ec" stroke-width="4.2" stroke-linecap="round" opacity="0.85"/>
+
+      <!-- 按钮 2：打乱（对标参考图左2 Restart 环形箭头磨砂玻璃钮，重排场上瓶中剩余水且总数不变） -->
+      <div class="medallion-btn" id="shuffle-btn" title="打乱重排场上剩余水（总数不变）">
+        <svg width="29" height="29" viewBox="0 0 36 36" fill="none" style="filter:drop-shadow(0 1.5px 3px rgba(85,48,8,0.28));">
+          <path d="M 19,10.2 A 8.2,8.2 0 1,1 11.2,20.5" stroke="#ffffff" stroke-width="3.8" stroke-linecap="round"/>
+          <polygon points="19,5.5 19,14.8 11.8,10.2" fill="#ffffff"/>
         </svg>
         <div class="medallion-badge" id="shuffle-count">3</div>
         <span class="medallion-label">打乱</span>
       </div>
 
-      <!-- 按钮 3：撤回（撤回上一步） -->
+      <!-- 按钮 3：撤回（对标参考图右2 Undo 柔美左弯箭头磨砂玻璃钮，撤回上一步） -->
       <div class="medallion-btn" id="undo-btn" title="撤回上一步">
-        <svg width="36" height="36" viewBox="0 0 48 48" style="filter:drop-shadow(0 3px 3px rgba(8,35,85,0.45));">
-          <!-- 3D 立体金黄回退弯箭头（带底部琥珀厚边与亮白高光棱） -->
-          <path d="M22,12 L8,23 L22,34 L22,27 C31,27 35,31 36,39 C40,31 39,18 26,18 L22,18 Z"
-                fill="url(#arrowYellowSide3D)" stroke="#4d2600" stroke-width="3.2" stroke-linejoin="round" transform="translate(0, 3)"/>
-          <path d="M22,12 L8,23 L22,34 L22,27 C31,27 35,31 36,39 C40,31 39,18 26,18 L22,18 Z"
-                fill="url(#arrowYellowTop3D)" stroke="#5c3000" stroke-width="2.6" stroke-linejoin="round"/>
-          <path d="M20,15.5 L11.5,22.2 M23,20.5 C30,20.5 34.5,23.5 36,28" fill="none" stroke="#ffffff" stroke-width="2.4" stroke-linecap="round" opacity="0.9"/>
+        <svg width="29" height="29" viewBox="0 0 36 36" fill="none" style="filter:drop-shadow(0 1.5px 3px rgba(85,48,8,0.28));">
+          <path d="M 15.5,14.5 C 21.5,14.0 26.2,17.2 27.8,22.8 C 24.2,19.5 20.2,19.0 15.5,19.8 L 15.5,24.2 L 7.8,17.2 L 15.5,10.2 Z"
+                fill="#ffffff"/>
         </svg>
         <div class="medallion-badge" id="undo-count-badge">5</div>
         <span class="medallion-label">撤回</span>
+      </div>
+
+      <!-- 按钮 4：提示（100%还原参考图右1 Hint 暖黄发光灯泡 + 灰金属螺口 + 8道放射光芒） -->
+      <div class="medallion-btn" id="hint-btn" title="智能提示下一步最优倒法">
+        <svg width="32" height="32" viewBox="0 0 40 40" fill="none" style="filter:drop-shadow(0 1.5px 4px rgba(120,68,8,0.28));">
+          <defs>
+            <radialGradient id="zenHintBulbGrad" cx="38%" cy="35%" r="65%">
+              <stop offset="0%" stop-color="#fffef0"/>
+              <stop offset="45%" stop-color="#fde047"/>
+              <stop offset="100%" stop-color="#f59e0b"/>
+            </radialGradient>
+          </defs>
+          <!-- 8道柔白放射灯芒（完全还原参考图 Hint 图标四周短光芒） -->
+          <g stroke="rgba(255, 255, 255, 0.88)" stroke-width="1.6" stroke-linecap="round">
+            <line x1="20" y1="4.2" x2="20" y2="6.8"/>
+            <line x1="8.5" y1="8.8" x2="10.6" y2="10.8"/>
+            <line x1="31.5" y1="8.8" x2="29.4" y2="10.8"/>
+            <line x1="5.2" y1="18.5" x2="8.0" y2="18.5"/>
+            <line x1="34.8" y1="18.5" x2="32.0" y2="18.5"/>
+            <line x1="8.8" y1="27.2" x2="11.2" y2="25.5"/>
+            <line x1="31.2" y1="27.2" x2="28.8" y2="25.5"/>
+          </g>
+          <!-- 暖金圆润灯泡主体 -->
+          <path d="M 20,9.2 C 14.5,9.2 10.8,13.2 10.8,18.2 C 10.8,21.5 13.2,24.2 15.2,26.8 H 24.8 C 26.8,24.2 29.2,21.5 29.2,18.2 C 29.2,13.2 25.5,9.2 20,9.2 Z"
+                fill="url(#zenHintBulbGrad)"/>
+          <!-- 灰银金属螺纹底座 -->
+          <rect x="15.8" y="26.8" width="8.4" height="3.2" rx="1.2" fill="#78716c"/>
+          <rect x="16.8" y="30.0" width="6.4" height="2.6" rx="1.2" fill="#57534e"/>
+        </svg>
+        <div class="medallion-badge" id="hint-count">3</div>
+        <span class="medallion-label">提示</span>
       </div>
     </div>
   </div>
@@ -1801,7 +1780,7 @@
   <!-- ==================== 弹窗 A：暂停设置面板（完全复刻参考图5 3D高光版） ==================== -->
   <div class="modal-mask" id="pause-modal-mask">
     <div class="casual-modal-card">
-      <div class="casual-header-pill">暂停</div>
+      <div class="casual-header-pill">设置</div>
       <div class="casual-close-btn" id="pause-close-btn">
         <svg width="19" height="19" viewBox="0 0 24 24" stroke="#ffffff" stroke-width="4.8" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>
       </div>
@@ -1867,11 +1846,11 @@
         </div>
       </div>
 
-      <!-- 速度x2、提速升级、主题商店 3D快捷入口（整合于设置面板中） -->
+      <!-- 速度x2、提速升级、主题商店、一键破局 快捷入口（整合于设置面板中） -->
       <div class="pause-feature-bar">
         <div class="pause-feature-btn" id="speed-x2-btn" title="切换2倍倒水速度">
           <div class="pause-feature-icon">
-            <svg width="22" height="16" viewBox="0 0 24 18" fill="#31659c">
+            <svg width="20" height="15" viewBox="0 0 24 18" fill="#8c5820">
               <polygon points="2,2 12,9 2,16"/>
               <polygon points="12,2 22,9 12,16"/>
             </svg>
@@ -1881,8 +1860,8 @@
 
         <div class="pause-feature-btn" id="upgrade-open-btn" title="打开速度升级面板">
           <div class="pause-feature-icon">
-            <svg width="22" height="22" viewBox="0 0 36 36">
-              <path d="M18,4 L29,17 L22.5,17 L22.5,30 L13.5,30 L13.5,17 L7,17 Z" fill="url(#arrowYellowTop3D)" stroke="#5d2906" stroke-width="2.4" stroke-linejoin="round"/>
+            <svg width="20" height="20" viewBox="0 0 36 36">
+              <path d="M18,5 L28,17 L22,17 L22,30 L14,30 L14,17 L8,17 Z" fill="#e5a344" stroke="#7c4a12" stroke-width="2.2" stroke-linejoin="round"/>
             </svg>
           </div>
           <span class="pause-feature-label">提速</span>
@@ -1890,15 +1869,24 @@
 
         <div class="pause-feature-btn" id="shop-open-btn" title="打开主题商店">
           <div class="pause-feature-icon">
-            <svg width="22" height="22" viewBox="0 0 36 36">
-              <rect x="7" y="16" width="22" height="14" rx="2.5" fill="#e0f2fe" stroke="#1e3a8a" stroke-width="2"/>
-              <rect x="14" y="21" width="8" height="9" rx="1.5" fill="#38bdf8" stroke="#1e3a8a" stroke-width="1.6"/>
-              <path d="M5,16 L8.5,7.5 L27.5,7.5 L31,16 Z" fill="#ec4899" stroke="#831843" stroke-width="2" stroke-linejoin="round"/>
-              <polygon points="11.5,7.5 16,7.5 15,16 9.5,16" fill="#ffffff"/>
-              <polygon points="20,7.5 24.5,7.5 26.5,16 21,16" fill="#ffffff"/>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7c4a12" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="9" fill="#f7df94"/>
+              <circle cx="9" cy="10" r="1.5" fill="#c87816" stroke="none"/>
+              <circle cx="15" cy="10" r="1.5" fill="#6d8c3e" stroke="none"/>
+              <circle cx="12" cy="15" r="1.5" fill="#b8582d" stroke="none"/>
             </svg>
           </div>
           <span class="pause-feature-label">主题</span>
+        </div>
+
+        <div class="pause-feature-btn" id="quick-unlock-btn" title="一键解锁当前关所有机关">
+          <div class="pause-feature-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <path d="M12 3L14.4 9.2L21 9.8L16 14.2L17.5 20.8L12 17.3L6.5 20.8L8 14.2L3 9.8L9.6 9.2L12 3Z"
+                    fill="#f5b942" stroke="#7c4a12" stroke-width="1.6" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <span class="pause-feature-label">破局</span>
         </div>
       </div>
     </div>
@@ -2028,7 +2016,7 @@
         </div>
       </div>
 
-      <div style="font-size: 18px; font-weight: 900; color: #164f87; margin: 12px 0 18px; letter-spacing: 0.5px;">智能破局一步 / 随机刷新药水颜色</div>
+      <div style="font-size: 18px; font-weight: 900; color: #5c3d18; margin: 12px 0 18px; letter-spacing: 0.5px;">智能破局一步 / 随机刷新药水颜色</div>
 
       <button class="casual-green-btn" id="refresh-confirm-btn">
         <svg width="28" height="20" viewBox="0 0 28 20" fill="#ffffff">
@@ -2044,6 +2032,7 @@
   <!-- ==================== 弹窗 D：主题商店面板（复刻参考图2 3D粉白遮阳篷 + 霓虹灯泡招牌 + 6套主题） ==================== -->
   <div class="modal-mask" id="shop-modal-mask">
     <div class="casual-modal-card shop-modal-card">
+      <div class="casual-header-pill">主题背景</div>
       <div class="shop-awning-header">
         <svg viewBox="0 0 380 98" width="100%" height="100%" style="overflow:visible;">
           <!-- 遮阳篷立体斜顶 -->
@@ -2106,7 +2095,7 @@
       <div class="casual-close-btn" id="level-modal-close-btn">
         <svg width="19" height="19" viewBox="0 0 24 24" stroke="#ffffff" stroke-width="4.8" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>
       </div>
-      <div style="font-size:12.5px;font-weight:800;color:#546e8a;margin-bottom:6px;">200关大师级试炼 · 点击任一关卡立即挑战</div>
+      <div style="font-size:12.5px;font-weight:800;color:#7c582c;margin-bottom:6px;">200关大师级试炼 · 点击任一关卡立即挑战</div>
       <div class="chapter-tabs" id="chapter-tabs">
         <button class="chapter-tab-btn active" data-ch="0">1-40关</button>
         <button class="chapter-tab-btn" data-ch="1">41-80关</button>
@@ -2130,8 +2119,8 @@
         <div class="pastel-sunburst-rays"></div>
         <div class="pastel-sunburst-content" id="mech-preview-stage" style="width:96px;height:148px;"></div>
       </div>
-      <div style="font-size:13px;font-weight:900;color:#31659c;margin-bottom:8px;" id="mech-sub">星雾遮蔽 · 倾注破雾显色</div>
-      <div style="background:#eef5fc;border:1.8px solid #bfd8f2;border-radius:16px;padding:10px 12px;font-size:12.5px;color:#1e3a5f;line-height:1.5;text-align:left;margin-bottom:14px;" id="mech-desc"></div>
+      <div style="font-size:13px;font-weight:900;color:#6e491e;margin-bottom:8px;" id="mech-sub">星雾遮蔽 · 倾注破雾显色</div>
+      <div style="background:rgba(235,220,192,0.55);border:1.5px solid rgba(255,255,255,0.85);border-radius:16px;padding:10px 12px;font-size:12.5px;color:#5c3d18;line-height:1.5;text-align:left;margin-bottom:14px;" id="mech-desc"></div>
       <button class="casual-green-btn" id="mech-close-btn" style="font-size:18px;padding:10px 26px;">明白啦，开始挑战</button>
     </div>
   </div>
@@ -2143,8 +2132,8 @@
       <div class="casual-close-btn" id="win-close-x-btn">
         <svg width="19" height="19" viewBox="0 0 24 24" stroke="#ffffff" stroke-width="4.8" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>
       </div>
-      <div style="font-size:19px;font-weight:900;color:#1c528a;margin-bottom:4px;" id="modal-title">过关成功！</div>
-      <div style="font-size:12.5px;font-weight:800;color:#546e8a;margin-bottom:10px;" id="modal-sub">所有水瓶已成功归类装满！</div>
+      <div style="font-size:19px;font-weight:900;color:#5c3d18;margin-bottom:4px;" id="modal-title">过关成功！</div>
+      <div style="font-size:12.5px;font-weight:800;color:#7c582c;margin-bottom:10px;" id="modal-sub">所有水瓶已成功归类装满！</div>
       <div class="win-scorecard">
         <div>
           <div class="score-col-label">本次用步</div>
@@ -2191,7 +2180,7 @@
         </div>
       </div>
       <div style="font-size:18px;font-weight:900;color:#be123c;margin-bottom:6px;">⚠️ 步数已用尽！</div>
-      <div style="font-size:13px;font-weight:800;color:#546e8a;margin-bottom:16px;">是否增加 +5 步继续游戏？</div>
+      <div style="font-size:13px;font-weight:800;color:#7c582c;margin-bottom:16px;">是否增加 +5 步继续游戏？</div>
       <button class="casual-green-btn" id="oom-add-moves-btn" style="width:100%;margin-bottom:10px;">
         <svg width="26" height="18" viewBox="0 0 28 20" fill="#ffffff">
           <rect x="1" y="2" width="18" height="16" rx="4"/>
@@ -2231,21 +2220,22 @@
         <linearGradient id="liq-mystery" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#03050a"/><stop offset="35%" stop-color="#090c16"/><stop offset="76%" stop-color="#1c2236"/><stop offset="100%" stop-color="#020308"/></linearGradient>
         <linearGradient id="top-mystery" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#151b2e"/><stop offset="70%" stop-color="#252f4a"/><stop offset="100%" stop-color="#090c16"/></linearGradient>
         <linearGradient id="checkGreenGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#86efac"/><stop offset="45%" stop-color="#22c55e"/><stop offset="100%" stop-color="#15803d"/></linearGradient>
-        <linearGradient id="neckLipGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#224999"/><stop offset="14%" stop-color="#6092eb"/><stop offset="30%" stop-color="#0d1e54"/><stop offset="55%" stop-color="#152d75"/><stop offset="73%" stop-color="#b8d8ff"/><stop offset="84%" stop-color="#3c6fd1"/><stop offset="94%" stop-color="#75a7f5"/><stop offset="100%" stop-color="#19357a"/></linearGradient>
-        <linearGradient id="neckTopRimGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#2d57ab"/><stop offset="25%" stop-color="#6ca0f0"/><stop offset="58%" stop-color="#1c3b82"/><stop offset="82%" stop-color="#8ab8ff"/><stop offset="100%" stop-color="#244794"/></linearGradient>
-        <linearGradient id="mouthBoreGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#1b3f82"/><stop offset="60%" stop-color="#2b5cb8"/><stop offset="100%" stop-color="#5b96f5"/></linearGradient>
-        <radialGradient id="leftShoulderDomeGrad" cx="35%" cy="35%" r="65%"><stop offset="0%" stop-color="rgba(215, 235, 255, 0.24)"/><stop offset="58%" stop-color="rgba(170, 205, 250, 0.08)"/><stop offset="100%" stop-color="rgba(150, 185, 245, 0.0)"/></radialGradient>
-        <radialGradient id="rightShoulderSoftGrad" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="rgba(255, 255, 255, 0.38)"/><stop offset="55%" stop-color="rgba(220, 240, 255, 0.16)"/><stop offset="100%" stop-color="rgba(220, 240, 255, 0.0)"/></radialGradient>
+        <linearGradient id="neckLipGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="rgba(255, 248, 230, 0.65)"/><stop offset="18%" stop-color="rgba(255, 255, 255, 0.88)"/><stop offset="48%" stop-color="rgba(240, 225, 195, 0.42)"/><stop offset="76%" stop-color="rgba(255, 255, 255, 0.92)"/><stop offset="100%" stop-color="rgba(245, 230, 200, 0.68)"/></linearGradient>
+        <linearGradient id="neckTopRimGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="rgba(255, 250, 235, 0.82)"/><stop offset="30%" stop-color="#ffffff"/><stop offset="65%" stop-color="rgba(254, 243, 199, 0.75)"/><stop offset="100%" stop-color="#ffffff"/></linearGradient>
+        <linearGradient id="mouthBoreGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="rgba(180, 140, 85, 0.28)"/><stop offset="60%" stop-color="rgba(255, 248, 230, 0.36)"/><stop offset="100%" stop-color="rgba(255, 255, 255, 0.65)"/></linearGradient>
+        <radialGradient id="leftShoulderDomeGrad" cx="35%" cy="35%" r="65%"><stop offset="0%" stop-color="rgba(255, 255, 255, 0.42)"/><stop offset="58%" stop-color="rgba(255, 250, 235, 0.14)"/><stop offset="100%" stop-color="rgba(255, 250, 235, 0.0)"/></radialGradient>
+        <radialGradient id="rightShoulderSoftGrad" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="rgba(255, 255, 255, 0.48)"/><stop offset="55%" stop-color="rgba(255, 250, 235, 0.20)"/><stop offset="100%" stop-color="rgba(255, 250, 235, 0.0)"/></radialGradient>
         <filter id="naturalGlassBlur" x="-15%" y="-10%" width="130%" height="120%"><feGaussianBlur stdDeviation="1.05"/></filter>
-        <linearGradient id="naturalRimGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#5b9cf5"/><stop offset="18%" stop-color="#5390e8"/><stop offset="55%" stop-color="#386ec2"/><stop offset="88%" stop-color="#4e8be0"/><stop offset="100%" stop-color="#68abff"/></linearGradient>
-        <linearGradient id="windowShoulderGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="rgba(255, 255, 255, 0.34)"/><stop offset="50%" stop-color="rgba(240, 248, 255, 0.48)"/><stop offset="90%" stop-color="rgba(215, 238, 255, 0.28)"/><stop offset="100%" stop-color="rgba(200, 230, 255, 0.08)"/></linearGradient>
-        <linearGradient id="rightPillarSheen" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="rgba(255, 255, 255, 0.22)"/><stop offset="40%" stop-color="rgba(255, 255, 255, 0.15)"/><stop offset="85%" stop-color="rgba(255, 255, 255, 0.06)"/><stop offset="100%" stop-color="rgba(255, 255, 255, 0.0)"/></linearGradient>
-        <linearGradient id="leftWallSheen" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="rgba(195, 222, 255, 0.16)"/><stop offset="65%" stop-color="rgba(180, 210, 255, 0.05)"/><stop offset="100%" stop-color="rgba(180, 210, 255, 0.0)"/></linearGradient>
-        <linearGradient id="glassBodyGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="rgba(180, 218, 255, 0.26)"/><stop offset="18%" stop-color="rgba(120, 165, 230, 0.14)"/><stop offset="55%" stop-color="rgba(110, 155, 225, 0.10)"/><stop offset="82%" stop-color="rgba(215, 238, 255, 0.28)"/><stop offset="100%" stop-color="rgba(95, 150, 230, 0.26)"/></linearGradient>
-        <linearGradient id="baseCushionGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="rgba(95, 160, 245, 0.58)"/><stop offset="22%" stop-color="rgba(70, 135, 225, 0.42)"/><stop offset="50%" stop-color="rgba(60, 125, 218, 0.36)"/><stop offset="78%" stop-color="rgba(85, 150, 238, 0.46)"/><stop offset="92%" stop-color="rgba(185, 225, 255, 0.72)"/><stop offset="100%" stop-color="rgba(80, 145, 235, 0.56)"/></linearGradient>
-        <linearGradient id="ikeaCorkTopGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#ffe89e"/><stop offset="55%" stop-color="#f5c356"/><stop offset="100%" stop-color="#d4922a"/></linearGradient>
-        <linearGradient id="ikeaCorkSideGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#b87b28"/><stop offset="25%" stop-color="#ffd978"/><stop offset="58%" stop-color="#eab347"/><stop offset="85%" stop-color="#ffe28a"/><stop offset="100%" stop-color="#9e6216"/></linearGradient>
-        <linearGradient id="ikeaCorkPlugGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#8c581c"/><stop offset="45%" stop-color="#c48838"/><stop offset="80%" stop-color="#d69a4a"/><stop offset="100%" stop-color="#704210"/></linearGradient>
+        <filter id="warmCastShadowBlur" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="4.6"/></filter>
+        <linearGradient id="naturalRimGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="rgba(255, 255, 255, 0.92)"/><stop offset="22%" stop-color="rgba(254, 243, 199, 0.82)"/><stop offset="55%" stop-color="rgba(255, 255, 255, 0.68)"/><stop offset="88%" stop-color="rgba(254, 240, 180, 0.84)"/><stop offset="100%" stop-color="#ffffff"/></linearGradient>
+        <linearGradient id="windowShoulderGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="rgba(255, 255, 255, 0.52)"/><stop offset="50%" stop-color="rgba(255, 253, 245, 0.62)"/><stop offset="90%" stop-color="rgba(255, 248, 225, 0.30)"/><stop offset="100%" stop-color="rgba(255, 248, 225, 0.05)"/></linearGradient>
+        <linearGradient id="rightPillarSheen" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="rgba(255, 255, 255, 0.38)"/><stop offset="45%" stop-color="rgba(255, 252, 240, 0.22)"/><stop offset="85%" stop-color="rgba(255, 248, 225, 0.08)"/><stop offset="100%" stop-color="rgba(255, 255, 255, 0.0)"/></linearGradient>
+        <linearGradient id="leftWallSheen" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="rgba(255, 255, 255, 0.28)"/><stop offset="65%" stop-color="rgba(255, 250, 235, 0.10)"/><stop offset="100%" stop-color="rgba(255, 250, 235, 0.0)"/></linearGradient>
+        <linearGradient id="glassBodyGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="rgba(255, 252, 242, 0.30)"/><stop offset="22%" stop-color="rgba(255, 248, 232, 0.15)"/><stop offset="58%" stop-color="rgba(255, 246, 225, 0.12)"/><stop offset="84%" stop-color="rgba(255, 254, 248, 0.34)"/><stop offset="100%" stop-color="rgba(255, 250, 235, 0.28)"/></linearGradient>
+        <linearGradient id="baseCushionGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="rgba(255, 250, 235, 0.52)"/><stop offset="28%" stop-color="rgba(255, 245, 218, 0.36)"/><stop offset="55%" stop-color="rgba(255, 242, 210, 0.32)"/><stop offset="84%" stop-color="rgba(255, 252, 240, 0.56)"/><stop offset="94%" stop-color="rgba(255, 255, 255, 0.78)"/><stop offset="100%" stop-color="rgba(255, 248, 228, 0.52)"/></linearGradient>
+        <linearGradient id="ikeaCorkTopGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fef9c3"/><stop offset="45%" stop-color="#facc15"/><stop offset="100%" stop-color="#d97706"/></linearGradient>
+        <linearGradient id="ikeaCorkSideGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#b45309"/><stop offset="25%" stop-color="#fde047"/><stop offset="55%" stop-color="#f59e0b"/><stop offset="82%" stop-color="#fef08a"/><stop offset="100%" stop-color="#92400e"/></linearGradient>
+        <linearGradient id="ikeaCorkPlugGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#78350f"/><stop offset="45%" stop-color="#d97706"/><stop offset="80%" stop-color="#f59e0b"/><stop offset="100%" stop-color="#652b0d"/></linearGradient>
         <linearGradient id="catEarInnerGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#ffb8dc" stop-opacity="0.72"/><stop offset="60%" stop-color="#ff6fae" stop-opacity="0.45"/><stop offset="100%" stop-color="#b8256e" stop-opacity="0.28"/></linearGradient>
         <radialGradient id="catBellGrad" cx="35%" cy="30%" r="65%"><stop offset="0%" stop-color="#fff8c4"/><stop offset="45%" stop-color="#ffd54f"/><stop offset="85%" stop-color="#e68a00"/><stop offset="100%" stop-color="#8c4b00"/></radialGradient>
         <linearGradient id="catCollarGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#9e1446"/><stop offset="28%" stop-color="#ff4d8d"/><stop offset="55%" stop-color="#ff85b3"/><stop offset="82%" stop-color="#e01e63"/><stop offset="100%" stop-color="#800b34"/></linearGradient>
@@ -2256,9 +2246,9 @@
         <linearGradient id="camBlueFaceGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#ffffff"/><stop offset="65%" stop-color="#e3f3ff"/><stop offset="100%" stop-color="#b3dcff"/></linearGradient>
         <linearGradient id="silkDrapeGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#bfdbfe"/><stop offset="28%" stop-color="#ffffff"/><stop offset="62%" stop-color="#dbeafe"/><stop offset="100%" stop-color="#7dd3fc"/></linearGradient>
         <linearGradient id="iceBaseBackGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="rgba(130, 235, 255, 0.72)"/><stop offset="100%" stop-color="rgba(20, 130, 210, 0.85)"/></linearGradient>
-        <linearGradient id="iceFacetLeftGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#7dd3fc"/><stop offset="100%" stop-color="#0284c7"/></linearGradient>
-        <linearGradient id="iceFacetMidGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#bae6fd"/><stop offset="55%" stop-color="#38bdf8"/><stop offset="100%" stop-color="#0369a1"/></linearGradient>
-        <linearGradient id="iceFacetRightGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#38bdf8"/><stop offset="100%" stop-color="#075985"/></linearGradient>
+        <linearGradient id="iceFacetLeftGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#67e8f9"/><stop offset="100%" stop-color="#0891b2"/></linearGradient>
+        <linearGradient id="iceFacetMidGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#cffafe"/><stop offset="52%" stop-color="#22d3ee"/><stop offset="100%" stop-color="#0e7490"/></linearGradient>
+        <linearGradient id="iceFacetRightGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#22d3ee"/><stop offset="100%" stop-color="#155e75"/></linearGradient>
         <linearGradient id="fullIceGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#38bdf8"/><stop offset="32%" stop-color="#bae6fd"/><stop offset="68%" stop-color="#7dd3fc"/><stop offset="100%" stop-color="#0284c7"/></linearGradient>
         <linearGradient id="stoneLeftGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#e3c9a8"/><stop offset="60%" stop-color="#b8936a"/><stop offset="100%" stop-color="#7d5a38"/></linearGradient>
         <linearGradient id="stoneMidGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#edd6b8"/><stop offset="50%" stop-color="#c49d71"/><stop offset="100%" stop-color="#6e4b2a"/></linearGradient>
@@ -3122,22 +3112,24 @@
     let shuffleUses = 3;
     let undoUses = 5;
     let hintUses = 3;
+    let addBottleUses = 2;
+    let streakWins = 1;
     let isLevelEntering = false;
     let entranceSloshRaf = null;
     const shownMechanicIntros = new Set();
 
     const SHOP_THEMES = [
+      { id: 'zen_amber', name: '晨曦流金', unlocked: true,  unlockType: 'free',  topCol: '#e49f42', botCol: '#7c8554' },
+      { id: 'starlight', name: '深邃星夜', unlocked: true,  unlockType: 'free',  topCol: '#191d52', botCol: '#090b24' },
       { id: 'volcanic',  name: '火山灰',   unlocked: true,  unlockType: 'free',  topCol: '#b8bac8', botCol: '#8d90a3' },
       { id: 'taro',      name: '香芋紫',   unlocked: false, unlockType: 'lv10',  topCol: '#dcd0f0', botCol: '#c2b0e2' },
       { id: 'orange',    name: '活力橙',   unlocked: false, unlockType: 'video', topCol: '#ffd8ad', botCol: '#f7b874' },
-      { id: 'beach',     name: '夏日沙滩', unlocked: false, unlockType: 'video', isBeach: true },
-      { id: 'starlight', name: '星光琉璃', unlocked: true,  unlockType: 'free',  topCol: '#1e3a75', botCol: '#0c1833' },
-      { id: 'emerald',   name: '极光森境', unlocked: false, unlockType: 'mystery', topCol: '#74c69d', botCol: '#40916c' }
+      { id: 'beach',     name: '夏日沙滩', unlocked: false, unlockType: 'video', isBeach: true }
     ];
-    let activeThemeId = 'volcanic';
+    let activeThemeId = 'zen_amber';
 
     function cloneState() {
-      return JSON.parse(JSON.stringify({ bottles, bags, packedTotal, pourCountTotal, remainingMoves, shuffleUses, undoUses, hintUses }));
+      return JSON.parse(JSON.stringify({ bottles, bags, packedTotal, pourCountTotal, remainingMoves, shuffleUses, undoUses, hintUses, addBottleUses }));
     }
 
     function showToast(msg) {
@@ -3640,7 +3632,10 @@
             <defs>
               <clipPath id="bclip-${idx}"><path d="${catClipPath}" /></clipPath>
             </defs>
-            <ellipse class="bottle-ground-shadow" cx="50" cy="201" rx="40" ry="4.5" fill="rgba(15, 25, 50, 0.16)" />
+            <g class="bottle-ground-shadow">
+              <ellipse cx="43" cy="210" rx="46" ry="13.5" transform="rotate(-7, 43, 210)" fill="rgba(148, 66, 8, 0.42)" filter="url(#warmCastShadowBlur)" />
+              <ellipse cx="49" cy="202" rx="38" ry="7.5" fill="rgba(120, 52, 6, 0.35)" filter="url(#warmCastShadowBlur)" />
+            </g>
             <ellipse cx="50" cy="204" rx="45" ry="7.2" fill="none" stroke="${targetColObj.topLight}" stroke-width="1.5" stroke-dasharray="10 5" opacity="0.7" />
             <g id="bottle-body-wrap-${idx}">
               <path d="${catClipPath}" fill="url(#glassBodyGrad)" />
@@ -4122,7 +4117,16 @@
             ${b.special === 'paper_bag' ? `<clipPath id="bag-neck-only-${idx}"><rect x="0" y="-10" width="100" height="${24 + neckOffsetY}"/></clipPath>` : ''}
           </defs>
 
-          ${b.special === "paper_bag" ? "" : `<ellipse class="bottle-ground-shadow" cx="50" cy="${bBotY + 5.2}" rx="25" ry="2.8" fill="rgba(15, 25, 50, 0.15)" />`}
+          ${b.special === "paper_bag" ? `
+            <g class="bottle-ground-shadow">
+              <ellipse cx="43" cy="209" rx="35" ry="12" transform="rotate(-8, 43, 209)" fill="rgba(148, 66, 8, 0.42)" filter="url(#warmCastShadowBlur)" />
+            </g>
+          ` : `
+            <g class="bottle-ground-shadow">
+              <ellipse cx="43" cy="${bBotY + 13.5}" rx="33" ry="11.8" transform="rotate(-8, 43, ${bBotY + 13.5})" fill="rgba(152, 68, 8, 0.44)" filter="url(#warmCastShadowBlur)" />
+              <ellipse cx="49" cy="${bBotY + 6.2}" rx="26.5" ry="6.8" fill="rgba(124, 52, 6, 0.36)" filter="url(#warmCastShadowBlur)" />
+            </g>
+          `}
           ${underGlassFX}
 
           <g id="bottle-body-wrap-${idx}" ${b.special === "paper_bag" ? `clip-path="url(#bag-neck-only-${idx})"` : ""}>
@@ -4158,12 +4162,12 @@
             <path d="M 17.8,${bBotY - 0.5} A 32.2,8.4 0 0,0 82.2,${bBotY - 0.5} L 81.6,${bBotY + 4.0} A 31.6,9.2 0 0,1 18.4,${bBotY + 4.0} Z"
                   fill="url(#baseCushionGrad)" />
             <path d="M 19.0,${bBotY + 3.0} A 31.0,8.8 0 0,0 81.0,${bBotY + 3.0}"
-                  fill="none" stroke="#3c80d4" stroke-width="1.55" stroke-linecap="round" opacity="0.88" />
+                  fill="none" stroke="rgba(255, 255, 255, 0.78)" stroke-width="1.5" stroke-linecap="round" opacity="0.88" />
             <path d="M 27.5,${bBotY + 6.2} A 22.5,4.8 0 0,0 72.5,${bBotY + 6.2}"
-                  fill="none" stroke="#75baff" stroke-width="1.1" stroke-linecap="round" opacity="0.65" />
+                  fill="none" stroke="rgba(254, 243, 199, 0.72)" stroke-width="1.1" stroke-linecap="round" opacity="0.72" />
 
             <path d="${smoothClipPath}"
-                  fill="none" stroke="rgba(10, 26, 72, 0.35)" stroke-width="1.2" stroke-linejoin="round" />
+                  fill="none" stroke="rgba(255, 255, 255, 0.38)" stroke-width="1.1" stroke-linejoin="round" />
 
             <!-- 外层3D纤细修长琉璃轮廓线（对齐参考图2 101f7498） -->
             <path d="M 32.0,${neckLipTopY}
@@ -4715,7 +4719,18 @@
 
     function renderAll() {
       const cfg = getLevelConfig(currentLevelId);
-      document.getElementById('level-pill-title').textContent = `第 ${currentLevelId} 关`;
+      const bigNumEl = document.getElementById('zen-header-big-num');
+      const pillTitleEl = document.getElementById('level-pill-title');
+      if (remainingMoves !== null) {
+        if (bigNumEl) bigNumEl.textContent = `${remainingMoves}`;
+        if (pillTitleEl) pillTitleEl.textContent = `剩余步数 · 第 ${currentLevelId} 关`;
+      } else {
+        if (bigNumEl) bigNumEl.textContent = `${currentLevelId}`;
+        const corkedCnt = bottles.filter(b => b && b.corked).length;
+        const totalTargets = cfg.hasBags ? (bags ? bags.length : 4) : Math.max(1, bottles.filter(b => b && b.layers && b.layers.length > 0).length);
+        const doneCnt = cfg.hasBags ? packedTotal : corkedCnt;
+        if (pillTitleEl) pillTitleEl.textContent = `第 ${currentLevelId} 关 · 已完成 ${doneCnt}/${totalTargets}`;
+      }
 
       const movesCounterPill = document.getElementById('moves-counter-pill');
       const movesLeftNum = document.getElementById('moves-left-num');
@@ -4764,26 +4779,25 @@
         });
       } else {
         bagsStage.classList.add('hidden');
-        modeBanner.classList.add('show');
         const bannerText = document.getElementById('mode-banner-text');
         const bannerProg = document.getElementById('mode-banner-progress');
 
         if (cfg.isCatBossLevel) {
+          modeBanner.classList.add('show');
           const catBottle = bottles.find(b => b.isGiantCat);
           const curCatLayers = catBottle ? catBottle.layers.length : 0;
           const catColName = COLORS[(catBottle && catBottle.catTargetColor) || 'pink'].name;
           if (bannerText) bannerText.textContent = `🐱 倒满中央【${catColName}】大猫瓶`;
           if (bannerProg) bannerProg.textContent = `完成 ${curCatLayers}/8`;
-        } else if (cfg.isVariedHeight) {
+        } else if (remainingMoves !== null) {
+          modeBanner.classList.add('show');
           const corkedCnt = bottles.filter(b => b.corked).length;
           const totalTargets = bottles.filter(b => b.layers.length > 0).length;
-          if (bannerText) bannerText.textContent = '🏺 同色水倒满整瓶即可完成';
+          if (bannerText) bannerText.textContent = '⏳ 在步数耗尽前完成归类';
           if (bannerProg) bannerProg.textContent = `完成 ${corkedCnt}/${totalTargets}`;
         } else {
-          const corkedCnt = bottles.filter(b => b.corked).length;
-          const totalTargets = bottles.filter(b => b.layers.length > 0).length;
-          if (bannerText) bannerText.textContent = '🎯 将相同颜色的水倒满整瓶';
-          if (bannerProg) bannerProg.textContent = `完成 ${corkedCnt}/${totalTargets}`;
+          /* 常规关卡保持参考图极简纯粹画面，隐藏顶部横幅 */
+          modeBanner.classList.remove('show');
         }
       }
 
@@ -4830,6 +4844,10 @@
       const undoBadge = document.getElementById('undo-count-badge');
       if (undoBadge) {
         undoBadge.textContent = undoUses > 0 ? undoUses : '+';
+      }
+      const addBottleBadge = document.getElementById('add-bottle-count');
+      if (addBottleBadge) {
+        addBottleBadge.textContent = addBottleUses > 0 ? addBottleUses : '+';
       }
       if (activeHintPair && !isAnimating) {
         requestAnimationFrame(renderHintGuideOverlay);
@@ -5714,24 +5732,22 @@
       return `
         <defs>
           <linearGradient id="liveStreamGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stop-color="${colObj.left}" />
-            <stop offset="45%" stop-color="${colObj.topLight}" />
-            <stop offset="82%" stop-color="${colObj.mid}" />
-            <stop offset="100%" stop-color="${colObj.right}" />
+            <stop offset="0%" stop-color="${colObj.mid}" />
+            <stop offset="50%" stop-color="${colObj.mid}" />
+            <stop offset="100%" stop-color="${colObj.left}" />
           </linearGradient>
         </defs>
         <path d="${streamPath}" fill="url(#liveStreamGrad)" />
-        <path d="${highlightPath}" fill="none" stroke="rgba(255,255,255,0.48)" stroke-width="1.6" stroke-linecap="round" />
         ${impactFoamHTML}
         <path d="M ${sx(31.4)},${sy(9.2)}
                  C ${sx(29.8)},${sy(13.5)} ${sx(31.0)},${sy(18.2)} ${sx(36.2)},${sy(20.6)}
                  A ${(14.2 * scale).toFixed(2)},${(3.3 * scale).toFixed(2)} 0 0,0 ${sx(63.8)},${sy(20.6)}
                  C ${sx(69.0)},${sy(18.2)} ${sx(70.2)},${sy(13.5)} ${sx(68.6)},${sy(9.2)}
                  A ${(18.6 * scale).toFixed(2)},${(3.8 * scale).toFixed(2)} 0 0,0 ${sx(31.4)},${sy(9.2)} Z"
-              fill="url(#neckLipGrad)" opacity="0.52"
-              stroke="#4d88e5" stroke-width="${(1.0 * scale).toFixed(2)}" />
+              fill="url(#neckLipGrad)" opacity="0.45"
+              stroke="rgba(255, 255, 255, 0.55)" stroke-width="${(1.0 * scale).toFixed(2)}" />
         <path d="M ${sx(32.0)},${sy(9.6)} A ${(18.1 * scale).toFixed(2)},${(3.5 * scale).toFixed(2)} 0 0,0 ${sx(68.0)},${sy(9.6)}"
-              fill="none" stroke="#b8d8ff" stroke-width="${(1.2 * scale).toFixed(2)}" />
+              fill="none" stroke="rgba(255, 255, 255, 0.72)" stroke-width="${(1.2 * scale).toFixed(2)}" />
       `;
     }
 
@@ -5806,7 +5822,22 @@
       }
       const dstInitialScale = (dstTopSameAfter - moveCount) / dstTopSameAfter;
 
-      const pourDir = (srcRect.left <= dstRect.left) ? 1 : -1;
+      const shellEl = document.querySelector('.app-shell');
+      const shellRect = shellEl ? shellEl.getBoundingClientRect() : { left: 0, right: window.innerWidth || 412 };
+      const dstCenterX = dstRect.left + dstRect.width * 0.5;
+      const swingSpanPx = Math.max(118, srcRect.height * 0.94);
+      const canPourFromLeft = (dstCenterX - swingSpanPx) >= (shellRect.left + 4);
+      const canPourFromRight = (dstCenterX + swingSpanPx) <= (shellRect.right - 4);
+      let pourDir = (srcRect.left <= dstRect.left) ? 1 : -1;
+      if (pourDir === -1 && !canPourFromRight && canPourFromLeft) {
+        pourDir = 1;
+      } else if (pourDir === 1 && !canPourFromLeft && canPourFromRight) {
+        pourDir = -1;
+      } else if (!canPourFromRight && !canPourFromLeft) {
+        const leftRoom = dstCenterX - shellRect.left;
+        const rightRoom = shellRect.right - dstCenterX;
+        pourDir = (leftRoom >= rightRoom) ? 1 : -1;
+      }
 
       const srcNeckOffsetY = getNeckOffsetY(srcCap, !!srcBottle.isGiantCat);
       const dstNeckOffsetY = getNeckOffsetY(dstCap, !!dstBottle.isGiantCat);
@@ -6902,6 +6933,28 @@
     }
 
     document.getElementById('level-pill-title').addEventListener('click', openLevelSelector);
+    document.getElementById('top-center-level-trigger')?.addEventListener('click', openLevelSelector);
+    document.getElementById('rules-help-btn')?.addEventListener('click', () => {
+      if (isAnimating) return;
+      const cfg = getLevelConfig(currentLevelId);
+      const key = cfg.introMechanicKey || 'mystery';
+      const info = MECHANIC_INTROS[key] || MECHANIC_INTROS.mystery;
+      const badgeEl = document.getElementById('mech-badge');
+      const titleEl = document.getElementById('mech-title');
+      const subEl = document.getElementById('mech-sub');
+      const descEl = document.getElementById('mech-desc');
+      if (badgeEl) badgeEl.textContent = `✨ 第 ${currentLevelId} 关 · 玩法与规则`;
+      if (titleEl) titleEl.textContent = '游戏规则';
+      if (subEl) subEl.textContent = '同色水相连即可倾倒 · 装满整瓶自动封存';
+      if (descEl) descEl.innerHTML = '💡 <b>核心规则：</b>点击任意水瓶拿起，再点击另一只<b>空瓶</b>或<b>顶层颜色相同且未满</b>的水瓶即可倒入。<br/>✨ <b>顶部选关：</b>点击画面正上方关卡数字即可随时切换 1～200 关！';
+      const previewEl = document.getElementById('mech-preview-stage');
+      if (previewEl) {
+        const sampleB = typeof info.sampleBottle === 'function' ? info.sampleBottle() : info.sampleBottle;
+        previewEl.innerHTML = renderBottleSVG(sampleB, 99);
+      }
+      document.getElementById('mechanic-modal-mask')?.classList.add('show');
+      playSound('select');
+    });
     document.getElementById('level-select-btn')?.addEventListener('click', openLevelSelector);
     document.getElementById('level-modal-close-btn').addEventListener('click', () => {
       levelModalMask.classList.remove('show');
@@ -6945,7 +6998,15 @@
     // 底部【+空瓶】按钮（防死锁规范 6、8、10：优先续步 -> 破除流沙冰封 -> 解锁广告空瓶 -> 解除机关 -> 原地复用已消失槽位）
     document.getElementById('add-bottle-btn')?.addEventListener('click', () => {
       if (isAnimating) return;
+      if (addBottleUses <= 0) {
+        addBottleUses = 2;
+        playSound('pack');
+        showToast('🎬 已为您免费补充 +2 次加瓶道具！');
+        renderAll();
+        return;
+      }
       moveHistory.push(cloneState());
+      addBottleUses = Math.max(0, addBottleUses - 1);
 
       if (remainingMoves !== null && remainingMoves <= 3) {
         remainingMoves += 5;
@@ -7066,6 +7127,7 @@
       pourCountTotal = prev.pourCountTotal || 0;
       remainingMoves = prev.remainingMoves;
       shuffleUses = prev.shuffleUses;
+      if (typeof prev.addBottleUses === 'number') addBottleUses = prev.addBottleUses;
       undoUses = Math.max(0, (undoUses || 1) - 1);
       selectedIndex = null;
       activeHintPair = null;
@@ -7109,7 +7171,10 @@
       setTimeout(() => checkAndPackWaitingCorkedBottles(), 180);
     }
 
-    document.getElementById('quick-unlock-btn').addEventListener('click', unlockAllSpecials);
+    document.getElementById('quick-unlock-btn')?.addEventListener('click', () => {
+      pauseModalMask?.classList.remove('show');
+      unlockAllSpecials();
+    });
 
     const modalMask = document.getElementById('modal-mask');
     document.getElementById('win-close-x-btn').addEventListener('click', () => {
@@ -7132,6 +7197,9 @@
     });
 
     function showWinModal(wasGiantCat) {
+      streakWins = (streakWins % 2) + 1;
+      const streakEl = document.getElementById('streak-chest-prog');
+      if (streakEl) streakEl.textContent = `${streakWins}/2`;
       const cfg = getLevelConfig(currentLevelId);
       const userSteps = Math.max(1, pourCountTotal);
       const optSteps = cfg.optimalMoves || 17;
@@ -7172,6 +7240,7 @@
       shuffleUses = 3;
       hintUses = 3;
       undoUses = 5;
+      addBottleUses = 2;
       if (cfg.hasBags) reconcileActiveBagsWithBottles();
       isLevelEntering = true;
       renderAll();
