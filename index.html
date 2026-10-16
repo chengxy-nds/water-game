@@ -146,10 +146,10 @@
     .top-bar {
       width: 100%;
       display: flex;
-      align-items: flex-start;
+      align-items: center;
       justify-content: space-between;
-      padding: 8px 14px 2px;
-      min-height: clamp(72px, 10.8dvh, 88px);
+      padding: 8px 14px 4px;
+      min-height: clamp(58px, 8.6dvh, 72px);
       flex-shrink: 0;
       position: relative;
       z-index: 15;
@@ -183,14 +183,13 @@
       display: none !important;
     }
 
-    /* 顶部中央精致流金玻璃关卡铭牌（字号精致小巧、配高定玻璃背景与双层亮边、稳固不跳动） */
+    /* 顶部中央极简圆润大数字（100%对标参考图2 image_703222：无背景框、与左右按钮严格等高居中对齐） */
     .top-center-group {
       position: absolute;
       left: 50%;
-      top: 10px;
-      transform: translateX(-50%);
+      top: 50%;
+      transform: translate(-50%, -50%);
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
       cursor: pointer;
@@ -202,39 +201,16 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 7px;
-      padding: 6px 20px 6.5px;
-      border-radius: 999px;
-      background: linear-gradient(160deg, rgba(255, 246, 222, 0.46) 0%, rgba(222, 168, 86, 0.30) 52%, rgba(168, 112, 38, 0.44) 100%);
-      border: 1.6px solid rgba(255, 250, 236, 0.86);
-      box-shadow:
-        inset 0 2px 3px rgba(255, 255, 255, 0.78),
-        inset 0 -2.5px 5px rgba(105, 62, 14, 0.26),
-        0 5px 14px rgba(92, 56, 12, 0.24);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      overflow: hidden;
+      padding: 0 8px;
+      background: none;
+      border: none;
+      box-shadow: none;
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
     }
-    /* 关卡胶囊顶部斜向玻璃反光弧（与左右两侧超椭圆玻璃按钮质感呼应） */
-    .zen-big-num-wrap::before {
-      content: "";
-      position: absolute;
-      top: 2px;
-      left: 10px;
-      right: 10px;
-      height: 44%;
-      border-radius: 999px;
-      background: linear-gradient(180deg, rgba(255, 255, 255, 0.52) 0%, rgba(255, 255, 255, 0) 100%);
-      pointer-events: none;
-    }
-    /* 胶囊两侧精致暖金星芒点缀 */
+    .zen-big-num-wrap::before,
     .zen-big-num-wrap::after {
-      content: "";
-      position: absolute;
-      inset: 1.5px;
-      border-radius: 999px;
-      border: 1px solid rgba(255, 236, 185, 0.32);
-      pointer-events: none;
+      display: none !important;
     }
     /* 清新Q弹圆润字体风格 */
     .zen-big-num,
@@ -250,29 +226,23 @@
       font-family: "Fredoka", "Quicksand", "SF Pro Rounded", ui-rounded, "Hiragino Maru Gothic ProN", "Rounded Mplus 1c", "YouYuan", "幼圆", "PingFang SC", "Microsoft YaHei", sans-serif;
     }
     .zen-big-num {
-      font-size: clamp(15.5px, 2.25vh, 18px);
+      font-family: "Fredoka", "Quicksand", "SF Pro Rounded", ui-rounded, sans-serif;
+      font-size: clamp(30px, 4.5vh, 38px);
       font-weight: 700;
-      line-height: 1.1;
-      letter-spacing: 1.0px;
+      line-height: 1;
+      letter-spacing: 0.5px;
       color: #ffffff;
       -webkit-text-stroke: 0px transparent;
       text-shadow:
-        0 1.5px 0 rgba(135, 85, 18, 0.45),
-        0 2px 6px rgba(95, 58, 10, 0.28);
+        0 2px 6px rgba(115, 72, 16, 0.30),
+        0 0 12px rgba(255, 245, 200, 0.18);
       position: relative;
       z-index: 2;
       white-space: nowrap;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
     }
     .zen-big-num::before,
     .zen-big-num::after {
-      content: "✦";
-      font-size: 11px;
-      color: #ffefa6;
-      text-shadow: 0 1px 3px rgba(120, 72, 10, 0.5);
-      opacity: 0.92;
+      display: none !important;
     }
     /* 已封存数量文案直接隐藏 */
     .level-pill {
@@ -1979,7 +1949,7 @@
       <!-- 居中：上方「第 X 关」 + 下方动态进度/剩余步数副标题（点击打开200关选单） -->
       <div class="top-center-group" id="top-center-level-trigger" title="点击打开200关选单">
         <div class="zen-big-num-wrap" id="zen-big-num-wrap">
-          <div class="zen-big-num" id="zen-header-big-num">第 1 关</div>
+          <div class="zen-big-num" id="zen-header-big-num">1</div>
         </div>
         <div class="level-pill" id="level-pill-title">已封存 0/7</div>
       </div>
@@ -2662,6 +2632,35 @@
         <linearGradient id="camPurpleFaceGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#c084fc"/><stop offset="55%" stop-color="#9333ea"/><stop offset="100%" stop-color="#581c87"/></linearGradient>
         <linearGradient id="camBlueFaceGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#ffffff"/><stop offset="65%" stop-color="#e3f3ff"/><stop offset="100%" stop-color="#b3dcff"/></linearGradient>
         <linearGradient id="silkDrapeGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#bfdbfe"/><stop offset="28%" stop-color="#ffffff"/><stop offset="62%" stop-color="#dbeafe"/><stop offset="100%" stop-color="#7dd3fc"/></linearGradient>
+        <!-- 高定凝霜玻璃与磨砂琉璃渐变（贴合瓶身真实轮廓，告别塑料多边形） -->
+        <linearGradient id="frostGlazeVertGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stop-color="rgba(224, 247, 255, 0.0)"/>
+          <stop offset="18%" stop-color="rgba(210, 245, 255, 0.38)"/>
+          <stop offset="55%" stop-color="rgba(165, 230, 255, 0.62)"/>
+          <stop offset="88%" stop-color="rgba(125, 211, 252, 0.78)"/>
+          <stop offset="100%" stop-color="rgba(224, 247, 255, 0.88)"/>
+        </linearGradient>
+        <linearGradient id="fullFrostGlassGrad" x1="0%" y1="0%" x2="100%" y2="12%">
+          <stop offset="0%" stop-color="rgba(224, 247, 255, 0.78)"/>
+          <stop offset="25%" stop-color="rgba(165, 232, 255, 0.56)"/>
+          <stop offset="58%" stop-color="rgba(56, 189, 248, 0.48)"/>
+          <stop offset="84%" stop-color="rgba(224, 247, 255, 0.75)"/>
+          <stop offset="100%" stop-color="rgba(125, 211, 252, 0.68)"/>
+        </linearGradient>
+        <linearGradient id="smokedAmberFrostedGrad" x1="0%" y1="0%" x2="100%" y2="8%">
+          <stop offset="0%" stop-color="rgba(120, 72, 28, 0.86)"/>
+          <stop offset="24%" stop-color="rgba(168, 108, 48, 0.78)"/>
+          <stop offset="55%" stop-color="rgba(92, 52, 18, 0.88)"/>
+          <stop offset="84%" stop-color="rgba(212, 152, 82, 0.82)"/>
+          <stop offset="100%" stop-color="rgba(82, 44, 14, 0.88)"/>
+        </linearGradient>
+        <linearGradient id="royalVelvetFrostedGrad" x1="0%" y1="0%" x2="100%" y2="8%">
+          <stop offset="0%" stop-color="rgba(46, 68, 118, 0.86)"/>
+          <stop offset="24%" stop-color="rgba(88, 124, 188, 0.78)"/>
+          <stop offset="56%" stop-color="rgba(32, 48, 92, 0.88)"/>
+          <stop offset="84%" stop-color="rgba(148, 188, 242, 0.82)"/>
+          <stop offset="100%" stop-color="rgba(28, 42, 82, 0.88)"/>
+        </linearGradient>
         <linearGradient id="iceBaseBackGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="rgba(130, 235, 255, 0.72)"/><stop offset="100%" stop-color="rgba(20, 130, 210, 0.85)"/></linearGradient>
         <linearGradient id="iceFacetLeftGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#67e8f9"/><stop offset="100%" stop-color="#0891b2"/></linearGradient>
         <linearGradient id="iceFacetMidGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#cffafe"/><stop offset="52%" stop-color="#22d3ee"/><stop offset="100%" stop-color="#0e7490"/></linearGradient>
@@ -3075,13 +3074,13 @@
         sampleBottle: () => ({ id: 99, maxCap: 8, isGiantCat: true, catTargetColor: 'pink', layers: ['pink', 'pink', 'pink', 'pink'], special: 'none' })
       },
       ice_base: {
-        key: 'ice_base', badge: '❄️ 第 6 关 · 新机关', title: '❄️ 瓶底冰晶座', sub: '多倒几次水 · 破除瓶底冰晶',
-        desc: '💡 <b>玩法说明：</b>瓶底被冰晶冻住，暂时不能向外倒水（但<b>可以往里接水</b>）。在桌上多倒几次水，就能震碎冰晶恢复正常！',
-        sampleBottle: () => ({ id: 99, maxCap: 4, layers: ['yellow', 'blue', 'blue'], special: 'ice_base', poursToBreak: 2 })
+        key: 'ice_base', badge: '❄️ 第 6 关 · 新机关', title: '❄️ 冰晶凝霜瓶', sub: '同色注入或满瓶共鸣 · 消融凝霜',
+        desc: '💡 <b>玩法说明：</b>瓶身下半部凝结冰霜，暂时不能向外倒水。唯有<b>直接向该瓶注入同色药水</b>，或<b>在场上凑满封存一整瓶药水</b>，才能消融冰霜解锁（随便乱倒其它水瓶不会破冰哦）！',
+        sampleBottle: () => ({ id: 99, maxCap: 4, layers: ['yellow', 'blue'], special: 'ice_base', poursToBreak: 2 })
       },
       silk_drape: {
-        key: 'silk_drape', badge: '🧣 第 7 关 · 新机关', title: '🧣 遮光布包裹瓶', sub: '装好礼袋 · 自动掀开披布',
-        desc: '💡 <b>玩法说明：</b>瓶身被布料包裹看不到里面。先将普通瓶子装满并飞入礼袋，遮光布就会自动掀开！',
+        key: 'silk_drape', badge: '🧣 第 7 关 · 新机关', title: '🧣 丝绒磨砂封印瓶', sub: '封存满瓶 · 揭开丝绒琉璃罩',
+        desc: '💡 <b>玩法说明：</b>瓶身被皇家丝绒磨砂琉璃笼罩。先将场上其它药水凑满封存达到印章星数，磨砂封印即会碎裂显色！',
         sampleBottle: () => ({ id: 99, maxCap: 4, layers: ['red', 'orange', 'yellow', 'blue'], special: 'silk_drape', unlockOrder: 1 })
       },
       varied_height: {
@@ -4290,148 +4289,134 @@
         `;
       }
 
+      // 高定琉璃机关 1：丝绒磨砂琉璃罩 (silk_drape) —— 严格贴合真实玻璃瓶轮廓，保留玻璃高光柱与火漆金章
       if (b.special === 'silk_drape') {
+        const leftCnt = Math.max(1, (b.unlockOrder || 1) - packedTotal);
         overGlassFX += `
           <g id="special-cover-${idx}">
-            <path d="M 32,7 C 32,3 68,3 68,7 L 71,32 C 86,42 90,56 92,82 L 96,192 C 96,201 88,205 82,199 C 75,209 56,211 46,203 C 36,196 24,205 14,201 C 6,199 3,193 4,185 L 8,82 C 10,56 14,42 29,32 Z"
-                  fill="url(#silkDrapeGrad)" stroke="#e0f2fe" stroke-width="1.4" />
-            <ellipse cx="50" cy="7" rx="18" ry="3.8" fill="#dbeafe" stroke="#ffffff" stroke-width="1" />
-            <path d="M 28,32 C 20,76 16,135 14,199 L 25,199 C 27,135 30,76 35,32 Z" fill="rgba(125, 172, 222, 0.34)" />
-            <path d="M 64,32 C 70,78 75,136 78,201 L 90,198 C 86,134 80,76 71,32 Z" fill="rgba(96, 148, 206, 0.42)" />
-            <path d="M 38,28 C 36,80 35,136 34,196" fill="none" stroke="rgba(255,255,255,0.88)" stroke-width="2.4" stroke-linecap="round" />
-            <path d="M 58,28 C 62,80 66,136 69,202" fill="none" stroke="rgba(255,255,255,0.72)" stroke-width="2.0" stroke-linecap="round" />
-            <path d="M 4,187 C 5,196 13,200 22,199 C 32,198 38,202 46,206 C 55,211 70,208 77,200 C 83,206 92,203 96,194"
-                  fill="none" stroke="#ffdf6b" stroke-width="2.2" stroke-linecap="round" />
-            <path d="M 29,31 Q 50,37 71,31 L 72,36 Q 50,42 28,36 Z" fill="#f59e0b" stroke="#fde68a" stroke-width="1.0" />
-            <circle cx="50" cy="34.5" r="5.2" fill="#dc2626" stroke="#fde68a" stroke-width="1.2" />
-            <g transform="translate(35, 74)">
-              <path d="M 10,5 L 20,5 L 20,13 C 27,17 29,23 29,31 L 29,65 A 14,4 0 0,1 1,65 L 1,31 C 1,23 3,17 10,13 Z"
-                    fill="#ffffff" stroke="#7dd3fc" stroke-width="1.5" stroke-linejoin="round"/>
-              <rect x="11.5" y="1" width="7" height="6" rx="1.5" fill="#d9913b" stroke="#78350f" stroke-width="0.8"/>
-              <path d="M 10.5,6.5 L 19.5,6.5 L 19.5,13.5 C 25.5,17 27.5,22 27.5,30 L 27.5,63.5 A 12.5,3.5 0 0,1 2.5,63.5 L 2.5,30 C 2.5,22 4.5,17 10.5,13.5 Z"
-                    fill="#1e3a8a" stroke="#60a5fa" stroke-width="1.2"/>
-              <path d="M 3.5,24 L 26.5,24 L 26.5,63 A 11.5,3.2 0 0,1 3.5,63 Z" fill="#2563eb"/>
-              <ellipse cx="15" cy="24" rx="11.5" ry="2.8" fill="#60a5fa"/>
-              <rect x="21" y="28" width="2.8" height="28" rx="1.4" fill="rgba(255,255,255,0.45)" />
+            <g clip-path="url(#bclip-${idx})">
+              <rect x="14" y="${shoulderTopY}" width="72" height="${bBotY - shoulderTopY + 12}" fill="url(#royalVelvetFrostedGrad)" />
+              <!-- 磨砂玻璃内部斜向丝绒暗纹与玻璃高光柱 -->
+              <path d="M 18,75 Q 50,92 82,75 M 18,118 Q 50,135 82,118 M 18,160 Q 50,177 82,160"
+                    fill="none" stroke="rgba(255, 255, 255, 0.16)" stroke-width="1.3" />
+              <rect x="21.0" y="${pillarTopY}" width="5.5" height="${pillarH}" rx="2.7" fill="url(#leftWallSheen)" opacity="0.85" />
+              <rect x="63.0" y="${pillarTopY}" width="10.5" height="${pillarH}" rx="2.4" fill="url(#rightPillarSheen)" opacity="0.85" />
+            </g>
+            <!-- 瓶颈鎏金丝带束环与火漆印章 -->
+            <path d="M 35.5,${25.5 + neckOffsetY} A 14.5,3.2 0 0,0 64.5,${25.5 + neckOffsetY}"
+                  fill="none" stroke="url(#funnelGoldGrad)" stroke-width="3.2" stroke-linecap="round" />
+            <g transform="translate(50, ${116 + neckOffsetY * 0.4})" style="filter:drop-shadow(0 3px 6px rgba(10, 18, 42, 0.45));">
+              <circle cx="0" cy="0" r="15" fill="url(#funnelGoldGrad)" stroke="#ffffff" stroke-width="1.3" />
+              <circle cx="0" cy="0" r="11.8" fill="#1e3a8a" stroke="#93c5fd" stroke-width="0.9" />
+              <text x="0" y="4.2" text-anchor="middle" fill="#ffffff" font-size="11.5" font-weight="900">★${leftCnt}</text>
             </g>
           </g>
         `;
       }
 
+      // 高定琉璃机关 2：冰晶凝霜瓶 (ice_base) —— 贴合玻璃瓶身下半部的通透凝霜层与冰裂纹理（告别突兀塑料块）
       if (b.special === 'ice_base') {
+        const frostTopY = bBotY - 64;
         overGlassFX += `
           <g id="special-cover-${idx}">
-            <polygon points="4,162 16,150 30,160 50,148 70,160 84,150 96,162 88,174 12,174"
-                     fill="#bae6fd" stroke="#ffffff" stroke-width="1.4" stroke-linejoin="round"/>
-            <polygon points="4,162 26,172 28,208 8,201"
-                     fill="url(#iceFacetLeftGrad)" stroke="#e0f2fe" stroke-width="1.2" stroke-linejoin="round"/>
-            <polygon points="26,172 52,173 50,212 28,208"
-                     fill="url(#iceFacetMidGrad)" stroke="#ffffff" stroke-width="1.3" stroke-linejoin="round"/>
-            <polygon points="52,173 76,171 73,210 50,212"
-                     fill="url(#iceFacetRightGrad)" stroke="#e0f2fe" stroke-width="1.2" stroke-linejoin="round"/>
-            <polygon points="76,171 96,162 92,201 73,210"
-                     fill="#0284c7" stroke="#bae6fd" stroke-width="1.2" stroke-linejoin="round"/>
-            <polyline points="12,170 26,172 52,173 76,171 90,165" fill="none" stroke="#ffffff" stroke-width="2.0" stroke-linecap="round"/>
-            <!-- 精致3D冰晶六角盾徽章 -->
-            <g transform="translate(50, 190)">
-              <polygon points="0,-13 12,-6.5 12,6.5 0,13 -12,6.5 -12,-6.5" fill="#0369a1" stroke="#ffffff" stroke-width="1.8" stroke-linejoin="round"/>
-              <polygon points="0,-10 9,-5 9,5 0,10 -9,5 -9,-5" fill="#0c4a6e"/>
-              <text x="0" y="4.2" text-anchor="middle" fill="#e0f2fe" font-size="12" font-weight="900">${b.poursToBreak || 1}</text>
+            <g clip-path="url(#bclip-${idx})">
+              <!-- 贴合瓶壁的自然起伏凝霜层 -->
+              <path d="M 18,${frostTopY + 8}
+                       Q 29,${frostTopY - 4} 39,${frostTopY + 6}
+                       Q 50,${frostTopY - 6} 62,${frostTopY + 5}
+                       Q 73,${frostTopY - 3} 82,${frostTopY + 7}
+                       L 82,${bBotY + 6} L 18,${bBotY + 6} Z"
+                    fill="url(#frostGlazeVertGrad)" />
+              <!-- 玻璃内壁冰裂纹与晶莹折光棱面 -->
+              <path d="M 26,${frostTopY + 14} L 35,${frostTopY + 30} L 29,${frostTopY + 48}
+                       M 35,${frostTopY + 30} L 46,${frostTopY + 36}
+                       M 68,${frostTopY + 12} L 59,${frostTopY + 32} L 66,${frostTopY + 52}
+                       M 59,${frostTopY + 32} L 48,${frostTopY + 42}"
+                    fill="none" stroke="rgba(255, 255, 255, 0.78)" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round" />
+              <path d="M 18,${frostTopY + 8}
+                       Q 29,${frostTopY - 4} 39,${frostTopY + 6}
+                       Q 50,${frostTopY - 6} 62,${frostTopY + 5}
+                       Q 73,${frostTopY - 3} 82,${frostTopY + 7}"
+                    fill="none" stroke="#ffffff" stroke-width="1.6" stroke-linecap="round" opacity="0.9" />
+            </g>
+            <!-- 瓶底外沿纤巧冰凌晶环与半透明冰晶菱章 -->
+            <path d="M 17.8,${bBotY + 1.5} A 32.2,8.8 0 0,0 82.2,${bBotY + 1.5}"
+                  fill="none" stroke="#bae6fd" stroke-width="2.2" stroke-linecap="round" />
+            <g transform="translate(50, ${bBotY - 24})" style="filter:drop-shadow(0 2px 5px rgba(3, 105, 161, 0.45));">
+              <polygon points="0,-13 13,0 0,13 -13,0" fill="rgba(12, 74, 110, 0.78)" stroke="#ffffff" stroke-width="1.4" stroke-linejoin="round"/>
+              <text x="0" y="4.2" text-anchor="middle" fill="#e0f2fe" font-size="11.5" font-weight="900">${b.poursToBreak || 1}</text>
             </g>
           </g>
         `;
       }
 
+      // 高定琉璃机关 3：极寒冰封琉璃瓶 (full_ice) —— 100%贴合玻璃瓶身曲线的冰晶通透折射层
       if (b.special === 'full_ice') {
+        const leftCnt = Math.max(1, (b.unlockOrder || 1) - packedTotal);
         overGlassFX += `
           <g id="special-cover-${idx}">
-            <path d="M 32,20 L 68,20 C 72,30 88,38 88,58 L 88,203 A 38,9.8 0 0,1 12,203 L 12,58 C 12,38 28,30 32,20 Z"
-                  fill="url(#fullIceGrad)" stroke="#e0f2fe" stroke-width="1.8" stroke-linejoin="round" opacity="0.90"/>
-            <polygon points="28,6 40,2 60,2 72,6 69,20 31,20"
-                     fill="url(#iceFacetMidGrad)" stroke="#ffffff" stroke-width="1.5" stroke-linejoin="round"/>
-            <path d="M 24,6 Q 36,0 50,4 Q 64,0 76,6 Q 79,13 72,15 Q 61,11 50,16 Q 37,11 27,15 Q 21,12 24,6 Z"
-                  fill="#ffffff" stroke="#bae6fd" stroke-width="1.1" />
-            <ellipse cx="48" cy="54" rx="22" ry="16" fill="rgba(255,255,255,0.38)" />
-            <rect x="16" y="58" width="8" height="134" rx="4" fill="rgba(255,255,255,0.34)" />
-            <rect x="68" y="58" width="11" height="134" rx="5.5" fill="rgba(186,230,253,0.30)" />
-            <g transform="translate(50, 114)">
-              <polygon points="0,-16 14,-8 14,8 0,16 -14,8 -14,-8" fill="rgba(3, 105, 161, 0.88)" stroke="#ffffff" stroke-width="1.8" stroke-linejoin="round"/>
-              <path d="M0,-9 L0,9 M-7.8,-4.5 L7.8,4.5 M-7.8,4.5 L7.8,-4.5" stroke="#e0f2fe" stroke-width="2.2" stroke-linecap="round"/>
+            <g clip-path="url(#bclip-${idx})">
+              <rect x="14" y="${neckLipTopY}" width="72" height="${bBotY - neckLipTopY + 12}" fill="url(#fullFrostGlassGrad)" />
+              <!-- 内部斜向冰晶折射光束与冰裂纹 -->
+              <polygon points="18,65 82,42 82,68 18,91" fill="rgba(255, 255, 255, 0.28)" />
+              <polygon points="18,125 82,102 82,120 18,143" fill="rgba(255, 255, 255, 0.22)" />
+              <path d="M 28,56 L 42,78 L 34,104 M 68,82 L 54,108 L 64,138"
+                    fill="none" stroke="rgba(255, 255, 255, 0.82)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+              <rect x="63.0" y="${pillarTopY}" width="10.5" height="${pillarH}" rx="2.4" fill="url(#rightPillarSheen)" opacity="0.9" />
+            </g>
+            <g transform="translate(50, ${116 + neckOffsetY * 0.4})" style="filter:drop-shadow(0 3px 6px rgba(3, 105, 161, 0.48));">
+              <polygon points="0,-15 15,0 0,15 -15,0" fill="rgba(7, 89, 133, 0.86)" stroke="#ffffff" stroke-width="1.5" stroke-linejoin="round"/>
+              <text x="0" y="4.2" text-anchor="middle" fill="#ffffff" font-size="11.5" font-weight="900">❄${leftCnt}</text>
             </g>
           </g>
         `;
       }
 
+      // 高定琉璃机关 4：黑曜鎏金箍瓶 (stone_base) —— 顺应圆柱玻璃瓶身弧度的双道3D鎏金黑曜环箍（取代粗糙褐色石头块）
       if (b.special === 'stone_base') {
+        const bandY1 = bBotY - 38;
+        const bandY2 = bBotY - 14;
         overGlassFX += `
           <g id="special-cover-${idx}">
-            <polygon points="5,178 16,158 36,172 34,207 9,201" fill="url(#stoneLeftGrad)" stroke="#5c3d1e" stroke-width="1.3" stroke-linejoin="round"/>
-            <polygon points="5,178 16,158 26,176 14,194" fill="#f5e1c8" opacity="0.72" />
-            <polygon points="74,174 93,154 96,190 82,203" fill="url(#stoneRightGrad)" stroke="#4a3016" stroke-width="1.3" stroke-linejoin="round"/>
-            <polygon points="32,174 58,156 82,172 64,211 32,206" fill="url(#stoneMidGrad)" stroke="#4a3016" stroke-width="1.4" stroke-linejoin="round"/>
-            <polygon points="32,174 58,156 64,180 42,188" fill="#f2dac0" opacity="0.68" />
-            <polyline points="18,166 25,182 20,198" fill="none" stroke="#ffca28" stroke-width="1.6" stroke-linecap="round"/>
-            <polyline points="54,162 49,180 57,200" fill="none" stroke="#ffd54f" stroke-width="1.8" stroke-linecap="round"/>
-            <g transform="translate(50, 191)">
-              <polygon points="0,-13 12,-6.5 12,6.5 0,13 -12,6.5 -12,-6.5" fill="#451a03" stroke="#ffd54f" stroke-width="1.8" stroke-linejoin="round"/>
-              <polygon points="0,-10 9,-5 9,5 0,10 -9,5 -9,-5" fill="#78350f"/>
-              <text x="0" y="4.2" text-anchor="middle" fill="#fef08a" font-size="12" font-weight="900">${b.poursToBreak || 1}</text>
+            <!-- 上道3D鎏金环箍 -->
+            <path d="M 17.6,${bandY1} A 32.4,7.6 0 0,0 82.4,${bandY1}
+                     L 82.4,${bandY1 + 7} A 32.4,7.6 0 0,1 17.6,${bandY1 + 7} Z"
+                  fill="url(#ancientSpoutGrad)" stroke="#fef08a" stroke-width="0.95" />
+            <!-- 下道3D鎏金环箍 -->
+            <path d="M 17.6,${bandY2} A 32.4,8.0 0 0,0 82.4,${bandY2}
+                     L 82.4,${bandY2 + 7.5} A 32.4,8.0 0 0,1 17.6,${bandY2 + 7.5} Z"
+                  fill="url(#ancientSpoutGrad)" stroke="#fef08a" stroke-width="0.95" />
+            <!-- 两侧竖向鎏金锁条 -->
+            <line x1="25" y1="${bandY1 + 3}" x2="25" y2="${bandY2 + 4}" stroke="url(#funnelGoldGrad)" stroke-width="2.6" stroke-linecap="round" />
+            <line x1="75" y1="${bandY1 + 3}" x2="75" y2="${bandY2 + 4}" stroke="url(#funnelGoldGrad)" stroke-width="2.6" stroke-linecap="round" />
+            <!-- 中央黑曜金盾章 -->
+            <g transform="translate(50, ${bBotY - 22})" style="filter:drop-shadow(0 3px 5px rgba(45, 20, 4, 0.52));">
+              <circle cx="0" cy="0" r="12.5" fill="url(#funnelGoldGrad)" stroke="#ffffff" stroke-width="1.3" />
+              <circle cx="0" cy="0" r="9.6" fill="#291507" stroke="#fbbf24" stroke-width="0.8" />
+              <text x="0" y="4.0" text-anchor="middle" fill="#fef08a" font-size="11.5" font-weight="900">${b.poursToBreak || 1}</text>
             </g>
           </g>
         `;
       }
 
-      // 修复问题 2：羊皮礼袋 (paper_bag) 全包裹瓶身（y=20..210，完全包住瓶肩与瓶底，绝不漏水或露底）
+      // 高定琉璃机关 5：琥珀磨砂琉璃盲盒瓶 (paper_bag) —— 保持优雅玻璃瓶身曲线与高光折射，告别死板方纸袋
       if (b.special === 'paper_bag') {
+        const leftCnt = Math.max(1, (b.unlockOrder || 1) - packedTotal);
         overGlassFX += `
           <g id="special-cover-${idx}">
-            <ellipse cx="50" cy="200" rx="42" ry="5.5" fill="rgba(5, 10, 26, 0.58)" />
-            <!-- 袋口内衬与锯齿折边（紧束于瓶颈下方 y=20..28） -->
-            <path d="M 10,27 L 20,19 L 80,19 L 91,25 L 82,30 L 9,27 Z"
-                  fill="url(#kraftInnerMouthGrad)" stroke="#5c3310" stroke-width="1.1" stroke-linejoin="round"/>
-            <polyline points="20,19 25,16.5 30,19 35,16.5 40,19 45,16.5 50,19 55,16.5 60,19 65,16.5 70,19 75,16.5 80,19"
-                      fill="#d4985e" stroke="#6e3f16" stroke-width="1.0" stroke-linejoin="round" />
-            <polygon points="10,27 20,19 23,28.5" fill="#e6b685" stroke="#7d4a1e" stroke-width="0.9" stroke-linejoin="round"/>
-            <polygon points="91,25 80,19 76,29" fill="#a86d36" stroke="#5c3310" stroke-width="0.9" stroke-linejoin="round"/>
-            <!-- 羊皮纸袋全高主袋身 (y=27..209) -->
-            <polygon points="8,27 82,30 80.5,200 6.5,196"
-                     fill="url(#kraftBagFrontGrad)" stroke="#6e3f16" stroke-width="1.3" stroke-linejoin="round"/>
-            <polygon points="8.5,27.5 48,29 24,196.5 7,195.5"
-                     fill="url(#kraftSunlitGrad)" pointer-events="none"/>
-            <polygon points="81.5,30.5 45,118 80,199.5"
-                     fill="rgba(78, 40, 10, 0.17)" pointer-events="none"/>
-            <!-- 袋颈麻绳束口蝴蝶结 -->
-            <path d="M 10,33 Q 46,37 82,34" fill="none" stroke="#78350f" stroke-width="3.2" stroke-linecap="round"/>
-            <path d="M 10,33 Q 46,37 82,34" fill="none" stroke="#fde68a" stroke-width="1.4" stroke-dasharray="4 3" stroke-linecap="round"/>
-            <path d="M 46,35 C 36,28 35,41 46,36 C 57,41 56,28 46,35 Z" fill="#d97706" stroke="#78350f" stroke-width="1.1"/>
-            <circle cx="46" cy="35.5" r="2.6" fill="#fef08a" stroke="#78350f" stroke-width="1.0"/>
-            <!-- 底部折痕与右侧3D风琴折角 -->
-            <line x1="7" y1="186" x2="80.5" y2="190" stroke="rgba(92, 48, 12, 0.35)" stroke-width="1.1" />
-            <line x1="7" y1="187.4" x2="80.5" y2="191.4" stroke="rgba(255, 228, 196, 0.35)" stroke-width="0.9" />
-            <path d="M 9,27.5 Q 45,29.2 82,30.2" fill="none" stroke="#ffe2be" stroke-width="1.7" stroke-linecap="round" />
-            <polygon points="82,30 87.2,26.5 86.2,186 80.5,200"
-                     fill="url(#kraftSideLeftGrad)" stroke="#5e3410" stroke-width="0.95" stroke-linejoin="round"/>
-            <polygon points="87.2,26.5 91.5,24 93.5,193 86.2,186"
-                     fill="url(#kraftSideRightGrad)" stroke="#542d0c" stroke-width="0.95" stroke-linejoin="round"/>
-            <polygon points="80.5,200 86.2,182.5 93.5,193"
-                     fill="#693b14" stroke="#4a2608" stroke-width="0.95" stroke-linejoin="round"/>
-            <line x1="86.2" y1="26.8" x2="86.2" y2="183" stroke="#4f2a0a" stroke-width="1.0" opacity="0.8" />
-            <!-- 袋面中央3D高光秘药贴纸徽章 -->
-            <g transform="translate(45, 122)" style="filter: drop-shadow(0 3px 5px rgba(45, 20, 4, 0.45));">
-              <path d="M -5.5,-32 C -5.5,-34.5 5.5,-34.5 5.5,-32 L 5.5,-24 C 7.5,-23.5 8.2,-21.5 6.8,-19 C 13.5,-15 16.5,-8.5 16.5,0 L 16.5,29 A 16.5,5.2 0 0,1 -16.5,29 L -16.5,0 C -16.5,-8.5 -13.5,-15 -6.8,-19 C -8.2,-21.5 -7.5,-23.5 -5.5,-24 Z"
-                    fill="#ffffff" stroke="#f0e4d4" stroke-width="1.1" stroke-linejoin="round"/>
-              <path d="M -4.2,-31.2 L 4.2,-31.2 L 3.4,-24.5 L -3.4,-24.5 Z"
-                    fill="#d9913b" stroke="#7c430a" stroke-width="0.7" stroke-linejoin="round"/>
-              <ellipse cx="0" cy="-31.2" rx="4.2" ry="1.2" fill="#f7c97e" />
-              <ellipse cx="0" cy="-25.2" rx="6.0" ry="1.8" fill="#88131b" stroke="#fca5a5" stroke-width="0.7" />
-              <path d="M -4.5,-24.5 L -4.5,-18.5 A 4.5,1.3 0 0,0 4.5,-18.5 L 4.5,-24.5 Z" fill="#690a10" />
-              <path d="M -4.5,-18.8 L 4.5,-18.8 C 11.2,-15 13.8,-8.5 13.8,0 L 13.8,27.8 A 13.8,4.2 0 0,1 -13.8,27.8 L -13.8,0 C -13.8,-8.5 -11.2,-15 -4.5,-18.8 Z"
-                    fill="#7f1d1d" stroke="#ef4444" stroke-width="0.85" stroke-linejoin="round"/>
-              <path d="M -12.8,-8.5 L 12.8,-8.5 L 12.8,27.2 A 12.8,3.8 0 0,1 -12.8,27.2 Z"
-                    fill="url(#stickerRedLiqGrad)" />
-              <ellipse cx="0" cy="-8.5" rx="12.8" ry="3.4"
-                       fill="#ff6b78" stroke="#ffb3ba" stroke-width="0.7" />
-              <rect x="6.8" y="-2.5" width="3.2" height="25.5" rx="1.6" fill="rgba(255, 255, 255, 0.58)" />
+            <g clip-path="url(#bclip-${idx})">
+              <rect x="14" y="${shoulderTopY}" width="72" height="${bBotY - shoulderTopY + 12}" fill="url(#smokedAmberFrostedGrad)" />
+              <path d="M 18,82 Q 50,98 82,82 M 18,136 Q 50,152 82,136"
+                    fill="none" stroke="rgba(255, 236, 195, 0.22)" stroke-width="1.3" />
+              <rect x="21.0" y="${pillarTopY}" width="5.5" height="${pillarH}" rx="2.7" fill="url(#leftWallSheen)" opacity="0.85" />
+              <rect x="63.0" y="${pillarTopY}" width="10.5" height="${pillarH}" rx="2.4" fill="url(#rightPillarSheen)" opacity="0.85" />
+            </g>
+            <path d="M 35.5,${25.5 + neckOffsetY} A 14.5,3.2 0 0,0 64.5,${25.5 + neckOffsetY}"
+                  fill="none" stroke="url(#funnelGoldGrad)" stroke-width="3.2" stroke-linecap="round" />
+            <g transform="translate(50, ${116 + neckOffsetY * 0.4})" style="filter:drop-shadow(0 3px 6px rgba(45, 20, 4, 0.48));">
+              <circle cx="0" cy="0" r="15" fill="url(#funnelGoldGrad)" stroke="#ffffff" stroke-width="1.3" />
+              <circle cx="0" cy="0" r="11.8" fill="#7c2d12" stroke="#fdba74" stroke-width="0.9" />
+              <text x="0" y="4.2" text-anchor="middle" fill="#fef08a" font-size="11.5" font-weight="900">★${leftCnt}</text>
             </g>
           </g>
         `;
@@ -4629,7 +4614,7 @@
           `}
           ${underGlassFX}
 
-          <g id="bottle-body-wrap-${idx}" ${b.special === "paper_bag" ? `clip-path="url(#bag-neck-only-${idx})"` : ""}>
+          <g id="bottle-body-wrap-${idx}">
             <path d="${smoothOuterBodyPath}" fill="url(#glassBodyGrad)" />
 
             <!-- 左右两侧玻璃壁厚度折射光带（体现真实玻璃瓶壁厚度） -->
@@ -4701,12 +4686,7 @@
                   fill="none" stroke="${(b.special === 'ad_cam' || b.special === 'ad_cam_blue') ? '#d884ff' : 'url(#naturalRimGrad)'}"
                   stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" />
 
-            ${cfg.isVariedHeight ? `
-              <g class="capacity-tag-badge" transform="translate(50, ${35 + neckOffsetY})">
-                <rect x="-15" y="-7.5" width="30" height="13" rx="6.5" fill="rgba(28, 38, 68, 0.62)" stroke="rgba(255, 255, 255, 0.72)" stroke-width="0.9" />
-                <text x="0" y="2.4" text-anchor="middle" fill="#ffffff" font-size="9" font-weight="800">${maxCap}层</text>
-              </g>
-            ` : ''}
+
 
             <!-- 参考图2 (101f7498) 经典圆润深蓝玻璃瓶口 + 紧束短颈环 -->
             <g id="neck-group-${idx}" transform="translate(0, ${neckOffsetY})">
@@ -4916,10 +4896,8 @@
                   <path d="${clipPoly}"/>
                 </clipPath>
               </defs>
-              <g clip-path="url(#burn-clip-${bottleIdx})" opacity="${Math.max(0, 1 - Math.pow(p, 2.4)).toFixed(2)}">
-                <polygon points="8,27 82,30 80.5,200 6.5,196" fill="url(#kraftBagFrontGrad)" stroke="#451a03" stroke-width="1.2"/>
-                <polygon points="82,30 92,25 93,202 80.5,209" fill="url(#kraftSideLeftGrad)"/>
-                <path d="M 10,33 Q 46,37 82,34" fill="none" stroke="#78350f" stroke-width="3"/>
+              <g clip-path="url(#burn-clip-${bottleIdx})" opacity="${Math.max(0, 1 - Math.pow(p, 2.2)).toFixed(2)}">
+                <rect x="18" y="26" width="64" height="168" rx="16" fill="url(#smokedAmberFrostedGrad)" />
               </g>
               <!-- 灼烧碳化黑边 + 橙红烈焰 + 金白火星前锋 -->
               <path d="${jagLine}" fill="none" stroke="#1c1008" stroke-width="8.5" stroke-linecap="round" stroke-linejoin="round" opacity="${fade.toFixed(2)}"/>
@@ -5248,7 +5226,7 @@
       const doneCnt = cfg.isCatBossLevel ? (catBottleNow ? catBottleNow.layers.length : 0) : (cfg.hasBags ? packedTotal : corkedCnt);
 
       if (bigNumEl) {
-        bigNumEl.textContent = `第 ${currentLevelId} 关`;
+        bigNumEl.textContent = `${currentLevelId}`;
         bigNumEl.classList.toggle('danger-low', remainingMoves !== null && remainingMoves <= 5);
       }
       if (remainingMoves !== null) {
@@ -5744,13 +5722,13 @@
         return false;
       }
       if (b.special === 'ice_base') {
-        if (bottleIdx >= 0) triggerBottleRejectFeedback(bottleIdx, `❄️ 再倒 ${b.poursToBreak || 1} 次破冰`, '#38bdf8');
-        showToast(`❄️ 瓶底冰晶冻结（仍可接水）！再倒水 ${b.poursToBreak || 1} 次破冰`);
+        if (bottleIdx >= 0) triggerBottleRejectFeedback(bottleIdx, `❄️ 注入同色或满瓶破冰(${b.poursToBreak || 1})`, '#38bdf8');
+        showToast(`❄️ 冰霜封印中：向该瓶注入同色药水或封存满瓶可破冰（剩 ${b.poursToBreak || 1} 层）！`);
         return false;
       }
       if (b.special === 'stone_base') {
-        if (bottleIdx >= 0) triggerBottleRejectFeedback(bottleIdx, `🪨 再倒 ${b.poursToBreak || 1} 次碎石`, '#fbbf24');
-        showToast(`🪨 瓶底石座锁定（仍可接水）！再倒水 ${b.poursToBreak || 1} 次碎石`);
+        if (bottleIdx >= 0) triggerBottleRejectFeedback(bottleIdx, `🔒 需封存 ${b.poursToBreak || 1} 瓶解箍`, '#fbbf24');
+        showToast(`🔒 鎏金箍锁定中：需在场上凑满封存 ${b.poursToBreak || 1} 瓶药水方可解开！`);
         return false;
       }
       if (b.special === 'ad_cam' || b.special === 'ad_cam_blue') return false;
@@ -6706,19 +6684,33 @@
             bombDefusedIdx = dstIdx;
           }
 
-          // C. 全局步进结算：寒冰座/曜石座共振递减 + 瓶口冰封回合递减 + 星砂流沙炸弹倒计时递减
+          // C. 策略机关步进结算：
+          //    - 冰晶凝霜瓶 (ice_base)：唯有【直接向该冰瓶注入同色药水】或【本次倒水凑满封存了一整瓶】时才消融 1 层（随便乱倒其它瓶子不破冰！）
+          //    - 鎏金锁扣瓶 (stone_base)：唯有【本次倒水凑满封存了一整瓶】或【将该瓶自身凑满】时才崩解 1 层锁扣！
+          const dstWillCompleteNow = isCompleteBottle(dstBottle) || (dstBottle.layers.length === (dstBottle.maxCap || 4) && dstBottle.layers.every(c => c === dstBottle.layers[0]));
           bottles.forEach((b, bIdx) => {
             if (b.removed || b.corked) return;
 
-            if ((b.special === 'ice_base' || b.special === 'stone_base') && b.poursToBreak) {
-              b.poursToBreak--;
-              if (b.poursToBreak <= 0) {
-                const wasIce = b.special === 'ice_base';
-                b.special = 'none';
-                brokenObstacles.push({ bIdx, type: wasIce ? 'ice_shatter' : 'stone_shatter', wasIce, broke: true });
-              } else {
-                const wasIce = b.special === 'ice_base';
-                brokenObstacles.push({ bIdx, type: wasIce ? 'ice_crack' : 'stone_hit', wasIce, broke: false });
+            if (b.special === 'ice_base' && b.poursToBreak) {
+              const directThermalHit = (bIdx === dstIdx);
+              if (directThermalHit || dstWillCompleteNow) {
+                b.poursToBreak = (bIdx === dstIdx && dstWillCompleteNow) ? 0 : (b.poursToBreak - 1);
+                if (b.poursToBreak <= 0) {
+                  b.special = 'none';
+                  brokenObstacles.push({ bIdx, type: 'ice_shatter', wasIce: true, broke: true });
+                } else {
+                  brokenObstacles.push({ bIdx, type: 'ice_crack', wasIce: true, broke: false });
+                }
+              }
+            } else if (b.special === 'stone_base' && b.poursToBreak) {
+              if (dstWillCompleteNow || (bIdx === dstIdx && dstBottle.layers.length === (dstBottle.maxCap || 4))) {
+                b.poursToBreak = (bIdx === dstIdx && dstWillCompleteNow) ? 0 : (b.poursToBreak - 1);
+                if (b.poursToBreak <= 0) {
+                  b.special = 'none';
+                  brokenObstacles.push({ bIdx, type: 'stone_shatter', wasIce: false, broke: true });
+                } else {
+                  brokenObstacles.push({ bIdx, type: 'stone_hit', wasIce: false, broke: false });
+                }
               }
             }
 
@@ -7401,6 +7393,7 @@
           }
 
           let score = 0;
+          if (dst.special === 'ice_base') score += 65;
           if (dst.layers.length > 0) {
             score += 100;
             // 如果能一次性把源瓶顶层同色全部转移过去，防止拆分同色层
