@@ -1,0 +1,2198 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Burlap Isles - 100% 3D 复刻版</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #1e1912;
+      font-family: 'Quicksand', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* 保持参考图 9:16 竖屏构图与渐变背景 */
+    #game-viewport {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      max-width: 56.25vh; /* 9:16 比例锁死 */
+      max-height: 100vh;
+      overflow: hidden;
+      box-shadow: 0 0 60px rgba(0, 0, 0, 0.75);
+      /* 100% 还原原图左上暖金、左下琥珀橘、右侧鼠尾草绿的柔和渐变 */
+      background:
+        radial-gradient(circle at 46% 18%, rgba(255, 224, 120, 0.38) 0%, rgba(255, 224, 120, 0) 42%),
+        radial-gradient(circle at 28% 58%, rgba(232, 165, 68, 0.92) 0%, rgba(218, 152, 60, 0.45) 52%, transparent 80%),
+        linear-gradient(115deg, #b89852 0%, #dfb456 32%, #d89b44 58%, #85986b 92%, #728862 100%);
+    }
+
+    @media (max-aspect-ratio: 9/16) {
+      #game-viewport {
+        max-width: 100vw;
+      }
+    }
+
+    #webgl-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+      z-index: 1;
+    }
+
+    /* 2D 顶层星光粒子流画布（连接 3D 气泡与顶部 12 Moves left） */
+    #fx-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 3;
+    }
+
+    /* 顶部 UI：12 Moves left 与 Rules */
+    .top-bar {
+      position: absolute;
+      top: 3.4%;
+      left: 0;
+      width: 100%;
+      z-index: 4;
+      pointer-events: none;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+
+    .moves-container {
+      text-align: center;
+      color: #ffffff;
+      margin-top: -4px;
+    }
+
+    .moves-count {
+      font-size: clamp(44px, 7.6vh, 62px);
+      font-weight: 800;
+      line-height: 1.0;
+      letter-spacing: -1px;
+      color: #ffffff;
+      text-shadow:
+        0 0 18px rgba(255, 240, 150, 0.65),
+        0 3px 8px rgba(120, 82, 20, 0.35);
+      transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .moves-count.pulse {
+      transform: scale(1.22);
+      color: #fff8a6;
+    }
+
+    .moves-label {
+      font-size: clamp(15px, 2.35vh, 20px);
+      font-weight: 700;
+      color: rgba(255, 255, 255, 0.96);
+      margin-top: 3px;
+      letter-spacing: 0.2px;
+      text-shadow: 0 2px 5px rgba(90, 62, 18, 0.35);
+    }
+
+    /* 右上角 Rules 按钮 */
+    .rules-wrapper {
+      position: absolute;
+      right: 6.8%;
+      top: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      pointer-events: auto;
+      cursor: pointer;
+    }
+
+    .glass-btn-small {
+      width: clamp(42px, 6.2vh, 52px);
+      height: clamp(42px, 6.2vh, 52px);
+      border-radius: 38%;
+      background: linear-gradient(145deg, rgba(255, 255, 255, 0.32) 0%, rgba(185, 205, 180, 0.18) 55%, rgba(140, 165, 140, 0.28) 100%);
+      border: 1.5px solid rgba(255, 255, 255, 0.62);
+      box-shadow:
+        inset 0 2px 4px rgba(255, 255, 255, 0.65),
+        inset 0 -3px 6px rgba(60, 80, 60, 0.25),
+        0 6px 14px rgba(65, 78, 52, 0.28);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .rules-wrapper:hover .glass-btn-small,
+    .bottom-item:hover .glass-btn {
+      transform: translateY(-2px) scale(1.03);
+    }
+
+    .rules-wrapper:active .glass-btn-small,
+    .bottom-item:active .glass-btn {
+      transform: translateY(1px) scale(0.96);
+    }
+
+    .rules-question {
+      font-size: clamp(24px, 3.6vh, 30px);
+      font-weight: 800;
+      background: linear-gradient(180deg, #ffffff 15%, #b8e1ff 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 2px 3px rgba(50, 85, 95, 0.3));
+    }
+
+    .btn-label {
+      margin-top: 7px;
+      font-size: clamp(13px, 2.05vh, 17px);
+      font-weight: 700;
+      color: #ffffff;
+      letter-spacing: 0.2px;
+      text-shadow: 0 2px 4px rgba(80, 58, 22, 0.4);
+    }
+
+    /* 底部四个磨砂玻璃按钮栏 */
+    .bottom-bar {
+      position: absolute;
+      bottom: 4.0%;
+      left: 0;
+      width: 100%;
+      padding: 0 7.5%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 4;
+    }
+
+    .bottom-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: pointer;
+    }
+
+    .glass-btn {
+      width: clamp(54px, 7.6vh, 66px);
+      height: clamp(54px, 7.6vh, 66px);
+      border-radius: 34%;
+      background: linear-gradient(145deg, rgba(255, 255, 255, 0.36) 0%, rgba(255, 255, 255, 0.12) 55%, rgba(215, 185, 130, 0.25) 100%);
+      border: 1.6px solid rgba(255, 255, 255, 0.68);
+      box-shadow:
+        inset 0 2px 5px rgba(255, 255, 255, 0.72),
+        inset 0 -4px 8px rgba(110, 78, 30, 0.22),
+        0 8px 18px rgba(110, 74, 24, 0.28);
+      backdrop-filter: blur(7px);
+      -webkit-backdrop-filter: blur(7px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    /* 玻璃按钮左上角高光反射弧 */
+    .glass-btn::before,
+    .glass-btn-small::before {
+      content: "";
+      position: absolute;
+      top: 4px;
+      left: 6px;
+      right: 6px;
+      height: 38%;
+      border-radius: 40% 40% 50% 50%;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.48) 0%, rgba(255, 255, 255, 0) 100%);
+      pointer-events: none;
+    }
+
+    .glass-btn svg {
+      width: 56%;
+      height: 56%;
+      filter: drop-shadow(0 2px 3px rgba(105, 70, 20, 0.3));
+    }
+
+    .glass-btn.hint-btn svg {
+      width: 68%;
+      height: 68%;
+      filter: drop-shadow(0 0 8px rgba(255, 230, 70, 0.7));
+    }
+
+    /* 状态提示浮层（不遮挡画面，轻量反馈） */
+    #toast-banner {
+      position: absolute;
+      top: 15.5%;
+      left: 50%;
+      transform: translateX(-50%) translateY(-10px);
+      background: rgba(55, 42, 24, 0.62);
+      border: 1px solid rgba(255, 238, 170, 0.55);
+      color: #fff7d6;
+      padding: 6px 16px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      backdrop-filter: blur(6px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+      z-index: 5;
+      white-space: nowrap;
+    }
+
+    #toast-banner.visible {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* 弹窗（Rules / Menu / 胜利结算） */
+    .modal-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(35, 26, 14, 0.58);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+
+    .modal-backdrop.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-card {
+      width: 100%;
+      max-width: 350px;
+      background: linear-gradient(155deg, rgba(255, 248, 232, 0.94), rgba(235, 214, 175, 0.94));
+      border: 2px solid rgba(255, 255, 255, 0.85);
+      border-radius: 26px;
+      padding: 22px 20px;
+      color: #4a3520;
+      box-shadow: 0 20px 45px rgba(30, 20, 8, 0.45);
+      text-align: center;
+    }
+
+    .modal-title {
+      font-size: 22px;
+      font-weight: 800;
+      color: #3d2a16;
+      margin-bottom: 12px;
+    }
+
+    .modal-body {
+      font-size: 14px;
+      line-height: 1.6;
+      text-align: left;
+      color: #5a4228;
+      margin-bottom: 18px;
+    }
+
+    .modal-body li {
+      margin-bottom: 8px;
+      margin-left: 18px;
+    }
+
+    .modal-btn {
+      display: inline-block;
+      width: 100%;
+      padding: 11px 18px;
+      margin-top: 6px;
+      border-radius: 14px;
+      border: none;
+      background: linear-gradient(135deg, #e5a93c, #c98224);
+      color: #fff;
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(180, 110, 20, 0.35);
+      transition: transform 0.12s ease;
+    }
+
+    .modal-btn.secondary {
+      background: linear-gradient(135deg, #7e9468, #637950);
+      box-shadow: 0 4px 12px rgba(80, 105, 60, 0.35);
+    }
+
+    .modal-btn:active {
+      transform: scale(0.97);
+    }
+  </style>
+</head>
+<body>
+  <div id="game-viewport">
+    <!-- 3D 渲染层 -->
+    <canvas id="webgl-canvas"></canvas>
+    <!-- 2D 魔法星光粒子与飞星特效层 -->
+    <canvas id="fx-canvas"></canvas>
+
+    <!-- 顶部步数与规则按钮 -->
+    <div class="top-bar">
+      <div class="moves-container">
+        <div id="moves-number" class="moves-count">12</div>
+        <div class="moves-label">Moves left</div>
+      </div>
+      <div class="rules-wrapper" id="btn-rules" title="Rules">
+        <div class="glass-btn-small">
+          <span class="rules-question">?</span>
+        </div>
+        <span class="btn-label">Rules</span>
+      </div>
+    </div>
+
+    <!-- 轻量交互提示 -->
+    <div id="toast-banner">点击昆虫切换操控，点击相邻麻布格移动或推球</div>
+
+    <!-- 底部四个磨砂玻璃功能按钮 -->
+    <div class="bottom-bar">
+      <div class="bottom-item" id="btn-menu">
+        <div class="glass-btn">
+          <svg viewBox="0 0 36 36" fill="none">
+            <rect x="7" y="9.5" width="22" height="3.8" rx="1.9" fill="#FFFFFF"/>
+            <rect x="7" y="16.1" width="22" height="3.8" rx="1.9" fill="#FFFFFF"/>
+            <rect x="7" y="22.7" width="22" height="3.8" rx="1.9" fill="#FFFFFF"/>
+          </svg>
+        </div>
+        <span class="btn-label">Menu</span>
+      </div>
+
+      <div class="bottom-item" id="btn-restart">
+        <div class="glass-btn">
+          <svg viewBox="0 0 36 36" fill="none">
+            <path d="M18 9C13.03 9 9 13.03 9 18C9 22.97 13.03 27 18 27C22.42 27 26.1 23.81 26.86 19.6" stroke="#FFFFFF" stroke-width="3.6" stroke-linecap="round"/>
+            <path d="M22.5 9.2H27.2V13.9" stroke="#FFFFFF" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M26.8 9.6L21.8 14.2" stroke="#FFFFFF" stroke-width="3.4" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <span class="btn-label">Restart</span>
+      </div>
+
+      <div class="bottom-item" id="btn-undo">
+        <div class="glass-btn">
+          <svg viewBox="0 0 36 36" fill="none">
+            <path d="M14.5 12.5L9.2 17.8L14.5 23.1" stroke="#FFFFFF" stroke-width="3.8" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M10.2 17.8H20.2C24.2 17.8 27.2 20.5 27.5 24.2" stroke="#FFFFFF" stroke-width="3.8" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <span class="btn-label">Undo</span>
+      </div>
+
+      <div class="bottom-item" id="btn-hint">
+        <div class="glass-btn hint-btn">
+          <svg viewBox="0 0 44 44" fill="none">
+            <!-- 灯泡周围放射光芒 -->
+            <g stroke="#FFF3A1" stroke-width="1.6" stroke-linecap="round" opacity="0.9">
+              <line x1="22" y1="4.5" x2="22" y2="7.8"/>
+              <line x1="10.2" y1="8.8" x2="12.5" y2="11.1"/>
+              <line x1="33.8" y1="8.8" x2="31.5" y2="11.1"/>
+              <line x1="5.8" y1="19.5" x2="9.0" y2="19.5"/>
+              <line x1="38.2" y1="19.5" x2="35.0" y2="19.5"/>
+              <line x1="8.8" y1="29.2" x2="11.5" y2="27.2"/>
+              <line x1="35.2" y1="29.2" x2="32.5" y2="27.2"/>
+            </g>
+            <!-- 黄色发光灯泡主体 -->
+            <path d="M22 10.5C16.75 10.5 12.5 14.65 12.5 19.8C12.5 23.15 14.3 26.08 17.0 27.72C17.85 28.25 18.4 29.18 18.5 30.2H25.5C25.6 29.18 26.15 28.25 27.0 27.72C29.7 26.08 31.5 23.15 31.5 19.8C31.5 14.65 27.25 10.5 22 10.5Z" fill="url(#bulbGrad)"/>
+            <!-- 灯泡底座螺纹 -->
+            <rect x="18.5" y="30.5" width="7" height="2.4" rx="1.2" fill="#D5D9DF"/>
+            <rect x="19.2" y="33.2" width="5.6" height="2.2" rx="1.1" fill="#B8BEC7"/>
+            <path d="M20.2 35.6C20.5 36.6 21.2 37.2 22 37.2C22.8 37.2 23.5 36.6 23.8 35.6H20.2Z" fill="#9098A4"/>
+            <defs>
+              <radialGradient id="bulbGrad" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(20 17) rotate(55) scale(14)">
+                <stop offset="0%" stop-color="#FFFCE0"/>
+                <stop offset="45%" stop-color="#FFE144"/>
+                <stop offset="100%" stop-color="#F2A818"/>
+              </radialGradient>
+            </defs>
+          </svg>
+        </div>
+        <span class="btn-label">Hint</span>
+      </div>
+    </div>
+
+    <!-- 规则与菜单弹窗 -->
+    <div class="modal-backdrop" id="modal-overlay">
+      <div class="modal-card">
+        <div class="modal-title" id="modal-title">游戏规则 (Rules)</div>
+        <div class="modal-body" id="modal-content"></div>
+        <button class="modal-btn" id="modal-primary-btn">继续游戏</button>
+        <button class="modal-btn secondary" id="modal-secondary-btn" style="display:none;">切换视角模式</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 引入 Three.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script>
+    /********************************************************************
+     * 1. 音效合成器（Web Audio API 零外部依赖，还原麻布踏步、星光清脆音效）
+     ********************************************************************/
+    class SoundFX {
+      constructor() {
+        this.ctx = null;
+      }
+      init() {
+        if (!this.ctx) {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          if (AudioCtx) this.ctx = new AudioCtx();
+        }
+        if (this.ctx && this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+      }
+      playStep() {
+        this.init();
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(145, now);
+        osc.frequency.exponentialRampToValueAtTime(68, now + 0.09);
+        gain.gain.setValueAtTime(0.18, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.095);
+      }
+      playStar(pitchOffset = 0) {
+        this.init();
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        const baseFreq = 680 + pitchOffset * 110;
+        osc.frequency.setValueAtTime(baseFreq, now);
+        osc.frequency.exponentialRampToValueAtTime(baseFreq * 1.5, now + 0.28);
+        gain.gain.setValueAtTime(0.16, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.31);
+      }
+      playBubblePop() {
+        this.init();
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        [520, 780, 1040].forEach((f, idx) => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(f, now + idx * 0.05);
+          osc.frequency.exponentialRampToValueAtTime(f * 1.35, now + idx * 0.05 + 0.18);
+          gain.gain.setValueAtTime(0.14, now + idx * 0.05);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.05 + 0.2);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(now + idx * 0.05);
+          osc.stop(now + idx * 0.05 + 0.21);
+        });
+      }
+    }
+    const sfx = new SoundFX();
+
+    /********************************************************************
+     * 2. 程序化高精度纹理生成器（粗麻布编织纹、白色虚线圆环、彩球/彩蛋/顶针纹理）
+     ********************************************************************/
+    function createBurlapTextures(isDark = false, hasRing = false) {
+      const size = 512;
+      const diffCanvas = document.createElement('canvas');
+      diffCanvas.width = size;
+      diffCanvas.height = size;
+      const ctx = diffCanvas.getContext('2d');
+
+      const bumpCanvas = document.createElement('canvas');
+      bumpCanvas.width = size;
+      bumpCanvas.height = size;
+      const bCtx = bumpCanvas.getContext('2d');
+
+      // 底色（浅色亚麻 / 深褐星级麻布）
+      ctx.fillStyle = isDark ? '#5d4732' : '#cfa872';
+      ctx.fillRect(0, 0, size, size);
+
+      bCtx.fillStyle = '#808080';
+      bCtx.fillRect(0, 0, size, size);
+
+      // 编织经纬网格（模拟原图极其细腻的粗麻布十字交织质感）
+      const step = 14;
+      for (let y = 0; y < size; y += step) {
+        for (let x = 0; x < size; x += step) {
+          const phase = ((x / step) + (y / step)) % 2;
+          const jitter = (Math.sin(x * 12.9898 + y * 78.233) * 43758.5453) % 1;
+          const shade = (jitter - 0.5) * 16;
+
+          if (isDark) {
+            const r = Math.min(255, Math.max(0, 102 + shade + (phase ? 12 : -10)));
+            const g = Math.min(255, Math.max(0, 78 + shade + (phase ? 9 : -8)));
+            const b = Math.min(255, Math.max(0, 54 + shade + (phase ? 6 : -6)));
+            ctx.fillStyle = `rgb(${r|0},${g|0},${b|0})`;
+          } else {
+            const r = Math.min(255, Math.max(0, 218 + shade + (phase ? 16 : -14)));
+            const g = Math.min(255, Math.max(0, 180 + shade + (phase ? 13 : -12)));
+            const b = Math.min(255, Math.max(0, 126 + shade + (phase ? 9 : -9)));
+            ctx.fillStyle = `rgb(${r|0},${g|0},${b|0})`;
+          }
+
+          if (phase === 0) {
+            // 横向麻线节
+            ctx.fillRect(x + 1, y + 2, step - 2, step - 4);
+            bCtx.fillStyle = '#d8d8d8';
+            bCtx.fillRect(x + 1, y + 2, step - 2, step - 4);
+          } else {
+            // 纵向麻线节
+            ctx.fillRect(x + 2, y + 1, step - 4, step - 2);
+            bCtx.fillStyle = '#bcbcbc';
+            bCtx.fillRect(x + 2, y + 1, step - 4, step - 2);
+          }
+
+          // 麻线交界深色针孔
+          ctx.fillStyle = isDark ? 'rgba(28, 18, 10, 0.55)' : 'rgba(92, 62, 30, 0.42)';
+          ctx.fillRect(x, y, 2.5, 2.5);
+          bCtx.fillStyle = '#252525';
+          bCtx.fillRect(x, y, 3, 3);
+        }
+      }
+
+      // 四周枕面边缘柔和压暗（还原立体软垫边缘阴影）
+      const grad = ctx.createRadialGradient(size / 2, size / 2, size * 0.22, size / 2, size / 2, size * 0.54);
+      grad.addColorStop(0, 'rgba(255, 245, 220, 0.10)');
+      grad.addColorStop(0.68, 'rgba(0, 0, 0, 0.0)');
+      grad.addColorStop(1, isDark ? 'rgba(22, 14, 8, 0.68)' : 'rgba(68, 44, 18, 0.62)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, size, size);
+
+      // 白色双圈虚线圆环图案（对应原图 (3,1) 机关格）
+      if (hasRing) {
+        ctx.save();
+        ctx.translate(size / 2, size / 2);
+        const drawDottedCircle = (radius, count, dotR) => {
+          for (let i = 0; i < count; i++) {
+            const ang = (i / count) * Math.PI * 2;
+            const dx = Math.cos(ang) * radius;
+            const dy = Math.sin(ang) * radius;
+            ctx.beginPath();
+            ctx.arc(dx, dy, dotR, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(255, 252, 242, 0.92)';
+            ctx.shadowColor = 'rgba(255, 255, 255, 0.5)';
+            ctx.shadowBlur = 4;
+            ctx.fill();
+          }
+        };
+        drawDottedCircle(size * 0.185, 28, 4.2);
+        drawDottedCircle(size * 0.148, 22, 3.4);
+        ctx.restore();
+      }
+
+      const mapTex = new THREE.CanvasTexture(diffCanvas);
+      const bumpTex = new THREE.CanvasTexture(bumpCanvas);
+      mapTex.anisotropy = 4;
+      bumpTex.anisotropy = 4;
+      return { map: mapTex, bumpMap: bumpTex };
+    }
+
+    // 条纹彩球与蜗牛壳螺旋条纹纹理
+    function createStripedShellTexture(isSnail = false) {
+      const c = document.createElement('canvas');
+      c.width = 512;
+      c.height = 512;
+      const ctx = c.getContext('2d');
+
+      ctx.fillStyle = '#f5da67';
+      ctx.fillRect(0, 0, 512, 512);
+
+      for (let y = 0; y < 512; y++) {
+        for (let x = 0; x < 512; x++) {
+          const u = x / 512;
+          const v = y / 512;
+          const wave = Math.sin((u * 3.0 + v * 4.5) * Math.PI * 2);
+          if (wave > 0.15) {
+            ctx.fillStyle = isSnail ? '#6e3f1f' : '#7b3f1e';
+            ctx.fillRect(x, y, 1, 1);
+          } else if (wave > -0.15) {
+            ctx.fillStyle = '#d89832';
+            ctx.fillRect(x, y, 1, 1);
+          }
+        }
+      }
+      const tex = new THREE.CanvasTexture(c);
+      tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+      return tex;
+    }
+
+    // 蓝色花纹彩蛋表面纹理
+    function createBlueEggTexture() {
+      const c = document.createElement('canvas');
+      c.width = 512;
+      c.height = 512;
+      const ctx = c.getContext('2d');
+
+      const g = ctx.createLinearGradient(0, 0, 0, 512);
+      g.addColorStop(0, '#5fd0ff');
+      g.addColorStop(0.5, '#2596ef');
+      g.addColorStop(1, '#1258a8');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, 512, 512);
+
+      // 绘制原图彩蛋表面的深蓝藤蔓旋涡暗纹
+      ctx.strokeStyle = 'rgba(12, 62, 138, 0.55)';
+      ctx.lineWidth = 6;
+      for (let i = 0; i < 14; i++) {
+        const cx = (i % 4) * 140 + 50;
+        const cy = Math.floor(i / 4) * 150 + 70;
+        ctx.beginPath();
+        for (let a = 0; a < Math.PI * 3.2; a += 0.15) {
+          const r = a * 7.5;
+          const px = cx + Math.cos(a + i) * r;
+          const py = cy + Math.sin(a + i) * r;
+          if (a === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        }
+        ctx.stroke();
+      }
+      return new THREE.CanvasTexture(c);
+    }
+
+    // 金属顶针蜂窝凹点凹凸贴图
+    function createThimbleBumpTexture() {
+      const c = document.createElement('canvas');
+      c.width = 512;
+      c.height = 256;
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = '#d0d0d0';
+      ctx.fillRect(0, 0, 512, 256);
+
+      // 上半部分蜂窝凹孔
+      for (let y = 24; y < 195; y += 14) {
+        const offset = ((y / 14) % 2) * 7;
+        for (let x = offset; x < 512; x += 14) {
+          ctx.beginPath();
+          ctx.arc(x, y, 4.4, 0, Math.PI * 2);
+          ctx.fillStyle = '#303030';
+          ctx.fill();
+        }
+      }
+      // 底部双圈金属凸棱
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 208, 512, 12);
+      ctx.fillStyle = '#505050';
+      ctx.fillRect(0, 222, 512, 8);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 232, 512, 14);
+      return new THREE.CanvasTexture(c);
+    }
+
+    /********************************************************************
+     * 3. 圆角微拱麻布软垫几何体生成器（还原圆润饱满的针插软垫体积感）
+     ********************************************************************/
+    function createCushionGeometry(width, height, depth) {
+      const segs = 28;
+      const geo = new THREE.BoxGeometry(width, height, depth, segs, 16, segs);
+      const pos = geo.attributes.position;
+      const uv = geo.attributes.uv;
+      const hw = width / 2;
+      const hh = height / 2;
+      const hd = depth / 2;
+      const cornerR = width * 0.24; // 圆角半径
+
+      for (let i = 0; i < pos.count; i++) {
+        let x = pos.getX(i);
+        let y = pos.getY(i);
+        let z = pos.getZ(i);
+
+        // 水平方向圆角超椭圆收缩（Squircle）
+        const innerX = Math.max(0, Math.abs(x) - (hw - cornerR));
+        const innerZ = Math.max(0, Math.abs(z) - (hd - cornerR));
+        const distCorner = Math.sqrt(innerX * innerX + innerZ * innerZ);
+        if (distCorner > cornerR && distCorner > 0.0001) {
+          const clampedX = (hw - cornerR) + (innerX / distCorner) * cornerR;
+          const clampedZ = (hd - cornerR) + (innerZ / distCorner) * cornerR;
+          x = Math.sign(x) * clampedX;
+          z = Math.sign(z) * clampedZ;
+        }
+
+        const normX = x / hw;
+        const normZ = z / hd;
+        const r2 = Math.min(1, normX * normX + normZ * normZ);
+
+        // 顶面微拱枕面与四周圆润倒角
+        if (y > 0) {
+          const topFactor = y / hh;
+          const dome = Math.cos(r2 * Math.PI * 0.46) * 0.16 * width;
+          const edgeDrop = Math.pow(r2, 2.2) * 0.15 * height;
+          y = y + (dome - edgeDrop) * topFactor;
+        } else {
+          // 底部内收阴影底座
+          const botFactor = -y / hh;
+          const shrink = 1 - Math.pow(botFactor, 1.8) * 0.08;
+          x *= shrink;
+          z *= shrink;
+        }
+
+        pos.setXYZ(i, x, y, z);
+
+        // 统一使用连续平面 UV 投影，消除立方体接缝
+        uv.setXY(i, (x / width) + 0.5, (z / depth) + 0.5);
+      }
+
+      geo.computeVertexNormals();
+      return geo;
+    }
+
+    // 立体五角星几何体（镶嵌于深色麻布块表面）
+    function createStarMesh(scale = 1.0) {
+      const shape = new THREE.Shape();
+      const outerR = 0.22 * scale;
+      const innerR = 0.098 * scale;
+      for (let i = 0; i < 10; i++) {
+        const ang = (i * Math.PI) / 5 - Math.PI / 2;
+        const r = i % 2 === 0 ? outerR : innerR;
+        const px = Math.cos(ang) * r;
+        const py = Math.sin(ang) * r;
+        if (i === 0) shape.moveTo(px, py);
+        else shape.lineTo(px, py);
+      }
+      shape.closePath();
+
+      const extrudeGeo = new THREE.ExtrudeGeometry(shape, {
+        depth: 0.025,
+        bevelEnabled: true,
+        bevelThickness: 0.018,
+        bevelSize: 0.015,
+        bevelSegments: 3
+      });
+      extrudeGeo.rotateX(-Math.PI / 2);
+
+      const mat = new THREE.MeshStandardMaterial({
+        color: 0xffe94d,
+        emissive: 0xffb81c,
+        emissiveIntensity: 0.55,
+        roughness: 0.32,
+        metalness: 0.1
+      });
+      const mesh = new THREE.Mesh(extrudeGeo, mat);
+      mesh.castShadow = false;
+      mesh.receiveShadow = true;
+      return mesh;
+    }
+
+    /********************************************************************
+     * 4. 6 个高精度 3D 棋子模型构建器（100% 复刻参考图造型、朝向与材质）
+     ********************************************************************/
+    // (A) 左上银色金属顶针 Thimble
+    function buildThimbleMesh() {
+      const group = new THREE.Group();
+      const bumpMap = createThimbleBumpTexture();
+      const metalMat = new THREE.MeshStandardMaterial({
+        color: 0xd8dde2,
+        metalness: 0.84,
+        roughness: 0.24,
+        bumpMap: bumpMap,
+        bumpScale: 0.025
+      });
+
+      // 锥柱体主体
+      const bodyGeo = new THREE.CylinderGeometry(0.20, 0.26, 0.42, 36, 12, false);
+      const body = new THREE.Mesh(bodyGeo, metalMat);
+      body.position.y = 0.21;
+      body.castShadow = true;
+      body.receiveShadow = true;
+      group.add(body);
+
+      // 顶部圆穹顶
+      const domeGeo = new THREE.SphereGeometry(0.201, 32, 16, 0, Math.PI * 2, 0, Math.PI * 0.5);
+      const dome = new THREE.Mesh(domeGeo, metalMat);
+      dome.position.y = 0.415;
+      dome.castShadow = true;
+      group.add(dome);
+
+      // 底部双圈金属环边
+      const rimGeo = new THREE.TorusGeometry(0.258, 0.022, 12, 36);
+      rimGeo.rotateX(Math.PI / 2);
+      const rim1 = new THREE.Mesh(rimGeo, metalMat);
+      rim1.position.y = 0.025;
+      const rim2 = rim1.clone();
+      rim2.scale.set(0.97, 1, 0.97);
+      rim2.position.y = 0.068;
+      group.add(rim1, rim2);
+
+      return group;
+    }
+
+    // (B) 七星瓢虫 Ladybug（位于左上加高麻布块）
+    function buildLadybugMesh() {
+      const group = new THREE.Group();
+
+      // 鲜红鞘翅纹理（含中缝黑线与 7 个黑斑）
+      const c = document.createElement('canvas');
+      c.width = 256;
+      c.height = 256;
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = '#dc2428';
+      ctx.fillRect(0, 0, 256, 256);
+
+      // 中缝黑线
+      ctx.fillStyle = '#181414';
+      ctx.fillRect(124, 0, 8, 256);
+
+      // 黑色圆斑
+      const spots = [
+        [75, 85, 22], [181, 85, 22],
+        [62, 155, 24], [194, 155, 24],
+        [92, 210, 18], [164, 210, 18],
+        [128, 52, 19]
+      ];
+      spots.forEach(([sx, sy, sr]) => {
+        ctx.beginPath();
+        ctx.arc(sx, sy, sr, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      const shellTex = new THREE.CanvasTexture(c);
+      const shellMat = new THREE.MeshStandardMaterial({
+        map: shellTex,
+        roughness: 0.18,
+        metalness: 0.08
+      });
+
+      const shellGeo = new THREE.SphereGeometry(0.26, 32, 20, 0, Math.PI * 2, 0, Math.PI * 0.55);
+      const shell = new THREE.Mesh(shellGeo, shellMat);
+      shell.scale.set(0.95, 0.82, 1.12);
+      shell.position.y = 0.03;
+      shell.castShadow = true;
+      group.add(shell);
+
+      // 黑色前胸背板与头部
+      const blackMat = new THREE.MeshStandardMaterial({ color: 0x1c1919, roughness: 0.28 });
+      const headGeo = new THREE.SphereGeometry(0.14, 20, 16);
+      const head = new THREE.Mesh(headGeo, blackMat);
+      head.scale.set(1.1, 0.72, 0.9);
+      head.position.set(0, 0.08, 0.24);
+      head.castShadow = true;
+      group.add(head);
+
+      // 头部两侧白色眼斑
+      const eyeMat = new THREE.MeshBasicMaterial({ color: 0xfefefe });
+      [-0.075, 0.075].forEach(ex => {
+        const eye = new THREE.Mesh(new THREE.SphereGeometry(0.028, 10, 10), eyeMat);
+        eye.position.set(ex, 0.13, 0.31);
+        group.add(eye);
+      });
+
+      // 6 条细足与触角
+      const legGeo = new THREE.CylinderGeometry(0.012, 0.008, 0.18, 8);
+      [-1, 1].forEach(side => {
+        [-0.12, 0.0, 0.12].forEach((zOff, idx) => {
+          const leg = new THREE.Mesh(legGeo, blackMat);
+          leg.position.set(side * 0.24, 0.03, zOff);
+          leg.rotation.z = side * 1.15;
+          leg.rotation.y = (idx - 1) * side * 0.32;
+          group.add(leg);
+        });
+      });
+
+      // 匹配参考图中瓢虫朝向右上方的姿态
+      group.rotation.y = Math.PI * 0.65;
+      return group;
+    }
+
+    // (C) 黄棕条纹彩球 Striped Sphere（位于金色魔法气泡下方）
+    function buildStripedBallMesh() {
+      const group = new THREE.Group();
+      const tex = createStripedShellTexture(false);
+      const mat = new THREE.MeshStandardMaterial({
+        map: tex,
+        roughness: 0.28,
+        metalness: 0.08
+      });
+      const mainBall = new THREE.Mesh(new THREE.SphereGeometry(0.27, 32, 32), mat);
+      mainBall.position.y = 0.26;
+      mainBall.castShadow = true;
+      mainBall.receiveShadow = true;
+      group.add(mainBall);
+
+      // 顶部旋涡小盖（还原参考图中气泡交界处的双层旋涡高光）
+      const cap = new THREE.Mesh(new THREE.SphereGeometry(0.14, 24, 16), mat);
+      cap.scale.set(1.15, 0.48, 1.15);
+      cap.position.set(-0.02, 0.52, -0.02);
+      group.add(cap);
+      return group;
+    }
+
+    // (D) 蓝色花纹彩蛋 Blue Egg
+    function buildBlueEggMesh() {
+      const group = new THREE.Group();
+      const tex = createBlueEggTexture();
+
+      // 自定义上尖下圆的蛋形顶点变形
+      const geo = new THREE.SphereGeometry(0.255, 32, 28);
+      const pos = geo.attributes.position;
+      for (let i = 0; i < pos.count; i++) {
+        let x = pos.getX(i);
+        let y = pos.getY(i);
+        let z = pos.getZ(i);
+        const taper = y > 0 ? 1.0 - y * 0.68 : 1.0 - y * 0.15;
+        pos.setXYZ(i, x * taper, y * 1.32, z * taper);
+      }
+      geo.computeVertexNormals();
+
+      const mat = new THREE.MeshStandardMaterial({
+        map: tex,
+        roughness: 0.22,
+        metalness: 0.05,
+        emissive: 0x0a3875,
+        emissiveIntensity: 0.18
+      });
+      const egg = new THREE.Mesh(geo, mat);
+      egg.position.y = 0.31;
+      egg.rotation.z = -0.08;
+      egg.castShadow = true;
+      egg.receiveShadow = true;
+      group.add(egg);
+      return group;
+    }
+
+    // (E) 右侧红褐色锹甲虫 Stag Beetle
+    function buildBeetleMesh() {
+      const group = new THREE.Group();
+      const wingMat = new THREE.MeshStandardMaterial({
+        color: 0xc82a38,
+        roughness: 0.22,
+        metalness: 0.15
+      });
+      const thoraxMat = new THREE.MeshStandardMaterial({
+        color: 0x461b20,
+        roughness: 0.32,
+        metalness: 0.18
+      });
+
+      // 椭圆红褐鞘翅腹部
+      const abdomen = new THREE.Mesh(
+        new THREE.SphereGeometry(0.21, 28, 20, 0, Math.PI * 2, 0, Math.PI * 0.58),
+        wingMat
+      );
+      abdomen.scale.set(0.84, 0.78, 1.32);
+      abdomen.position.set(0, 0.04, -0.08);
+      abdomen.castShadow = true;
+      group.add(abdomen);
+
+      // 深褐前胸与头部
+      const thorax = new THREE.Mesh(new THREE.SphereGeometry(0.14, 22, 16), thoraxMat);
+      thorax.scale.set(0.95, 0.68, 0.92);
+      thorax.position.set(0, 0.09, 0.16);
+      thorax.castShadow = true;
+      group.add(thorax);
+
+      // 弯曲大颚（Pincers）
+      const jawCurveL = new THREE.CatmullRomCurve3([
+        new THREE.Vector3(-0.06, 0.08, 0.25),
+        new THREE.Vector3(-0.11, 0.08, 0.36),
+        new THREE.Vector3(-0.04, 0.09, 0.44)
+      ]);
+      const jawCurveR = new THREE.CatmullRomCurve3([
+        new THREE.Vector3(0.06, 0.08, 0.25),
+        new THREE.Vector3(0.11, 0.08, 0.36),
+        new THREE.Vector3(0.04, 0.09, 0.44)
+      ]);
+      const jawL = new THREE.Mesh(new THREE.TubeGeometry(jawCurveL, 12, 0.018, 8, false), thoraxMat);
+      const jawR = new THREE.Mesh(new THREE.TubeGeometry(jawCurveR, 12, 0.018, 8, false), thoraxMat);
+      group.add(jawL, jawR);
+
+      // 6 条甲虫节肢
+      const legGeo = new THREE.CylinderGeometry(0.013, 0.008, 0.22, 8);
+      [-1, 1].forEach(side => {
+        [-0.14, 0.02, 0.16].forEach((zOff, idx) => {
+          const leg = new THREE.Mesh(legGeo, thoraxMat);
+          leg.position.set(side * 0.22, 0.03, zOff);
+          leg.rotation.z = side * 1.18;
+          leg.rotation.y = (idx - 1) * side * 0.38;
+          group.add(leg);
+        });
+      });
+
+      // 匹配参考图中甲虫朝向右下方的姿态
+      group.rotation.y = Math.PI * 0.22;
+      return group;
+    }
+
+    // (F) 底部主角小蜗牛 Snail
+    function buildSnailMesh() {
+      const group = new THREE.Group();
+
+      // 暖橘粉色软体腹足
+      const bodyMat = new THREE.MeshStandardMaterial({
+        color: 0xdc8858,
+        roughness: 0.42,
+        metalness: 0.02
+      });
+      const footCurve = new THREE.CatmullRomCurve3([
+        new THREE.Vector3(0, 0.05, -0.26),
+        new THREE.Vector3(0, 0.07, 0.0),
+        new THREE.Vector3(0, 0.13, 0.20),
+        new THREE.Vector3(0, 0.22, 0.29)
+      ]);
+      const bodyGeo = new THREE.TubeGeometry(footCurve, 20, 0.095, 16, false);
+      const body = new THREE.Mesh(bodyGeo, bodyMat);
+      body.scale.set(1.05, 0.72, 1.0);
+      body.castShadow = true;
+      group.add(body);
+
+      // 头部圆球与两根长眼柄触角
+      const head = new THREE.Mesh(new THREE.SphereGeometry(0.092, 16, 16), bodyMat);
+      head.position.set(0, 0.18, 0.28);
+      group.add(head);
+
+      [-0.045, 0.045].forEach(xOff => {
+        const stalkGeo = new THREE.CylinderGeometry(0.008, 0.014, 0.18, 8);
+        const stalk = new THREE.Mesh(stalkGeo, bodyMat);
+        stalk.position.set(xOff * 1.5, 0.28, 0.33);
+        stalk.rotation.x = 0.45;
+        stalk.rotation.z = -xOff * 4.5;
+        const tip = new THREE.Mesh(new THREE.SphereGeometry(0.018, 10, 10), bodyMat);
+        tip.position.set(xOff * 2.1, 0.36, 0.37);
+        group.add(stalk, tip);
+      });
+
+      // 背部黄棕螺旋蜗牛壳
+      const shellTex = createStripedShellTexture(true);
+      const shellMat = new THREE.MeshStandardMaterial({
+        map: shellTex,
+        roughness: 0.28,
+        metalness: 0.06
+      });
+      const shell = new THREE.Mesh(new THREE.SphereGeometry(0.22, 28, 24), shellMat);
+      shell.scale.set(0.82, 1.02, 1.05);
+      shell.position.set(0, 0.26, -0.02);
+      shell.rotation.z = 0.12;
+      shell.castShadow = true;
+      group.add(shell);
+
+      // 蜗牛壳侧面螺旋凸起细节
+      const swirlMat = new THREE.MeshStandardMaterial({ color: 0xf7df70, roughness: 0.3 });
+      [-1, 1].forEach(side => {
+        const swirl = new THREE.Mesh(new THREE.SphereGeometry(0.11, 16, 16), swirlMat);
+        swirl.scale.set(0.45, 0.85, 0.85);
+        swirl.position.set(side * 0.15, 0.25, -0.02);
+        group.add(swirl);
+      });
+
+      // 匹配参考图中蜗牛朝向右上方前进的姿态
+      group.rotation.y = Math.PI * 0.68;
+      return group;
+    }
+
+    // (G) 还原参考图中大号半透明金色魔法气泡（Fresnel 边缘发光 Shader）
+    function buildGoldenBubbleMesh() {
+      const geo = new THREE.SphereGeometry(0.95, 48, 48);
+      const mat = new THREE.ShaderMaterial({
+        transparent: true,
+        depthWrite: false,
+        side: THREE.FrontSide,
+        uniforms: {
+          uTime: { value: 0 }
+        },
+        vertexShader: `
+          varying vec3 vNormal;
+          varying vec3 vViewPosition;
+          void main() {
+            vNormal = normalize(normalMatrix * normal);
+            vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+            vViewPosition = -mvPosition.xyz;
+            gl_Position = projectionMatrix * mvPosition;
+          }
+        `,
+        fragmentShader: `
+          varying vec3 vNormal;
+          varying vec3 vViewPosition;
+          uniform float uTime;
+          void main() {
+            vec3 normal = normalize(vNormal);
+            vec3 viewDir = normalize(vViewPosition);
+            float fresnel = pow(1.0 - max(dot(normal, viewDir), 0.0), 2.35);
+
+            // 左上与右下高光反射弧
+            vec3 lightDir1 = normalize(vec3(-0.6, 0.75, 0.6));
+            vec3 lightDir2 = normalize(vec3(0.5, -0.65, 0.5));
+            float spec1 = pow(max(dot(reflect(-lightDir1, normal), viewDir), 0.0), 28.0);
+            float spec2 = pow(max(dot(reflect(-lightDir2, normal), viewDir), 0.0), 16.0);
+
+            vec3 baseColor = mix(vec3(1.0, 0.86, 0.32), vec3(1.0, 0.97, 0.68), fresnel);
+            float alpha = clamp(fresnel * 0.78 + spec1 * 0.65 + spec2 * 0.35 + 0.04, 0.0, 0.92);
+            gl_FragColor = vec4(baseColor + vec3(spec1 * 0.5), alpha);
+          }
+        `
+      });
+      return new THREE.Mesh(geo, mat);
+    }
+
+    /********************************************************************
+     * 5. 场景初始化与 15 格棋盘精确坐标映射（100% 对齐参考图）
+     ********************************************************************/
+    const viewportEl = document.getElementById('game-viewport');
+    const webglCanvas = document.getElementById('webgl-canvas');
+    const fxCanvas = document.getElementById('fx-canvas');
+    const fxCtx = fxCanvas.getContext('2d');
+
+    const renderer = new THREE.WebGLRenderer({
+      canvas: webglCanvas,
+      antialias: true,
+      alpha: true
+    });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.outputEncoding = THREE.sRGBEncoding;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.08;
+
+    const scene = new THREE.Scene();
+
+    // 正交等距相机（匹配原图微透视等轴测构图）
+    const frustumSize = 8.4;
+    const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 60);
+    // 等距俯仰角完美还原原图方块顶面与侧面的比例
+    const defaultCamPos = new THREE.Vector3(9.2, 11.2, 9.2);
+    const camTarget = new THREE.Vector3(0.0, -0.15, 0.0);
+    camera.position.copy(defaultCamPos);
+    camera.lookAt(camTarget);
+
+    // 灯光系统：左上暖阳主光 + 柔和环境补光 + 底部地面阴影接收面
+    const ambientLight = new THREE.HemisphereLight(0xfff4d2, 0x6d784e, 0.78);
+    scene.add(ambientLight);
+
+    const dirLight = new THREE.DirectionalLight(0xfff0cc, 0.92);
+    dirLight.position.set(-4.5, 13.5, 3.8);
+    dirLight.castShadow = true;
+    dirLight.shadow.mapSize.width = 2048;
+    dirLight.shadow.mapSize.height = 2048;
+    dirLight.shadow.camera.near = 1;
+    dirLight.shadow.camera.far = 30;
+    const d = 6.5;
+    dirLight.shadow.camera.left = -d;
+    dirLight.shadow.camera.right = d;
+    dirLight.shadow.camera.top = d;
+    dirLight.shadow.camera.bottom = -d;
+    dirLight.shadow.bias = -0.0008;
+    scene.add(dirLight);
+
+    // 暖橘色侧逆光增强立体边缘感
+    const rimLight = new THREE.DirectionalLight(0xffb85c, 0.38);
+    rimLight.position.set(-7, 4, -5);
+    scene.add(rimLight);
+
+    // 透明阴影接收底板（还原原图麻布块下方柔和的暖棕色悬浮投影）
+    const shadowPlane = new THREE.Mesh(
+      new THREE.PlaneGeometry(24, 24),
+      new THREE.ShadowMaterial({ opacity: 0.26, color: 0x5c3410 })
+    );
+    shadowPlane.rotation.x = -Math.PI / 2;
+    shadowPlane.position.y = -0.34;
+    shadowPlane.receiveShadow = true;
+    scene.add(shadowPlane);
+
+    /**
+     * 等距网格坐标系 (u, v):
+     * u 轴：向屏幕左下方延伸 (+X, 0, 0)
+     * v 轴：向屏幕右下方延伸 (0, 0, +Z)
+     * 经过对参考图 15 个方块的逐一拓扑比对，精确坐标如下：
+     */
+    const TILE_SPACING = 0.96;
+    const GRID_CENTER_U = 2.65;
+    const GRID_CENTER_V = 1.65;
+
+    function gridToWorld(u, v) {
+      return new THREE.Vector3(
+        (u - GRID_CENTER_U) * TILE_SPACING,
+        0,
+        (v - GRID_CENTER_V) * TILE_SPACING
+      );
+    }
+
+    const INITIAL_BOARD_DATA = [
+      { u: 0, v: 0,  type: 'normal', tall: false, stars: 0 },
+      { u: 1, v: 0,  type: 'star',   tall: false, stars: 1 }, // 气泡内 1 星深色块
+      { u: 2, v: -1, type: 'normal', tall: false, stars: 0 }, // 银色顶针所在格
+      { u: 2, v: 0,  type: 'normal', tall: false, stars: 0 },
+      { u: 3, v: 0,  type: 'normal', tall: true,  stars: 0 }, // 七星瓢虫所在加高格
+      { u: 2, v: 1,  type: 'normal', tall: false, stars: 0 }, // 黄棕条纹球所在格
+      { u: 3, v: 1,  type: 'ring',   tall: false, stars: 0 }, // 白色虚线圆环机关格
+      { u: 1, v: 2,  type: 'normal', tall: false, stars: 0 }, // 红褐锹甲虫所在格
+      { u: 2, v: 2,  type: 'normal', tall: false, stars: 0 }, // 蓝色花纹彩蛋所在格
+      { u: 3, v: 2,  type: 'normal', tall: false, stars: 0 },
+      { u: 4, v: 2,  type: 'star',   tall: false, stars: 3 }, // 3 颗星深色块
+      { u: 3, v: 3,  type: 'normal', tall: true,  stars: 0 }, // 中右加高麻布格
+      { u: 4, v: 3,  type: 'star',   tall: false, stars: 1 }, // 1 颗星深色块
+      { u: 5, v: 3,  type: 'normal', tall: false, stars: 0 },
+      { u: 5, v: 4,  type: 'normal', tall: false, stars: 0 }  // 底部小蜗牛所在格
+    ];
+
+    const INITIAL_ENTITIES = [
+      { id: 'thimble',  kind: 'pushable', u: 2, v: -1 },
+      { id: 'ladybug',  kind: 'critter',  u: 3, v: 0  },
+      { id: 'ball',     kind: 'pushable', u: 2, v: 1  },
+      { id: 'beetle',   kind: 'critter',  u: 1, v: 2  },
+      { id: 'egg',      kind: 'pushable', u: 2, v: 2  },
+      { id: 'snail',    kind: 'critter',  u: 5, v: 4  }
+    ];
+
+    // 预生成麻布纹理与材质
+    const texLight = createBurlapTextures(false, false);
+    const texDark = createBurlapTextures(true, false);
+    const texRing = createBurlapTextures(false, true);
+
+    const matLight = new THREE.MeshStandardMaterial({
+      map: texLight.map,
+      bumpMap: texLight.bumpMap,
+      bumpScale: 0.032,
+      roughness: 0.86,
+      metalness: 0.02
+    });
+    const matDark = new THREE.MeshStandardMaterial({
+      map: texDark.map,
+      bumpMap: texDark.bumpMap,
+      bumpScale: 0.035,
+      roughness: 0.88,
+      metalness: 0.04
+    });
+    const matRing = new THREE.MeshStandardMaterial({
+      map: texRing.map,
+      bumpMap: texRing.bumpMap,
+      bumpScale: 0.032,
+      roughness: 0.86,
+      metalness: 0.02
+    });
+
+    const geoStandard = createCushionGeometry(0.90, 0.38, 0.90);
+    const geoTall = createCushionGeometry(0.90, 0.66, 0.90);
+
+    // 选中指示光圈与提示光圈
+    const selectRingGeo = new THREE.RingGeometry(0.29, 0.35, 36);
+    selectRingGeo.rotateX(-Math.PI / 2);
+    const selectRingMat = new THREE.MeshBasicMaterial({
+      color: 0xfff580,
+      transparent: true,
+      opacity: 0.0,
+      side: THREE.DoubleSide
+    });
+    const selectRingMesh = new THREE.Mesh(selectRingGeo, selectRingMat);
+    scene.add(selectRingMesh);
+
+    const hintRingMesh = new THREE.Mesh(
+      selectRingGeo.clone(),
+      new THREE.MeshBasicMaterial({ color: 0xffe438, transparent: true, opacity: 0.0, side: THREE.DoubleSide })
+    );
+    scene.add(hintRingMesh);
+
+    // 存储场景对象
+    const boardGroup = new THREE.Group();
+    scene.add(boardGroup);
+
+    const tileMap = new Map();
+    const entityMap = new Map();
+    let goldenBubbleMesh = null;
+
+    // 游戏状态管理
+    let gameState = {
+      movesLeft: 12,
+      selectedCritterId: 'snail',
+      bubbleActive: true,
+      tallLowered: false,
+      collectedStarTiles: new Set(),
+      history: [],
+      hintTarget: null,
+      cameraOrbitAngle: 0
+    };
+
+    function keyUV(u, v) {
+      return `${u},${v}`;
+    }
+
+    function getTileSurfaceY(tileObj) {
+      const isCurrentlyTall = tileObj.data.tall && !gameState.tallLowered;
+      return isCurrentlyTall ? 0.56 : 0.25;
+    }
+
+    // 构建 15 块麻布软垫与星级装饰
+    function initBoardMeshes() {
+      INITIAL_BOARD_DATA.forEach(item => {
+        const group = new THREE.Group();
+        const worldPos = gridToWorld(item.u, item.v);
+        group.position.set(worldPos.x, 0, worldPos.z);
+
+        const mat = item.type === 'star' ? matDark : (item.type === 'ring' ? matRing : matLight);
+        const geo = item.tall ? geoTall : geoStandard;
+        const cushion = new THREE.Mesh(geo, mat);
+        cushion.position.y = item.tall ? 0.19 : 0.02;
+        cushion.castShadow = true;
+        cushion.receiveShadow = true;
+        cushion.userData = { isTile: true, u: item.u, v: item.v };
+        group.add(cushion);
+
+        // 如果是深色星星格，添加立体发光黄星
+        const starMeshes = [];
+        if (item.stars === 1) {
+          const s = createStarMesh(1.08);
+          s.position.set(0, 0.26, 0);
+          s.rotation.y = 0.25;
+          group.add(s);
+          starMeshes.push(s);
+        } else if (item.stars === 3) {
+          const offsets = [
+            [-0.14, -0.10, 0.82],
+            [0.16, -0.06, 0.78],
+            [-0.02, 0.16, 0.80]
+          ];
+          offsets.forEach(([ox, oz, sc], idx) => {
+            const s = createStarMesh(sc);
+            s.position.set(ox, 0.26, oz);
+            s.rotation.y = idx * 0.4;
+            group.add(s);
+            starMeshes.push(s);
+          });
+        }
+
+        boardGroup.add(group);
+        tileMap.set(keyUV(item.u, item.v), {
+          data: { ...item },
+          group,
+          cushion,
+          starMeshes,
+          targetScaleY: 1.0
+        });
+      });
+
+      // 构建 6 个棋子角色
+      const builders = {
+        thimble: buildThimbleMesh,
+        ladybug: buildLadybugMesh,
+        ball: buildStripedBallMesh,
+        beetle: buildBeetleMesh,
+        egg: buildBlueEggMesh,
+        snail: buildSnailMesh
+      };
+
+      INITIAL_ENTITIES.forEach(ent => {
+        const mesh = builders[ent.id]();
+        const tile = tileMap.get(keyUV(ent.u, ent.v));
+        const wp = gridToWorld(ent.u, ent.v);
+        const sy = getTileSurfaceY(tile);
+        mesh.position.set(wp.x, sy, wp.z);
+
+        // 为方便射线拾取，递归绑定 entityId
+        mesh.traverse(child => {
+          if (child.isMesh) {
+            child.userData = { entityId: ent.id, isEntity: true };
+          }
+        });
+
+        scene.add(mesh);
+        entityMap.set(ent.id, {
+          id: ent.id,
+          kind: ent.kind,
+          u: ent.u,
+          v: ent.v,
+          mesh,
+          targetPos: new THREE.Vector3(wp.x, sy, wp.z),
+          baseRotY: mesh.rotation.y,
+          hopPhase: 0
+        });
+      });
+
+      // 构建参考图正中央偏上的大号金色魔法气泡（罩住 (1,0) 星格与 (2,1) 条纹球上方）
+      goldenBubbleMesh = buildGoldenBubbleMesh();
+      const p1 = gridToWorld(1, 0);
+      const p2 = gridToWorld(2, 1);
+      goldenBubbleMesh.position.set(
+        (p1.x + p2.x) * 0.5 - 0.12,
+        1.02,
+        (p1.z + p2.z) * 0.5 - 0.12
+      );
+      goldenBubbleMesh.userData = { isBubble: true };
+      scene.add(goldenBubbleMesh);
+    }
+
+    initBoardMeshes();
+
+    /********************************************************************
+     * 6. 2D 顶层金色星光流与背景萤火微粒系统（100% 复刻参考图顶部星光特效）
+     ********************************************************************/
+    const bgDust = [];
+    for (let i = 0; i < 24; i++) {
+      bgDust.push({
+        x: Math.random(),
+        y: Math.random(),
+        r: 1.2 + Math.random() * 2.2,
+        alpha: 0.25 + Math.random() * 0.55,
+        speedY: -0.00015 - Math.random() * 0.00025,
+        phase: Math.random() * Math.PI * 2
+      });
+    }
+
+    // 持续从金色气泡飘向 "12 Moves left" 的星光粒子与飞星队列
+    const streamStars = [];
+    const flyingBonusStars = [];
+
+    function spawnStreamStar() {
+      streamStars.push({
+        t: Math.random() * 0.12,
+        speed: 0.0045 + Math.random() * 0.004,
+        size: 5 + Math.random() * 9,
+        rot: Math.random() * Math.PI * 2,
+        rotSpeed: (Math.random() - 0.5) * 0.06,
+        offsetX: (Math.random() - 0.5) * 26,
+        branch: Math.random() > 0.38 ? 0 : 1 // 0: 主星流，1: 左侧弯弧星流（对应原图左上金色弧线！）
+      });
+    }
+    for (let i = 0; i < 14; i++) {
+      spawnStreamStar();
+      streamStars[i].t = i / 14;
+    }
+
+    // 将 3D 世界坐标投影到 2D 屏幕画布坐标
+    function worldToScreen(vec3) {
+      const v = vec3.clone().project(camera);
+      return {
+        x: (v.x * 0.5 + 0.5) * fxCanvas.width,
+        y: (-v.y * 0.5 + 0.5) * fxCanvas.height
+      };
+    }
+
+    // 绘制发光五角星函数
+    function drawGlowingStar(ctx, x, y, radius, rotation, alpha) {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(rotation);
+      ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
+
+      // 外围金色柔和光晕
+      const glow = ctx.createRadialGradient(0, 0, radius * 0.1, 0, 0, radius * 2.2);
+      glow.addColorStop(0, 'rgba(255, 252, 190, 0.95)');
+      glow.addColorStop(0.45, 'rgba(255, 220, 75, 0.55)');
+      glow.addColorStop(1, 'rgba(255, 195, 30, 0)');
+      ctx.fillStyle = glow;
+      ctx.beginPath();
+      ctx.arc(0, 0, radius * 2.2, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 五角星实体
+      ctx.beginPath();
+      for (let i = 0; i < 10; i++) {
+        const ang = (i * Math.PI) / 5 - Math.PI / 2;
+        const r = i % 2 === 0 ? radius : radius * 0.44;
+        const px = Math.cos(ang) * r;
+        const py = Math.sin(ang) * r;
+        if (i === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      }
+      ctx.closePath();
+      ctx.fillStyle = '#fff9b0';
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // 当收集星星或点击气泡时，发射飞往顶部 12 Moves left 的奖励飞星
+    function emitBonusStarsFromWorld(worldPos, count, bonusMoves) {
+      const startPt = worldToScreen(worldPos);
+      const endPt = { x: fxCanvas.width * 0.495, y: fxCanvas.height * 0.075 };
+
+      for (let i = 0; i < count; i++) {
+        flyingBonusStars.push({
+          t: -i * 0.08,
+          startX: startPt.x,
+          startY: startPt.y,
+          ctrlX: startPt.x - 60 + (Math.random() - 0.5) * 90,
+          ctrlY: (startPt.y + endPt.y) * 0.45,
+          endX: endPt.x,
+          endY: endPt.y,
+          size: 11 + Math.random() * 5,
+          rot: Math.random() * Math.PI,
+          rewardOnArrive: i === count - 1 ? bonusMoves : 0
+        });
+      }
+    }
+
+    function render2DFX(timeSec) {
+      fxCtx.clearRect(0, 0, fxCanvas.width, fxCanvas.height);
+      const w = fxCanvas.width;
+      const h = fxCanvas.height;
+
+      // 1. 绘制背景暖色微尘光点（还原原图四周散落的细腻光斑）
+      bgDust.forEach(d => {
+        d.y += d.speedY;
+        if (d.y < 0) d.y = 1.0;
+        const twinkle = 0.55 + 0.45 * Math.sin(timeSec * 2.2 + d.phase);
+        fxCtx.save();
+        fxCtx.globalAlpha = d.alpha * twinkle;
+        fxCtx.fillStyle = '#fff5c0';
+        fxCtx.beginPath();
+        fxCtx.arc(d.x * w, d.y * h, d.r, 0, Math.PI * 2);
+        fxCtx.fill();
+        fxCtx.restore();
+      });
+
+      // 2. 如果金色魔法气泡存在，绘制原图标志性的双股金色光带与上升星群
+      if (gameState.bubbleActive && goldenBubbleMesh) {
+        const bubbleTopWorld = goldenBubbleMesh.position.clone().add(new THREE.Vector3(0, 0.88, 0));
+        const bPt = worldToScreen(bubbleTopWorld);
+        const topCounterPt = { x: w * 0.50, y: h * 0.095 };
+
+        // 绘制原图左上侧优美的金色上扬光弧与主星流丝带
+        fxCtx.save();
+        const ribbonGrad = fxCtx.createLinearGradient(bPt.x, bPt.y, topCounterPt.x - 45, topCounterPt.y - 10);
+        ribbonGrad.addColorStop(0, 'rgba(255, 232, 110, 0.75)');
+        ribbonGrad.addColorStop(0.55, 'rgba(255, 240, 140, 0.85)');
+        ribbonGrad.addColorStop(1, 'rgba(255, 245, 170, 0.0)');
+
+        // 左侧金色弧形光流（100% 对应原图 "12" 左侧那道亮金弧线）
+        fxCtx.strokeStyle = ribbonGrad;
+        fxCtx.lineWidth = 3.2;
+        fxCtx.shadowColor = 'rgba(255, 225, 80, 0.9)';
+        fxCtx.shadowBlur = 10;
+        fxCtx.beginPath();
+        fxCtx.moveTo(bPt.x - 18, bPt.y + 32);
+        fxCtx.bezierCurveTo(
+          bPt.x - 82, bPt.y - 38,
+          topCounterPt.x - 115, topCounterPt.y + 12,
+          topCounterPt.x - 68, topCounterPt.y - 14
+        );
+        fxCtx.stroke();
+
+        // 中央袅袅上升的S形细光丝
+        fxCtx.lineWidth = 2.2;
+        fxCtx.beginPath();
+        fxCtx.moveTo(bPt.x + 8, bPt.y + 8);
+        fxCtx.bezierCurveTo(
+          bPt.x + 28, bPt.y - 35,
+          topCounterPt.x - 15, topCounterPt.y + 45,
+          topCounterPt.x + 4, topCounterPt.y + 8
+        );
+        fxCtx.stroke();
+        fxCtx.restore();
+
+        // 更新并绘制上升星群
+        streamStars.forEach(st => {
+          st.t += st.speed;
+          st.rot += st.rotSpeed;
+          if (st.t >= 1.0) {
+            st.t = 0;
+          }
+          const t = st.t;
+          let sx, sy;
+          if (st.branch === 0) {
+            // 中央主星流（从气泡顶端飘向 "Moves left"）
+            sx = (1 - t) * (bPt.x + 6) + t * (topCounterPt.x + 4) + Math.sin(t * Math.PI * 2 + timeSec * 2) * 8;
+            sy = (1 - t) * (bPt.y + 12) + t * (topCounterPt.y + 2);
+          } else {
+            // 左侧弯弧星流（对应原图左上角星簇）
+            const p0x = bPt.x - 20, p0y = bPt.y + 25;
+            const p1x = bPt.x - 90, p1y = bPt.y - 45;
+            const p2x = topCounterPt.x - 65, p2y = topCounterPt.y - 12;
+            sx = (1 - t) * (1 - t) * p0x + 2 * (1 - t) * t * p1x + t * t * p2x;
+            sy = (1 - t) * (1 - t) * p0y + 2 * (1 - t) * t * p1y + t * t * p2y;
+          }
+          const alpha = Math.sin(t * Math.PI) * 0.95;
+          drawGlowingStar(fxCtx, sx, sy, st.size * (1 - t * 0.35), st.rot, alpha);
+        });
+      }
+
+      // 3. 绘制收集触发的奖励飞星
+      for (let i = flyingBonusStars.length - 1; i >= 0; i--) {
+        const bs = flyingBonusStars[i];
+        bs.t += 0.032;
+        if (bs.t < 0) continue;
+        if (bs.t >= 1.0) {
+          if (bs.rewardOnArrive > 0) {
+            gameState.movesLeft += bs.rewardOnArrive;
+            updateMovesUI(true);
+            sfx.playStar(2);
+          }
+          flyingBonusStars.splice(i, 1);
+          continue;
+        }
+        const t = bs.t;
+        const x = (1 - t) * (1 - t) * bs.startX + 2 * (1 - t) * t * bs.ctrlX + t * t * bs.endX;
+        const y = (1 - t) * (1 - t) * bs.startY + 2 * (1 - t) * t * bs.ctrlY + t * t * bs.endY;
+        drawGlowingStar(fxCtx, x, y, bs.size, bs.rot + t * 4, 1.0);
+      }
+    }
+
+    /********************************************************************
+     * 7. 核心玩法逻辑（移动、推球/推蛋/推顶针、圆环机关升降、星级收集、撤回与提示）
+     ********************************************************************/
+    const movesNumberEl = document.getElementById('moves-number');
+    const toastEl = document.getElementById('toast-banner');
+    let toastTimer = null;
+
+    function showToast(msg, duration = 2400) {
+      toastEl.textContent = msg;
+      toastEl.classList.add('visible');
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toastEl.classList.remove('visible');
+      }, duration);
+    }
+
+    function updateMovesUI(pulse = false) {
+      movesNumberEl.textContent = gameState.movesLeft;
+      if (pulse) {
+        movesNumberEl.classList.remove('pulse');
+        void movesNumberEl.offsetWidth;
+        movesNumberEl.classList.add('pulse');
+        setTimeout(() => movesNumberEl.classList.remove('pulse'), 260);
+      }
+    }
+
+    function getEntityAt(u, v) {
+      for (const ent of entityMap.values()) {
+        if (ent.u === u && ent.v === v) return ent;
+      }
+      return null;
+    }
+
+    function saveHistorySnapshot() {
+      const entSnap = [];
+      entityMap.forEach(e => {
+        entSnap.push({ id: e.id, u: e.u, v: e.v, rotY: e.baseRotY });
+      });
+      gameState.history.push({
+        movesLeft: gameState.movesLeft,
+        selectedCritterId: gameState.selectedCritterId,
+        bubbleActive: gameState.bubbleActive,
+        tallLowered: gameState.tallLowered,
+        collectedStarTiles: new Set(gameState.collectedStarTiles),
+        entities: entSnap
+      });
+    }
+
+    // 检查白色虚线圆环格 (3,1) 上是否有物体或昆虫，激活高低台升降机关
+    function checkRingSwitch() {
+      const occupant = getEntityAt(3, 1);
+      const shouldLower = Boolean(occupant) || gameState.tallLowered;
+      if (occupant && !gameState.tallLowered) {
+        gameState.tallLowered = true;
+        sfx.playStar(1);
+        showToast('白色圆环机关已激活：高台麻布块已平降！');
+        syncAllHeights();
+      }
+    }
+
+    function syncAllHeights() {
+      entityMap.forEach(ent => {
+        const tile = tileMap.get(keyUV(ent.u, ent.v));
+        if (tile) {
+          const wp = gridToWorld(ent.u, ent.v);
+          ent.targetPos.set(wp.x, getTileSurfaceY(tile), wp.z);
+        }
+      });
+    }
+
+    // 检查是否踏上深色星星麻布块
+    function checkStarCollection(u, v) {
+      const k = keyUV(u, v);
+      const tile = tileMap.get(k);
+      if (!tile || tile.data.type !== 'star') return;
+      if (gameState.collectedStarTiles.has(k)) return;
+
+      gameState.collectedStarTiles.add(k);
+      const bonus = tile.data.stars;
+      sfx.playStar(0);
+
+      // 发射飞向顶部步数栏的金色星星
+      const wp = gridToWorld(u, v);
+      wp.y += 0.4;
+      emitBonusStarsFromWorld(wp, bonus * 2, bonus);
+
+      // 星星网格微缩发光反馈
+      tile.starMeshes.forEach(sm => {
+        sm.material.emissiveIntensity = 1.25;
+      });
+
+      const remaining = 3 - gameState.collectedStarTiles.size;
+      if (remaining === 0) {
+        setTimeout(() => {
+          openModal(
+            '✨ 完美通关！',
+            `<p>恭喜！你已收集棋盘上全部 <strong>3 处深色星级麻布块（共 5 颗金星）</strong>，成功解开麻布岛机关！</p>
+             <p style="margin-top:8px;">剩余步数：<strong>${gameState.movesLeft} Moves</strong></p>`,
+            '再玩一次',
+            () => restartGame()
+          );
+        }, 700);
+      } else {
+        showToast(`收集星级麻布块！步数 +${bonus}（还剩 ${remaining} 处星格）`);
+      }
+    }
+
+    // 点击金色魔法气泡触发星光充能
+    function popGoldenBubble() {
+      if (!gameState.bubbleActive) return;
+      saveHistorySnapshot();
+      gameState.bubbleActive = false;
+      sfx.playBubblePop();
+      emitBonusStarsFromWorld(goldenBubbleMesh.position, 6, 2);
+      // 同时自动点亮气泡内的 (1,0) 星格
+      checkStarCollection(1, 0);
+      showToast('金色魔法气泡释放！飞星涌入顶部，步数 +2');
+    }
+
+    // 尝试将选中的昆虫移动到相邻格 (targetU, targetV)
+    function tryMoveSelectedCritter(targetU, targetV) {
+      const critter = entityMap.get(gameState.selectedCritterId);
+      if (!critter) return;
+
+      const du = targetU - critter.u;
+      const dv = targetV - critter.v;
+      if (Math.abs(du) + Math.abs(dv) !== 1) {
+        showToast('请点击与当前昆虫相邻的麻布格移动');
+        return;
+      }
+
+      const currentTile = tileMap.get(keyUV(critter.u, critter.v));
+      const destTile = tileMap.get(keyUV(targetU, targetV));
+      if (!destTile) return;
+
+      if (gameState.movesLeft <= 0) {
+        showToast('步数已用尽！请点击 Undo 撤回或 Restart 重试');
+        return;
+      }
+
+      // 高低差检查：未激活圆环机关前，低处无法直接爬上加高麻布块（但高处瓢虫可以跳下高台）
+      const curTall = currentTile.data.tall && !gameState.tallLowered;
+      const destTall = destTile.data.tall && !gameState.tallLowered;
+      if (!curTall && destTall) {
+        showToast('高台太高！将彩球/彩蛋推到白色虚线圆环格即可降下高台');
+        return;
+      }
+
+      const blockingEnt = getEntityAt(targetU, targetV);
+      if (blockingEnt) {
+        // 如果目标是可推动物体（条纹彩球、蓝彩蛋、银顶针），尝试顺着方向推一格
+        if (blockingEnt.kind === 'pushable') {
+          const pushU = targetU + du;
+          const pushV = targetV + dv;
+          const pushTile = tileMap.get(keyUV(pushU, pushV));
+          if (!pushTile || getEntityAt(pushU, pushV)) {
+            showToast('前方受阻，无法推动该物体');
+            return;
+          }
+          const pushDestTall = pushTile.data.tall && !gameState.tallLowered;
+          if (pushDestTall) {
+            showToast('无法将物体推上加高麻布块');
+            return;
+          }
+
+          saveHistorySnapshot();
+          gameState.hintTarget = null;
+
+          // 执行推动
+          blockingEnt.u = pushU;
+          blockingEnt.v = pushV;
+          const pushWp = gridToWorld(pushU, pushV);
+          blockingEnt.targetPos.set(pushWp.x, getTileSurfaceY(pushTile), pushWp.z);
+          blockingEnt.hopPhase = 1.0;
+
+          // 如果推动的是气泡下的条纹球，顺带释放金色气泡
+          if (blockingEnt.id === 'ball' && gameState.bubbleActive) {
+            gameState.bubbleActive = false;
+            sfx.playBubblePop();
+            emitBonusStarsFromWorld(goldenBubbleMesh.position, 5, 2);
+          }
+
+          checkStarCollection(pushU, pushV);
+        } else {
+          // 如果点击的是另一只昆虫，直接切换操控对象
+          gameState.selectedCritterId = blockingEnt.id;
+          sfx.playStep();
+          return;
+        }
+      } else {
+        saveHistorySnapshot();
+        gameState.hintTarget = null;
+      }
+
+      // 移动昆虫
+      critter.u = targetU;
+      critter.v = targetV;
+      const wp = gridToWorld(targetU, targetV);
+      critter.targetPos.set(wp.x, getTileSurfaceY(destTile), wp.z);
+      critter.baseRotY = Math.atan2(du, dv);
+      critter.hopPhase = 1.0;
+
+      gameState.movesLeft = Math.max(0, gameState.movesLeft - 1);
+      updateMovesUI(false);
+      sfx.playStep();
+
+      checkRingSwitch();
+      checkStarCollection(targetU, targetV);
+    }
+
+    // 完整状态重置（100% 恢复参考图初始画面与 12 Moves left）
+    function restartGame() {
+      gameState.movesLeft = 12;
+      gameState.selectedCritterId = 'snail';
+      gameState.bubbleActive = true;
+      gameState.tallLowered = false;
+      gameState.collectedStarTiles.clear();
+      gameState.history = [];
+      gameState.hintTarget = null;
+      updateMovesUI(true);
+
+      tileMap.forEach(t => {
+        t.starMeshes.forEach(sm => {
+          sm.material.emissiveIntensity = 0.55;
+        });
+      });
+
+      INITIAL_ENTITIES.forEach(initEnt => {
+        const ent = entityMap.get(initEnt.id);
+        const tile = tileMap.get(keyUV(initEnt.u, initEnt.v));
+        const wp = gridToWorld(initEnt.u, initEnt.v);
+        ent.u = initEnt.u;
+        ent.v = initEnt.v;
+        ent.targetPos.set(wp.x, getTileSurfaceY(tile), wp.z);
+        ent.hopPhase = 0.6;
+        if (initEnt.id === 'ladybug') ent.baseRotY = Math.PI * 0.65;
+        else if (initEnt.id === 'beetle') ent.baseRotY = Math.PI * 0.22;
+        else if (initEnt.id === 'snail') ent.baseRotY = Math.PI * 0.68;
+      });
+
+      sfx.playStep();
+      showToast('已重置为参考图初始状态 (12 Moves left)');
+    }
+
+    // 撤回上一步 (Undo)
+    function undoMove() {
+      if (gameState.history.length === 0) {
+        showToast('已经是初始状态，无需撤回');
+        return;
+      }
+      const prev = gameState.history.pop();
+      gameState.movesLeft = prev.movesLeft;
+      gameState.selectedCritterId = prev.selectedCritterId;
+      gameState.bubbleActive = prev.bubbleActive;
+      gameState.tallLowered = prev.tallLowered;
+      gameState.collectedStarTiles = new Set(prev.collectedStarTiles);
+      gameState.hintTarget = null;
+      updateMovesUI(false);
+
+      prev.entities.forEach(es => {
+        const ent = entityMap.get(es.id);
+        const tile = tileMap.get(keyUV(es.u, es.v));
+        const wp = gridToWorld(es.u, es.v);
+        ent.u = es.u;
+        ent.v = es.v;
+        ent.baseRotY = es.rotY;
+        ent.targetPos.set(wp.x, getTileSurfaceY(tile), wp.z);
+        ent.hopPhase = 0.5;
+      });
+      sfx.playStep();
+      showToast('已撤回上一步');
+    }
+
+    // 智能提示 (Hint)：自动高亮最优下一步
+    function triggerHint() {
+      sfx.playStar(1);
+      // 优先提示还未收集的星星格路径
+      if (!gameState.collectedStarTiles.has('4,3')) {
+        gameState.selectedCritterId = 'snail';
+        const snail = entityMap.get('snail');
+        if (snail.u === 5 && snail.v === 4) {
+          gameState.hintTarget = { u: 5, v: 3 };
+          showToast('💡 提示：先将底部小蜗牛向左上移动到 (5,3)，再踏上右侧星星格！');
+          return;
+        } else if (snail.u === 5 && snail.v === 3) {
+          gameState.hintTarget = { u: 4, v: 3 };
+          showToast('💡 提示：将小蜗牛移动到右上方 1 星深色麻布格！');
+          return;
+        }
+      }
+      if (!gameState.collectedStarTiles.has('4,2')) {
+        gameState.selectedCritterId = 'snail';
+        gameState.hintTarget = { u: 4, v: 2 };
+        showToast('💡 提示：前往收集 3 颗星的深色麻布格 (+3 步数)！');
+        return;
+      }
+      if (!gameState.collectedStarTiles.has('1,0')) {
+        gameState.selectedCritterId = 'ladybug';
+        const lb = entityMap.get('ladybug');
+        if (lb.u === 3 && lb.v === 0) {
+          gameState.hintTarget = { u: 2, v: 0 };
+          showToast('💡 提示：已为您选中左上七星瓢虫，向右上跳下高台收集气泡内的星星！');
+          return;
+        }
+        gameState.hintTarget = { u: 1, v: 0 };
+        showToast('💡 提示：操控七星瓢虫前往上方 (1,0) 星级麻布格！');
+      }
+    }
+
+    /********************************************************************
+     * 8. 射线点击交互与 UI 弹窗绑定
+     ********************************************************************/
+    const raycaster = new THREE.Raycaster();
+    const pointerNDC = new THREE.Vector2();
+
+    webglCanvas.addEventListener('pointerdown', (e) => {
+      const rect = webglCanvas.getBoundingClientRect();
+      pointerNDC.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      pointerNDC.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+      raycaster.setFromCamera(pointerNDC, camera);
+
+      // 1. 检查是否点击了金色魔法气泡
+      if (gameState.bubbleActive && goldenBubbleMesh) {
+        const bubbleHit = raycaster.intersectObject(goldenBubbleMesh, false);
+        if (bubbleHit.length > 0) {
+          popGoldenBubble();
+          return;
+        }
+      }
+
+      // 2. 检查是否点击了棋子（昆虫或可推物体）
+      const entityMeshes = [];
+      entityMap.forEach(ent => entityMeshes.push(ent.mesh));
+      const entHits = raycaster.intersectObjects(entityMeshes, true);
+      if (entHits.length > 0) {
+        const hitObj = entHits[0].object;
+        const entId = hitObj.userData.entityId;
+        const ent = entityMap.get(entId);
+        if (ent) {
+          if (ent.kind === 'critter') {
+            if (gameState.selectedCritterId !== ent.id) {
+              gameState.selectedCritterId = ent.id;
+              ent.hopPhase = 0.6;
+              sfx.playStep();
+              const names = { snail: '小蜗牛', ladybug: '七星瓢虫', beetle: '红褐锹甲虫' };
+              showToast(`当前操控：${names[ent.id]}（点击相邻麻布格移动）`);
+              return;
+            }
+          } else {
+            // 点击了可推物体，检查是否与当前选中昆虫相邻，若相邻则直接推它
+            const activeCritter = entityMap.get(gameState.selectedCritterId);
+            if (activeCritter && Math.abs(activeCritter.u - ent.u) + Math.abs(activeCritter.v - ent.v) === 1) {
+              tryMoveSelectedCritter(ent.u, ent.v);
+              return;
+            }
+          }
+        }
+      }
+
+      // 3. 检查是否点击了麻布软垫方块
+      const tileCushions = [];
+      tileMap.forEach(t => tileCushions.push(t.cushion));
+      const tileHits = raycaster.intersectObjects(tileCushions, false);
+      if (tileHits.length > 0) {
+        const { u, v } = tileHits[0].object.userData;
+        tryMoveSelectedCritter(u, v);
+      }
+    });
+
+    // 模态框控制
+    const modalOverlay = document.getElementById('modal-overlay');
+    const modalTitle = document.getElementById('modal-title');
+    const modalContent = document.getElementById('modal-content');
+    const modalPrimaryBtn = document.getElementById('modal-primary-btn');
+    const modalSecondaryBtn = document.getElementById('modal-secondary-btn');
+
+    function openModal(title, htmlContent, primaryText = '继续游戏', onPrimary = null, showSecondary = false) {
+      modalTitle.textContent = title;
+      modalContent.innerHTML = htmlContent;
+      modalPrimaryBtn.textContent = primaryText;
+      modalPrimaryBtn.onclick = () => {
+        modalOverlay.classList.remove('open');
+        if (onPrimary) onPrimary();
+      };
+      if (showSecondary) {
+        modalSecondaryBtn.style.display = 'inline-block';
+      } else {
+        modalSecondaryBtn.style.display = 'none';
+      }
+      modalOverlay.classList.add('open');
+    }
+
+    document.getElementById('btn-rules').addEventListener('click', () => {
+      sfx.playStep();
+      openModal(
+        '游戏规则 (Rules)',
+        `<ul>
+          <li><strong>目标</strong>：在步数（<code>Moves left</code>）耗尽前，操控昆虫踏上全部 <strong>3 块深褐色星星麻布垫</strong> 收集所有金星。</li>
+          <li><strong>切换与移动</strong>：点击<strong>小蜗牛、七星瓢虫或锹甲虫</strong>可切换当前操控角色；点击相邻麻布垫即可移动（消耗 1 步）。</li>
+          <li><strong>推物与圆环机关</strong>：向<strong>黄棕条纹球、蓝彩蛋或银顶针</strong>方向移动可推动它们。当物体或角色位于<strong>白色虚线圆环垫</strong>上时，全场加高麻布块将平降！</li>
+          <li><strong>金色魔法气泡</strong>：点击或推动中央金色气泡可释放上升星流，额外奖励步数！</li>
+        </ul>`
+      );
+    });
+
+    document.getElementById('btn-menu').addEventListener('click', () => {
+      sfx.playStep();
+      openModal(
+        '游戏菜单 (Menu)',
+        `<p style="margin-bottom:10px;">当前处于 <strong>100% 参考图高保真复刻关卡</strong>：</p>
+         <ul>
+           <li>已收集星格：<strong>${gameState.collectedStarTiles.size} / 3</strong></li>
+           <li>高台状态：<strong>${gameState.tallLowered ? '已平降' : '初始加高'}</strong></li>
+           <li>魔法气泡：<strong>${gameState.bubbleActive ? '激活中 (持续飘星)' : '已释放'}</strong></li>
+         </ul>`,
+        '返回游戏',
+        null,
+        true
+      );
+    });
+
+    modalSecondaryBtn.addEventListener('click', () => {
+      gameState.cameraOrbitAngle = (gameState.cameraOrbitAngle + 1) % 3;
+      const angles = [0, 0.35, -0.35];
+      const a = angles[gameState.cameraOrbitAngle];
+      const dist = Math.hypot(defaultCamPos.x, defaultCamPos.z);
+      const baseAng = Math.PI / 4;
+      camera.position.x = Math.cos(baseAng + a) * dist;
+      camera.position.z = Math.sin(baseAng + a) * dist;
+      camera.lookAt(camTarget);
+      modalOverlay.classList.remove('open');
+      showToast(a === 0 ? '已恢复 100% 参考图原始等距机位' : '已切换环绕观察视角');
+    });
+
+    document.getElementById('btn-restart').addEventListener('click', restartGame);
+    document.getElementById('btn-undo').addEventListener('click', undoMove);
+    document.getElementById('btn-hint').addEventListener('click', triggerHint);
+
+    /********************************************************************
+     * 9. 自适应视口缩放与 60FPS 动画主循环
+     ********************************************************************/
+    function onResize() {
+      const w = viewportEl.clientWidth;
+      const h = viewportEl.clientHeight;
+      renderer.setSize(w, h);
+      fxCanvas.width = w;
+      fxCanvas.height = h;
+
+      const aspect = w / h;
+      camera.left = (-frustumSize * aspect) / 2;
+      camera.right = (frustumSize * aspect) / 2;
+      camera.top = frustumSize / 2;
+      camera.bottom = -frustumSize / 2;
+      camera.updateProjectionMatrix();
+    }
+    window.addEventListener('resize', onResize);
+    onResize();
+
+    const clock = new THREE.Clock();
+
+    function animate() {
+      requestAnimationFrame(animate);
+      const dt = Math.min(clock.getDelta(), 0.05);
+      const elapsed = clock.getElapsedTime();
+
+      // 1. 更新麻布块高低台平滑升降动画与星星微光脉动
+      tileMap.forEach(tile => {
+        if (tile.data.tall) {
+          const targetScale = gameState.tallLowered ? 0.58 : 1.0;
+          const targetY = gameState.tallLowered ? 0.02 : 0.19;
+          tile.cushion.scale.y += (targetScale - tile.cushion.scale.y) * 0.12;
+          tile.cushion.position.y += (targetY - tile.cushion.position.y) * 0.12;
+        }
+        tile.starMeshes.forEach((sm, idx) => {
+          const key = keyUV(tile.data.u, tile.data.v);
+          if (!gameState.collectedStarTiles.has(key)) {
+            sm.material.emissiveIntensity = 0.5 + 0.25 * Math.sin(elapsed * 3.2 + idx);
+          }
+        });
+      });
+
+      // 2. 更新 6 个棋子的平滑跳跃位移与昆虫呼吸微动
+      entityMap.forEach(ent => {
+        ent.mesh.position.x += (ent.targetPos.x - ent.mesh.position.x) * 0.18;
+        ent.mesh.position.z += (ent.targetPos.z - ent.mesh.position.z) * 0.18;
+
+        if (ent.hopPhase > 0.01) {
+          ent.hopPhase = Math.max(0, ent.hopPhase - dt * 4.2);
+        } else {
+          ent.hopPhase = 0;
+        }
+        const hopHeight = Math.sin(ent.hopPhase * Math.PI) * 0.36;
+        const baseY = ent.targetPos.y;
+        ent.mesh.position.y += (baseY + hopHeight - ent.mesh.position.y) * 0.25;
+
+        // 朝向平滑插值 + 昆虫细微呼吸摆动
+        let diffRot = ent.baseRotY - ent.mesh.rotation.y;
+        while (diffRot > Math.PI) diffRot -= Math.PI * 2;
+        while (diffRot < -Math.PI) diffRot += Math.PI * 2;
+        ent.mesh.rotation.y += diffRot * 0.18;
+
+        if (ent.kind === 'critter') {
+          const breathe = 1.0 + Math.sin(elapsed * 3.6 + ent.u) * 0.022;
+          ent.mesh.scale.set(1, breathe, 1);
+        }
+      });
+
+      // 3. 选中昆虫脚下柔和光环与 Hint 提示光环
+      const activeCritter = entityMap.get(gameState.selectedCritterId);
+      if (activeCritter) {
+        selectRingMesh.position.set(
+          activeCritter.mesh.position.x,
+          activeCritter.mesh.position.y + 0.02,
+          activeCritter.mesh.position.z
+        );
+        selectRingMesh.material.opacity = 0.42 + 0.22 * Math.sin(elapsed * 4.5);
+        const s = 1.0 + 0.06 * Math.sin(elapsed * 4.5);
+        selectRingMesh.scale.set(s, s, 1);
+      }
+
+      if (gameState.hintTarget) {
+        const hTile = tileMap.get(keyUV(gameState.hintTarget.u, gameState.hintTarget.v));
+        if (hTile) {
+          const hwp = gridToWorld(gameState.hintTarget.u, gameState.hintTarget.v);
+          hintRingMesh.position.set(hwp.x, getTileSurfaceY(hTile) + 0.03, hwp.z);
+          hintRingMesh.material.opacity = 0.55 + 0.4 * Math.sin(elapsed * 7.0);
+          const hs = 1.1 + 0.12 * Math.sin(elapsed * 7.0);
+          hintRingMesh.scale.set(hs, hs, 1);
+        }
+      } else {
+        hintRingMesh.material.opacity = 0;
+      }
+
+      // 4. 金色魔法气泡呼吸浮动动画
+      if (goldenBubbleMesh) {
+        goldenBubbleMesh.visible = gameState.bubbleActive;
+        if (gameState.bubbleActive) {
+          goldenBubbleMesh.material.uniforms.uTime.value = elapsed;
+          goldenBubbleMesh.position.y = 1.02 + Math.sin(elapsed * 2.1) * 0.035;
+          const bScale = 1.0 + Math.sin(elapsed * 2.8) * 0.015;
+          goldenBubbleMesh.scale.set(bScale, bScale, bScale);
+        }
+      }
+
+      renderer.render(scene, camera);
+      render2DFX(elapsed);
+    }
+
+    animate();
+  </script>
+</body>
+</html>
