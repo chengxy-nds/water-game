@@ -352,3 +352,31 @@ if (b.special === 'stone_base' && b.poursToBreak) {
 10. **规范 10（`color_lock` 专属色环瓶与 `countdownMoves` 流沙瓶的容错设计）**：
     * **色环空瓶配额**：单关最多配置 $1 \sim 2$ 只 `color_lock` 瓶，且必须保留至少 1 只无色环限制的通用免费空瓶。`color_lock` 瓶的 `requiredColor` 必须优先从开局明牌顶层暴露频次最高的颜色中选取，使玩家在前 3 步内即可顺畅利用该色环瓶。
     * **流沙炸弹步数下限与广告救援**：挂载 `countdownMoves` 的水瓶，其初始倒计时步数必须满足 $\text{countdownMoves} \ge \text{该瓶暴露层数} + 3$（通常设为 $6 \sim 8$ 步），且不得挂载在被 `silk_drape` / `full_ice` 锁死的瓶子上。当流沙归零触发 `frozenTurns = 3` 寒冰封口时，玩家点击底部 `➕ +空瓶` 道具可优先立即震碎该寒冰封口。
+
+---
+
+## 七、 TapTap 小游戏平台规范与合规集成 (TapTap Platform Specification)
+
+### 7.1 平台凭据与客户端安全配置
+* **应用 Client ID**：`2churuxkey3zhktug2`
+* **Client Token**：`bAmMtLUCeY0ZITLYJjcODrVe644poeQNXGNOjXNf`
+* **TDS 国内服服务域名**：`https://2churuxkey3zhktug2.cloud.tds1.tapapis.cn`
+* **Client Public Key**：RSA 客户端公钥，用于端云通信验签。
+
+### 7.2 动态加载与 3 秒熔断离线降级架构
+为确保离线环境、本地调试（`localhost` / `127.0.0.1`）以及公网波动时不阻断游戏首屏加载，`TapTapBridge` 采用**超时熔断加载模式**：
+1. 动态注入 `@taptap/tapsdk-web` UMD 库，设置 3000ms 超时保护定时器；
+2. 若超时或网络异常，系统静默降级为“单机安全沙盒模式”，游戏 0 延迟进入主舞台；
+3. 若正常加载，静默完成 `TapSDK.init()` 并拉取登录凭证。
+
+### 7.3 实名认证与国家防沉迷合规系统
+* 启动时唤起 `TapSDK.TDSUser.loginWithTapTap()` 获取当前玩家 `objectId`；
+* 启动防沉迷守护进程 `TapSDK.AntiAddiction.startup(objectId)`，实时监听未成年人家长监护限制与法定节假日游玩限时。
+
+### 7.4 双写持久化机制 (Dual-Write Storage Engine)
+* **本地读写 (0 延迟)**：以 `water_game_` 为前缀安全读写 `localStorage`，确保玩家离线或切前台时进度立即可读；
+* **云端同步 (异步无阻断)**：在关卡结算、下一关晋级或更换高定主题时，调用 `TapSDK.CloudStorage.saveData()` 静默双写同步至 TapTap 云端，换机不丢档。
+
+### 7.5 TapADN 激励视频广告与审核放行兜底
+* 道具栏（提示、+空瓶、撤回）接入 `TapTapBridge.showRewardAd()`；
+* 若当前环境处于平台审核期、无可用广告填充或离线，触发自动放行回调（`onReward`），避免产生恶性阻塞导致审核驳回。
