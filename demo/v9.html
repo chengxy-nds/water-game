@@ -542,8 +542,8 @@
     }
     @keyframes bottleLandingSettle {
       0%   { transform: translateY(-22px) scale(1.035); }
-      62%  { transform: translateY(2.2px) scale(1.018, 0.975); }
-      84%  { transform: translateY(-1.2px) scale(0.995, 1.008); }
+      70%  { transform: translateY(1.2px) scale(1.01, 0.985); }
+      88%  { transform: translateY(-0.4px) scale(0.998, 1.002); }
       100% { transform: translateY(0) scale(1, 1); }
     }
     @keyframes bottleShuffleWave {
@@ -7821,12 +7821,11 @@
             renderAll();
             const landedSlot = document.getElementById('bottles-grid')?.children[srcIdx];
             if (landedSlot && !bottles[srcIdx]?.removed) {
-              landedSlot.classList.remove('level-enter-anim');
+              landedSlot.classList.remove('level-enter-anim', 'settling', 'selected');
               landedSlot.style.animationDelay = '';
-              landedSlot.classList.add('settling');
-              setTimeout(() => landedSlot.classList.remove('settling'), 340);
             }
-            startSettleSloshAnimation(srcIdx, 0.44);
+            // 物理平稳落座：保持瓶身静止不动，仅触发水面微阻尼自平衡回弹波纹
+            startSettleSloshAnimation(srcIdx, 0.38);
 
             if (revealedMysteryLayerIdx !== null && revealedMysteryLayerIdx >= 0) {
               playSound('mystery_reveal');
