@@ -14,35 +14,30 @@ export function isCompleteBottle(b: Bottle): boolean {
 export function canSelectBottle(b: Bottle | undefined, showToast?: (msg: string) => void): boolean {
   if (!b || b.removed || b.corked) return false;
   if (b.frozenTurns && b.frozenTurns > 0) {
-    showToast?.(`🧊 瓶口寒冰封印中！再完成 ${b.frozenTurns} 次倾倒解封`);
+    showToast?.(`🧊 再倒水 ${b.frozenTurns} 步解封`);
     return false;
   }
   if (b.isGiantCat) {
-    showToast?.('🐱 正中央是超大小猫目标玻璃瓶！请将周围小瓶的樱花粉药水倒入猫瓶中灌满它！');
+    showToast?.('🐱 请把目标秘药倒入大猫瓶');
     return false;
   }
   if (b.special === 'one_way_in') {
-    showToast?.('⏬ 单向漏斗瓶：仅可注入秘药，不可向外倾倒！');
+    showToast?.('⏬ 漏斗瓶：只进不出');
     return false;
   }
-  if (b.special === 'silk_drape') {
-    showToast?.(`🧣 蓝白丝绸布幔锁住中！打包 ${b.unlockOrder || 1} 个礼盒即可掀开`);
-    return false;
-  }
-  if (b.special === 'full_ice') {
-    showToast?.(`🧊 全冰雕冻结中！累计打包 ${b.unlockOrder || 1} 个礼盒即可破冰融化`);
-    return false;
-  }
-  if (b.special === 'paper_bag') {
-    showToast?.(`🛍️ 牛皮纸袋包裹中！打包 ${b.unlockOrder || 1} 个礼盒即可拆开纸袋`);
+  if (b.special === 'silk_drape' || b.special === 'full_ice' || b.special === 'paper_bag') {
+    const leftBags = b.unlockOrder || 1;
+    showToast?.(`🔒 再装满 ${leftBags} 瓶自动解锁`);
     return false;
   }
   if (b.special === 'ice_base') {
-    showToast?.(`❄️ 瓶底被寒冰冻结（还可接水）！再完成 ${b.poursToBreak || 1} 次倒水自动震碎寒冰`);
+    const leftCnt = b.poursToBreak || 1;
+    showToast?.(`❄️ 同色合并 ${leftCnt} 次破冰（可接水）`);
     return false;
   }
   if (b.special === 'stone_base') {
-    showToast?.(`🪨 瓶底被岩石卡住（还可接水）！再完成 ${b.poursToBreak || 1} 次倒水自动震碎岩石`);
+    const leftCnt = b.poursToBreak || 1;
+    showToast?.(`🔒 同色合并 ${leftCnt} 次解锁（可接水）`);
     return false;
   }
   if (b.special === 'ad_cam' || b.special === 'ad_cam_blue') return false;
@@ -143,9 +138,9 @@ export function checkGameWon(bottles: Bottle[], wasGiantCat?: boolean): boolean 
 }
 
 /**
- * 启发式智能寻路算法：快速找出当前盘面最具有推进价值的倒水方案
+ * 启发式智能寻路算法：快速找出当前盘面最具有推进价值的倒水方案（V9 极值加权与导流）
  */
-export function findBestPourMove(bottles: Bottle[]): { srcIdx: number; dstIdx: number } | null {
+export function findBestPourMove(bottles: Bottle[], bags?: Bag[]): { srcIdx: number; dstIdx: number } | null {
   let bestMove: { srcIdx: number; dstIdx: number } | null = null;
   let bestScore = -1e9;
 
@@ -169,16 +164,23 @@ export function findBestPourMove(bottles: Bottle[]): { srcIdx: number; dstIdx: n
       const dstCap = dst.maxCap || 4;
       const freeSpace = dstCap - dst.layers.length;
 
-      // 避免纯色瓶倒入普通空瓶无意义搬家
-      if (dst.layers.length === 0 && isSrcPure && dst.special !== 'color_lock' && dstCap <= (src.maxCap || 4)) {
+      // 避免把纯色瓶倒入同尺寸空瓶做无意义搬家（但高低异形关中，将纯色水倒入恰好匹配其层数的空瓶可直接满瓶落塞！）
+      const isExactFitEmpty = dst.layers.length === 0 && dstCap === src.layers.length && dstCap !== (src.maxCap || 4);
+      if (dst.layers.length === 0 && isSrcPure && dst.special !== 'color_lock' && dstCap <= (src.maxCap || 4) && !isExactFitEmpty) {
         continue;
       }
-      // 避免杂色倒入单向漏斗瓶
+      // 避免将未凑齐的杂色误倒入单向漏斗瓶
       if (dst.special === 'one_way_in' && dst.layers.length === 0 && srcTopSame < dstCap) {
         continue;
       }
 
       let score = 0;
+      const matchesOpenBag = bags && bags.some((bg) => bg && !bg.locked && bg.color === pourCol && (!bg.packedBottle || bg.packedBottle === ''));
+      if (matchesOpenBag) score += 68;
+      if (dst.special === 'ice_base' || dst.special === 'stone_base') score += 65;
+      if (dst.special === 'color_lock' && dst.requiredColor === pourCol) score += 75;
+      if (dst.special === 'one_way_in') score += 55;
+
       if (dst.layers.length > 0) {
         score += 100;
         // 一次性转移全部同色
@@ -194,8 +196,8 @@ export function findBestPourMove(bottles: Bottle[]): { srcIdx: number; dstIdx: n
           score += 90;
         }
       } else {
-        // 目标为空瓶
-        score += 25;
+        // 目标为空瓶：精准满塞给予最高优先级 +220 分！
+        score += isExactFitEmpty ? 220 : 25;
         if (src.mysteryCount && src.mysteryCount > 0 && src.layers.length - srcTopSame <= src.mysteryCount) score += 45;
         if (new Set(src.layers).size > 1) score += 20;
       }

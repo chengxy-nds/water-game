@@ -13,3 +13,11 @@ const cocosLogicPath = 'E:/GithubProjects/water-game-cocos/assets/scripts/core/w
 const cocosLogic = workspaceLogic.replace("../types/game", "./types");
 fs.writeFileSync(cocosLogicPath, cocosLogic, 'utf-8');
 console.log('✓ Synced waterSortLogic.ts to Cocos');
+// 3. 同步 levelGenerator.ts
+const workspaceLevels = fs.readFileSync(path.join(__dirname, '../src/data/levelGenerator.ts'), 'utf-8');
+const cocosLevelsPath = 'E:/GithubProjects/water-game-cocos/assets/scripts/core/levelGenerator.ts';
+const cocosLevels = workspaceLevels
+  .replace("../types/game", "./types")
+  .replace("../constants/colors", "./colors");
+fs.writeFileSync(cocosLevelsPath, cocosLevels, 'utf-8');
+console.log('✓ Synced levelGenerator.ts to Cocos');

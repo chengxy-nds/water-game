@@ -226,16 +226,16 @@
       font-family: "Fredoka", "Quicksand", "SF Pro Rounded", ui-rounded, "Hiragino Maru Gothic ProN", "Rounded Mplus 1c", "YouYuan", "幼圆", "PingFang SC", "Microsoft YaHei", sans-serif;
     }
     .zen-big-num {
-      font-family: "Fredoka", "Quicksand", "SF Pro Rounded", ui-rounded, sans-serif;
-      font-size: clamp(30px, 4.5vh, 38px);
-      font-weight: 700;
+      font-family: "Fredoka", "Quicksand", "SF Pro Rounded", ui-rounded, "PingFang SC", "Microsoft YaHei", sans-serif;
+      font-size: clamp(28px, 4.4vh, 36px);
+      font-weight: 800;
       line-height: 1;
-      letter-spacing: 0.5px;
+      letter-spacing: 1.5px;
       color: #ffffff;
       -webkit-text-stroke: 0px transparent;
       text-shadow:
-        0 2px 6px rgba(115, 72, 16, 0.30),
-        0 0 12px rgba(255, 245, 200, 0.18);
+        0 2.5px 7px rgba(110, 68, 14, 0.34),
+        0 0 14px rgba(255, 245, 200, 0.20);
       position: relative;
       z-index: 2;
       white-space: nowrap;
@@ -258,12 +258,12 @@
       grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: clamp(12px, 3.2vw, 18px);
       padding: 2px 12px 0;
-      height: clamp(104px, 16.8dvh, 136px);
+      height: clamp(98px, 15.8dvh, 128px);
       align-items: end;
       justify-items: center;
       flex-shrink: 0;
       position: relative;
-      z-index: 10;
+      z-index: 6;
       min-width: 0;
     }
     .bags-stage.hidden { display: none !important; }
@@ -279,7 +279,7 @@
       align-items: flex-end;
       justify-content: center;
       cursor: pointer;
-      transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+      transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
     .bag-slot svg {
       width: 100%;
@@ -289,32 +289,32 @@
       display: block;
       overflow: visible;
     }
-    .bag-slot.packing-bounce { animation: bagPackBounce 0.46s cubic-bezier(0.34, 1.56, 0.64, 1); }
+    .bag-slot.packing-bounce { animation: bagPackBounce 0.26s cubic-bezier(0.34, 1.56, 0.64, 1); }
     @keyframes bagPackBounce {
       0% { transform: scale(1); }
-      32% { transform: scale(1.13, 0.89) translateY(5px); }
-      68% { transform: scale(0.96, 1.06) translateY(-6px); }
+      35% { transform: scale(1.12, 0.90) translateY(4px); }
+      72% { transform: scale(0.97, 1.05) translateY(-4px); }
       100% { transform: scale(1); }
     }
-    .bag-bottle-drop-in { animation: bagBottleSlideIn 0.36s cubic-bezier(0.22, 1.35, 0.5, 1) forwards; }
+    .bag-bottle-drop-in { animation: bagBottleSlideIn 0.22s cubic-bezier(0.22, 1.35, 0.5, 1) forwards; }
     @keyframes bagBottleSlideIn {
       0% { transform: translate(27px, 12px); opacity: 0.4; }
       100% { transform: translate(27px, 45px); opacity: 1; }
     }
     .bag-slot.bag-carry-away {
       transform-origin: 50% 8%;
-      animation: bagCarryAwayAnim 0.56s cubic-bezier(0.32, 0, 0.67, 0) forwards;
+      animation: bagCarryAwayAnim 0.30s cubic-bezier(0.32, 0, 0.67, 0) forwards;
       pointer-events: none;
     }
     @keyframes bagCarryAwayAnim {
       0%   { transform: translateY(0) rotate(0deg) scale(1); opacity: 1; }
-      24%  { transform: translateY(5px) rotate(-7deg) scale(1.03, 0.96); opacity: 1; }
-      54%  { transform: translateY(-34px) rotate(8.5deg) scale(0.97, 1.05); opacity: 0.95; }
-      100% { transform: translateY(-148px) rotate(-5deg) scale(0.84); opacity: 0; }
+      22%  { transform: translateY(3px) rotate(-6deg) scale(1.03, 0.96); opacity: 1; }
+      52%  { transform: translateY(-42px) rotate(7deg) scale(0.97, 1.05); opacity: 0.95; }
+      100% { transform: translateY(-155px) rotate(-5deg) scale(0.84); opacity: 0; }
     }
     .bag-slot.bag-drop-in {
       transform-origin: 50% 100%;
-      animation: bagDropInAnim 0.48s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+      animation: bagDropInAnim 0.26s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
     }
     @keyframes bagDropInAnim {
       0%   { transform: translateY(-115px) scale(0.86, 1.12); opacity: 0; }
@@ -449,8 +449,9 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: clamp(4px, 1.2dvh, 12px) clamp(2px, 1vw, 6px) clamp(8px, 1.8dvh, 16px);
+      padding: clamp(8px, 1.6dvh, 16px) clamp(2px, 1vw, 6px) clamp(8px, 1.8dvh, 16px);
       position: relative;
+      z-index: 30;
       overflow: visible;
     }
 
@@ -464,8 +465,8 @@
       grid-template-columns: repeat(6, minmax(0, 1fr));
       grid-template-rows: repeat(2, auto);
       column-gap: clamp(5px, 1.5vw, 9px);
-      row-gap: clamp(22px, 4.2dvh, 38px);
-      padding: 2px 2px;
+      row-gap: clamp(36px, 6.4dvh, 52px);
+      padding: 16px 2px 18px;
       align-content: center;
       align-items: end;
       justify-items: center;
@@ -475,21 +476,28 @@
       transform: scale(0.90);
       transform-origin: center center;
     }
+    .bottles-grid.layout-dynamic-12 {
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      grid-template-rows: repeat(2, auto);
+      column-gap: clamp(5px, 1.5vw, 9px);
+      row-gap: clamp(38px, 6.6dvh, 54px);
+      padding: 18px 2px 20px;
+    }
     .bottles-grid.layout-5col { grid-template-columns: repeat(5, minmax(0, 1fr)); column-gap: clamp(7px, 2vw, 12px); }
-    .bottles-grid.layout-varied { grid-template-columns: repeat(6, minmax(0, 1fr)); grid-template-rows: repeat(2, auto); row-gap: clamp(18px, 3.4dvh, 30px); }
-    .bottles-grid.layout-tall8 { grid-template-columns: repeat(7, minmax(0, 1fr)); grid-template-rows: auto; column-gap: clamp(3px, 1vw, 6px); align-items: center; padding: 4px 1px; }
-    .bottles-grid.layout-cat-boss { grid-template-columns: repeat(7, minmax(0, 1fr)); grid-template-rows: repeat(2, auto); column-gap: clamp(3px, 1vw, 6px); row-gap: clamp(16px, 3.2dvh, 28px); align-items: center; }
-    .bottles-grid.layout-21 { width: calc(100% + 10px); margin-left: -5px; margin-right: -5px; grid-template-columns: repeat(7, minmax(0, 1fr)); grid-template-rows: repeat(3, auto); column-gap: 1px; row-gap: clamp(5px, 1.0dvh, 10px); padding: 0; }
+    .bottles-grid.layout-varied { grid-template-columns: repeat(6, minmax(0, 1fr)); grid-template-rows: repeat(2, auto); row-gap: clamp(36px, 6.0dvh, 50px); padding: 16px 2px 18px; }
+    .bottles-grid.layout-tall8 { grid-template-columns: repeat(7, minmax(0, 1fr)); grid-template-rows: auto; column-gap: clamp(3px, 1vw, 6px); align-items: center; padding: 14px 1px; }
+    .bottles-grid.layout-cat-boss { grid-template-columns: repeat(7, minmax(0, 1fr)); grid-template-rows: repeat(2, auto); column-gap: clamp(3px, 1vw, 6px); row-gap: clamp(32px, 5.4dvh, 44px); align-items: center; padding: 14px 2px; }
+    .bottles-grid.layout-21 { width: calc(100% + 10px); margin-left: -5px; margin-right: -5px; grid-template-columns: repeat(7, minmax(0, 1fr)); grid-template-rows: repeat(3, auto); column-gap: 1px; row-gap: clamp(16px, 2.6dvh, 24px); padding: 6px 0; }
 
+    /* 关键修复：将 .bottle-slot 的宽度与高度严格锁定为 67:204 黄金比例，绝不因 max-height 截断导致瓶身变窄而垫子偏宽！ */
     .bottle-slot {
+      --slot-max-h: clamp(132px, 24.5dvh, 186px);
       position: relative;
-      width: 100%;
-      max-width: 72px;
+      width: min(100%, 62px, calc(var(--slot-max-h) * 67 / 204));
       min-width: 0;
       min-height: 0;
       aspect-ratio: 67 / 204;
       height: auto;
-      max-height: clamp(128px, 24.5dvh, 186px);
       display: flex;
       align-items: flex-end;
       justify-content: center;
@@ -498,13 +506,13 @@
       will-change: transform;
       z-index: 20;
     }
-    /* 100% 借鉴原图 image_55d85b 的 3D 粗麻布编织软垫底座（瓶子拿起或倾倒时，软垫稳固留在原位，瓶身脱离软垫升空！） */
+    /* 100% 借鉴原图 image_55d85b 的 3D 粗麻布编织软垫底座（采用与瓶身宽度严格绑定的百分比尺寸，任何屏幕下瓶底与软垫100%严丝合缝！） */
     .burlap-coaster-pad {
       position: absolute;
       left: -10%;
       right: -10%;
-      bottom: -13px;
-      height: 36px;
+      bottom: -7.2%;
+      height: 19.8%;
       pointer-events: none;
       z-index: 1;
       transition: transform 0.24s ease, filter 0.24s ease;
@@ -521,31 +529,80 @@
       display: block;
       overflow: visible;
     }
-    /* 当瓶子被选中拿起时，瓶身向上浮起，而底部的3D麻布软垫保持在桌面原位，且软垫上的接触阴影自然变淡缩小 */
+    /* 当瓶子被选中拿起时：采用弹簧阻尼物理曲线丝滑升空 + 微幅放大 + 柔和呼吸悬浮，软垫留在原位并自然卸力回弹 */
+    @keyframes selectedBottleFloat {
+      0%, 100% { transform: translateY(-22px) scale(1.035); }
+      50%      { transform: translateY(-25.5px) scale(1.042); }
+    }
+    @keyframes coasterLandingSquish {
+      0%   { transform: translateY(0) scale(1, 1); }
+      38%  { transform: translateY(2.2px) scale(1.045, 0.88); }
+      72%  { transform: translateY(-0.8px) scale(0.99, 1.02); }
+      100% { transform: translateY(0) scale(1, 1); }
+    }
+    @keyframes bottleLandingSettle {
+      0%   { transform: translateY(-22px) scale(1.035); }
+      62%  { transform: translateY(2.2px) scale(1.018, 0.975); }
+      84%  { transform: translateY(-1.2px) scale(0.995, 1.008); }
+      100% { transform: translateY(0) scale(1, 1); }
+    }
+    @keyframes bottleShuffleWave {
+      0%   { transform: translateY(0) scale(1) rotate(0deg); }
+      34%  { transform: translateY(-18px) scale(0.95, 1.05) rotate(-5deg); }
+      68%  { transform: translateY(3px) scale(1.03, 0.97) rotate(3deg); }
+      100% { transform: translateY(0) scale(1) rotate(0deg); }
+    }
+    @keyframes bottleUndoRewind {
+      0%   { transform: translateY(0) scale(1); }
+      35%  { transform: translateY(-10px) scale(0.96, 1.04); }
+      75%  { transform: translateY(2px) scale(1.02, 0.98); }
+      100% { transform: translateY(0) scale(1); }
+    }
+    .bottle-slot:not(.selected):not(.pouring-source):active .bottle-svg {
+      transform: translateY(2.5px) scale(1.025, 0.965);
+      transition: transform 0.09s ease-out;
+    }
     .bottle-slot.selected {
       transform: none;
       z-index: 50;
     }
     .bottle-slot.selected .bottle-svg {
-      transform: translateY(-20px);
-      filter: drop-shadow(0 12px 14px rgba(68, 38, 8, 0.34));
+      transform: translateY(-22px) scale(1.035);
+      filter: drop-shadow(0 15px 16px rgba(62, 34, 6, 0.36)) drop-shadow(0 0 10px rgba(255, 238, 155, 0.38));
+      animation: selectedBottleFloat 2.1s ease-in-out 0.34s infinite;
+    }
+    .bottle-slot.settling .bottle-svg {
+      animation: bottleLandingSettle 0.32s cubic-bezier(0.25, 0.96, 0.38, 1) forwards;
+    }
+    .bottle-slot.selected .burlap-coaster-pad {
+      transform: translateY(-1.2px) scale(0.985, 1.02);
+    }
+    .bottle-slot.settling .burlap-coaster-pad {
+      animation: coasterLandingSquish 0.32s cubic-bezier(0.25, 0.96, 0.38, 1);
+    }
+    .bottle-slot.shuffle-wave-anim .bottle-svg {
+      animation: bottleShuffleWave 0.44s cubic-bezier(0.22, 1.28, 0.36, 1);
+    }
+    .bottle-slot.undo-rewind-anim .bottle-svg {
+      animation: bottleUndoRewind 0.34s cubic-bezier(0.22, 1.28, 0.36, 1);
     }
     .bottle-slot.selected .burlap-contact-ao,
     .bottle-slot.pouring-source .burlap-contact-ao {
-      transform: scale(0.62);
-      opacity: 0.28;
+      transform: scale(0.56);
+      opacity: 0.22;
     }
     .bottle-slot.pouring-source .burlap-coaster-pad {
       opacity: 1 !important;
     }
-    .bottles-grid.layout-21 .bottle-slot { max-width: 68px; max-height: clamp(114px, 19.6dvh, 160px); }
+    .bottles-grid.layout-21 .bottle-slot { --slot-max-h: clamp(112px, 19.2dvh, 156px); width: min(100%, 54px, calc(var(--slot-max-h) * 67 / 204)); }
     .bottle-slot.bottle-removed { opacity: 0 !important; visibility: hidden !important; pointer-events: none !important; }
-    .bottle-slot.tall-8-slot { width: 100%; max-width: 72px; aspect-ratio: 78 / 298; height: auto; max-height: clamp(180px, 40dvh, 276px); }
-    .bottle-slot.giant-cat-slot { grid-column: 3 / 6; grid-row: 1 / 3; max-width: 195px; aspect-ratio: 124 / 224; width: 100%; max-height: clamp(198px, 42dvh, 296px); align-self: center; z-index: 30; }
+    .bottle-slot.tall-8-slot { --slot-max-h: clamp(180px, 40dvh, 276px); width: min(100%, 64px, calc(var(--slot-max-h) * 70 / 298)); aspect-ratio: 70 / 298; height: auto; }
+    .bottle-slot.giant-cat-slot { --slot-max-h: clamp(198px, 42dvh, 296px); grid-column: 3 / 6; grid-row: 1 / 3; width: min(100%, 168px, calc(var(--slot-max-h) * 124 / 224)); aspect-ratio: 124 / 224; height: auto; align-self: center; z-index: 30; }
     .bottle-slot.pouring-source { z-index: 100 !important; transition: none !important; filter: drop-shadow(0 10px 16px rgba(55, 30, 6, 0.34)); }
     .bottle-slot.selected .bottle-ground-shadow,
     .bottle-slot.hint-source-slot .bottle-ground-shadow,
-    .bottle-slot.pouring-source .bottle-ground-shadow { opacity: 0 !important; }
+    .bottle-slot.pouring-source .bottle-ground-shadow { opacity: 0 !important; transition: opacity 0.25s ease; }
+    .bottle-ground-shadow { transition: opacity 0.25s ease; }
     .bottle-slot.pouring-source .shoulder-sheen { opacity: 0.14 !important; }
     .bottle-slot.pouring-source .capacity-tag-badge { opacity: 0 !important; transition: opacity 0.12s ease; }
     .bottle-slot.pouring-target { z-index: 85 !important; }
@@ -558,10 +615,13 @@
       max-height: 100%;
       display: block;
       overflow: visible;
-      transition: transform 0.24s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.22s ease;
+      transform-origin: 50% 92%;
+      transition: transform 0.32s cubic-bezier(0.20, 1.38, 0.34, 1), filter 0.26s ease;
+      will-change: transform, filter;
     }
     .bottle-slot.pouring-source .bottle-svg {
       transition: none !important;
+      animation: none !important;
     }
 
     /* 舞台底部两侧的轻量辅助按钮：左【速度x2 / 速度升级】，右【主题商店】 */
@@ -632,17 +692,17 @@
 
     /* ==================== 4. 底部 4 枚原图级超椭圆 SVG 玻璃按钮栏（100%对标 image_55d85b 与用户 HTML） ==================== */
     .bottom-dock-wrap {
-      width: 100%;
-      max-width: 400px;
-      margin: 0 auto calc(var(--safe-bottom) + 10px);
-      padding: 2px clamp(18px, 5.2vw, 28px) 6px;
+      width: auto;
+      max-width: 96vw;
+      margin: 2px auto calc(var(--safe-bottom) + 12px);
+      padding: 2px 12px 6px;
       background: transparent;
       border: none;
       box-shadow: none;
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      gap: clamp(14px, 4.2vw, 26px);
+      justify-content: center;
+      gap: clamp(11px, 3.0vw, 16px);
       height: auto;
       flex-shrink: 0;
       position: relative;
@@ -681,8 +741,8 @@
       -webkit-tap-highlight-color: transparent;
     }
     .svg-btn-bottom {
-      width: clamp(54px, 7.8vh, 68px);
-      height: clamp(54px, 7.8vh, 68px);
+      width: clamp(62px, 8.6vh, 74px);
+      height: clamp(62px, 8.6vh, 74px);
       display: block;
       transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.14s ease;
     }
@@ -784,25 +844,42 @@
     .modal-mask {
       position: fixed;
       inset: 0;
-      background: rgba(44, 30, 12, 0.46);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
+      background: rgba(44, 30, 12, 0.0);
+      backdrop-filter: blur(0px);
+      -webkit-backdrop-filter: blur(0px);
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       z-index: 160;
       opacity: 0;
+      visibility: hidden;
       pointer-events: none;
-      transition: opacity 0.24s ease;
+      transition:
+        opacity 0.30s cubic-bezier(0.22, 1, 0.36, 1),
+        background 0.30s cubic-bezier(0.22, 1, 0.36, 1),
+        backdrop-filter 0.30s cubic-bezier(0.22, 1, 0.36, 1),
+        -webkit-backdrop-filter 0.30s cubic-bezier(0.22, 1, 0.36, 1),
+        visibility 0s linear 0.30s;
       padding: 14px;
+      perspective: 900px;
     }
     .modal-mask.show {
       opacity: 1;
+      visibility: visible;
+      background: rgba(44, 30, 12, 0.48);
+      backdrop-filter: blur(11px);
+      -webkit-backdrop-filter: blur(11px);
       pointer-events: auto;
+      transition:
+        opacity 0.30s cubic-bezier(0.22, 1, 0.36, 1),
+        background 0.30s cubic-bezier(0.22, 1, 0.36, 1),
+        backdrop-filter 0.30s cubic-bezier(0.22, 1, 0.36, 1),
+        -webkit-backdrop-filter 0.30s cubic-bezier(0.22, 1, 0.36, 1),
+        visibility 0s linear 0s;
     }
 
-    /* 高定暖象牙磨砂玻璃卡片（告别蓝框卡通感，与晨曦流金主页浑然一体） */
+    /* 高定暖象牙磨砂玻璃卡片（带3D阻尼弹簧升起与内部元素级联入场） */
     .casual-modal-card {
       position: relative;
       width: min(90vw, 352px);
@@ -819,11 +896,110 @@
         0 4px 12px rgba(68, 38, 6, 0.16),
         inset 0 2px 3px rgba(255, 255, 255, 0.92),
         inset 0 -3px 6px rgba(190, 150, 92, 0.22);
-      transform: scale(0.92);
-      transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+      transform: translateY(24px) scale(0.86) rotateX(6deg);
+      opacity: 0;
+      transition:
+        transform 0.38s cubic-bezier(0.20, 1.34, 0.34, 1),
+        opacity 0.26s cubic-bezier(0.22, 1, 0.36, 1);
+      will-change: transform, opacity;
     }
     .modal-mask.show .casual-modal-card {
-      transform: scale(1);
+      transform: translateY(0) scale(1) rotateX(0deg);
+      opacity: 1;
+    }
+    .pause-bottom-actions {
+      transform: translateY(18px) scale(0.92);
+      opacity: 0;
+      transition:
+        transform 0.40s cubic-bezier(0.20, 1.32, 0.34, 1) 0.06s,
+        opacity 0.28s ease 0.06s;
+    }
+    .modal-mask.show .pause-bottom-actions {
+      transform: translateY(0) scale(1);
+      opacity: 1;
+    }
+    /* 弹窗内子项级联浮入动画 */
+    @keyframes modalItemCascadeIn {
+      0%   { opacity: 0; transform: translateY(12px) scale(0.95); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .modal-mask.show .pause-setting-row:nth-of-type(1) { animation: modalItemCascadeIn 0.34s cubic-bezier(0.22, 1.25, 0.36, 1) 0.03s both; }
+    .modal-mask.show .pause-setting-row:nth-of-type(2) { animation: modalItemCascadeIn 0.34s cubic-bezier(0.22, 1.25, 0.36, 1) 0.06s both; }
+    .modal-mask.show .pause-setting-row:nth-of-type(3) { animation: modalItemCascadeIn 0.34s cubic-bezier(0.22, 1.25, 0.36, 1) 0.09s both; }
+    .modal-mask.show .pause-setting-row:nth-of-type(4) { animation: modalItemCascadeIn 0.34s cubic-bezier(0.22, 1.25, 0.36, 1) 0.12s both; }
+    .modal-mask.show .pause-feature-btn:nth-child(1) { animation: modalItemCascadeIn 0.36s cubic-bezier(0.22, 1.32, 0.36, 1) 0.14s both; }
+    .modal-mask.show .pause-feature-btn:nth-child(2) { animation: modalItemCascadeIn 0.36s cubic-bezier(0.22, 1.32, 0.36, 1) 0.17s both; }
+    .modal-mask.show .pause-feature-btn:nth-child(3) { animation: modalItemCascadeIn 0.36s cubic-bezier(0.22, 1.32, 0.36, 1) 0.20s both; }
+    .modal-mask.show .pause-feature-btn:nth-child(4) { animation: modalItemCascadeIn 0.36s cubic-bezier(0.22, 1.32, 0.36, 1) 0.23s both; }
+    .modal-mask.show .win-scorecard { animation: modalItemCascadeIn 0.38s cubic-bezier(0.22, 1.25, 0.36, 1) 0.15s both; }
+    .pause-setting-row {
+      transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1), background 0.2s ease;
+    }
+    .pause-setting-row:active {
+      transform: scale(0.985);
+    }
+    .casual-toggle-knob {
+      transition: left 0.26s cubic-bezier(0.22, 1.48, 0.36, 1), transform 0.18s ease !important;
+    }
+    .casual-toggle:active .casual-toggle-knob {
+      transform: scaleX(1.16) scaleY(0.92);
+    }
+    @keyframes levelCellWaveIn {
+      0%   { opacity: 0; transform: translateY(14px) scale(0.88); }
+      70%  { opacity: 1; transform: translateY(-2px) scale(1.02); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .level-cell {
+      transition: transform 0.18s cubic-bezier(0.22, 1.35, 0.36, 1), box-shadow 0.18s ease, background 0.2s ease !important;
+    }
+    .level-cell:hover {
+      transform: translateY(-2px) scale(1.03);
+      box-shadow: 0 6px 12px rgba(95, 58, 14, 0.16);
+    }
+    .level-cell:active {
+      transform: translateY(1px) scale(0.93) !important;
+    }
+    .level-cell.wave-enter {
+      animation: levelCellWaveIn 0.34s cubic-bezier(0.22, 1.28, 0.36, 1) both;
+    }
+    .chapter-tab-btn {
+      transition: transform 0.18s cubic-bezier(0.22, 1.35, 0.36, 1), background 0.22s ease, color 0.2s ease, box-shadow 0.22s ease;
+    }
+    .chapter-tab-btn:active {
+      transform: scale(0.93);
+    }
+    .shop-item-card {
+      transition: transform 0.20s cubic-bezier(0.22, 1.35, 0.36, 1), box-shadow 0.20s ease, border-color 0.20s ease !important;
+    }
+    .shop-item-card:hover {
+      transform: translateY(-2.5px) scale(1.02);
+      box-shadow: 0 8px 18px rgba(95, 58, 14, 0.18), inset 0 2px 3px #ffffff;
+    }
+    .shop-item-card:active {
+      transform: translateY(1px) scale(0.95) !important;
+    }
+    .shop-item-card.active-theme {
+      border-color: #8aa858;
+      box-shadow: 0 6px 16px rgba(109, 140, 62, 0.24), inset 0 2px 3px #ffffff;
+    }
+    .shop-item-card.shop-wave-enter {
+      animation: levelCellWaveIn 0.36s cubic-bezier(0.22, 1.28, 0.36, 1) both;
+    }
+    @keyframes shopCheckPop {
+      0%   { transform: scale(0.2) rotate(-25deg); opacity: 0; }
+      70%  { transform: scale(1.18) rotate(6deg); opacity: 1; }
+      100% { transform: scale(1) rotate(0deg); opacity: 1; }
+    }
+    .shop-check-badge {
+      animation: shopCheckPop 0.34s cubic-bezier(0.22, 1.45, 0.36, 1) both;
+    }
+    @keyframes badgeBumpAnim {
+      0%   { transform: scale(1); }
+      40%  { transform: scale(1.28); }
+      100% { transform: scale(1); }
+    }
+    .medallion-badge.badge-bump {
+      animation: badgeBumpAnim 0.30s cubic-bezier(0.22, 1.5, 0.36, 1);
     }
 
     /* 高定流金磨砂玻璃标题胶囊（丝滑穹顶反光弧，无粗糙圆点） */
@@ -1587,7 +1763,7 @@
 
     @media (max-height: 700px) {
       .bags-stage { height: 104px; }
-      .bottles-grid { row-gap: clamp(18px, 3.6dvh, 30px); }
+      .bottles-grid { row-gap: clamp(28px, 4.8dvh, 40px); }
       .bottles-grid.layout-21 { row-gap: clamp(6px, 1.2dvh, 12px); }
       .bottom-dock-wrap { padding: 2px 16px 20px; margin-bottom: 6px; }
     }
@@ -1647,8 +1823,8 @@
       z-index: 65;
     }
     .bottle-slot.hint-source-slot .bottle-svg {
-      transform: translateY(-16px);
-      filter: drop-shadow(0 0 10px rgba(250, 204, 21, 0.85)) drop-shadow(0 8px 12px rgba(68, 38, 8, 0.3));
+      transform: translateY(-22px) scale(1.035);
+      filter: drop-shadow(0 0 11px rgba(250, 204, 21, 0.88)) drop-shadow(0 14px 16px rgba(68, 38, 8, 0.36));
     }
     .bottle-slot.hint-target-slot {
       filter: drop-shadow(0 0 12px rgba(56, 189, 248, 0.95)) drop-shadow(0 8px 12px rgba(0, 0, 0, 0.55));
@@ -1684,15 +1860,15 @@
     /* 与晨曦流金磨砂玻璃主题完全统一的瓶顶轻提示气泡（暖琥珀香槟磨砂玻璃质感） */
     .bottle-reject-callout {
       position: absolute;
-      top: -18px;
+      top: -22px;
       left: 50%;
       transform: translateX(-50%);
-      background: linear-gradient(160deg, rgba(255, 250, 236, 0.95) 0%, rgba(242, 225, 192, 0.95) 100%);
-      border: 1.5px solid rgba(255, 255, 255, 0.92);
+      background: linear-gradient(160deg, rgba(255, 252, 242, 0.97) 0%, rgba(245, 228, 195, 0.97) 100%);
+      border: 1.8px solid rgba(255, 255, 255, 0.96);
       border-radius: 999px;
-      padding: 4px 11px;
-      font-size: 11px;
-      font-weight: 800;
+      padding: 5px 13px;
+      font-size: 13.5px;
+      font-weight: 900;
       color: #5c3d18;
       letter-spacing: 0.3px;
       text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);
@@ -1728,6 +1904,170 @@
       78%  { opacity: 1; transform: translateX(-50%) translateY(-2px) scale(1); }
       100% { opacity: 0; transform: translateX(-50%) translateY(-10px) scale(0.9); }
     }
+
+    /* ==================== 100% 复刻参考图2 (IMG_6674) 的无边框悬浮舞台式【解锁新玩法】庆典层 ==================== */
+    #mechanic-modal-mask {
+      background: radial-gradient(circle at 50% 44%, rgba(42, 30, 18, 0.68) 0%, rgba(12, 9, 18, 0.84) 100%);
+      backdrop-filter: blur(7px);
+      -webkit-backdrop-filter: blur(7px);
+      cursor: pointer;
+    }
+    .mech-ceremony-wrap {
+      position: relative;
+      width: min(94vw, 390px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 8px 6px;
+      transform: scale(0.86);
+      transition: transform 0.34s cubic-bezier(0.34, 1.56, 0.64, 1);
+      pointer-events: none;
+    }
+    #mechanic-modal-mask.show .mech-ceremony-wrap {
+      transform: scale(1);
+    }
+    .mech-ribbon-header {
+      position: relative;
+      width: min(92vw, 356px);
+      height: 112px;
+      margin-bottom: -8px;
+      z-index: 6;
+      filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.42));
+      animation: mechRibbonFloat 3s ease-in-out infinite;
+    }
+    @keyframes mechRibbonFloat {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-4px); }
+    }
+    .mech-open-spotlight {
+      position: relative;
+      width: 280px;
+      height: 256px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto;
+      z-index: 4;
+    }
+    /* 图2同款：开放式暖金放射神光束（无方框边界，自然向四周羽化消融） */
+    .mech-open-rays {
+      position: absolute;
+      width: 320px;
+      height: 320px;
+      left: 50%;
+      top: 50%;
+      margin-left: -160px;
+      margin-top: -160px;
+      background: conic-gradient(
+        from 0deg,
+        rgba(255, 238, 155, 0.55) 0deg,
+        rgba(255, 238, 155, 0.0) 14deg,
+        rgba(255, 215, 95, 0.42) 28deg,
+        rgba(255, 238, 155, 0.0) 44deg,
+        rgba(255, 238, 155, 0.58) 60deg,
+        rgba(255, 238, 155, 0.0) 76deg,
+        rgba(255, 215, 95, 0.42) 92deg,
+        rgba(255, 238, 155, 0.0) 108deg,
+        rgba(255, 238, 155, 0.55) 124deg,
+        rgba(255, 238, 155, 0.0) 140deg,
+        rgba(255, 215, 95, 0.45) 156deg,
+        rgba(255, 238, 155, 0.0) 172deg,
+        rgba(255, 238, 155, 0.55) 188deg,
+        rgba(255, 238, 155, 0.0) 204deg,
+        rgba(255, 215, 95, 0.42) 220deg,
+        rgba(255, 238, 155, 0.0) 236deg,
+        rgba(255, 238, 155, 0.58) 252deg,
+        rgba(255, 238, 155, 0.0) 268deg,
+        rgba(255, 215, 95, 0.42) 284deg,
+        rgba(255, 238, 155, 0.0) 300deg,
+        rgba(255, 238, 155, 0.55) 316deg,
+        rgba(255, 238, 155, 0.0) 332deg,
+        rgba(255, 215, 95, 0.45) 348deg,
+        rgba(255, 238, 155, 0.0) 360deg
+      );
+      -webkit-mask-image: radial-gradient(circle at center, rgba(0,0,0,1) 8%, rgba(0,0,0,0.75) 36%, rgba(0,0,0,0) 68%);
+      mask-image: radial-gradient(circle at center, rgba(0,0,0,1) 8%, rgba(0,0,0,0.75) 36%, rgba(0,0,0,0) 68%);
+      animation: smoothGodRaysSpin 20s linear infinite;
+      pointer-events: none;
+    }
+    .mech-open-glow-core {
+      position: absolute;
+      width: 210px;
+      height: 210px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255, 244, 175, 0.72) 0%, rgba(255, 204, 72, 0.28) 46%, rgba(255, 180, 30, 0) 74%);
+      pointer-events: none;
+    }
+    .mech-sparkles-layer {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 3;
+      animation: stageSparkleTwinkle 2.2s ease-in-out infinite;
+    }
+    .mech-bottle-hero {
+      position: relative;
+      z-index: 5;
+      width: 88px;
+      height: 196px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.55)) drop-shadow(0 0 16px rgba(255, 230, 120, 0.45));
+      animation: floatBounce 2.6s ease-in-out infinite;
+    }
+    /* 图2同款：水瓶下方圆润白点指示器 */
+    .mech-carousel-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: #ffffff;
+      box-shadow: 0 0 8px rgba(255, 255, 255, 0.9);
+      margin: 2px 0 14px;
+      z-index: 6;
+    }
+    /* 图2同款：双层金边米白横幅说明条 */
+    .mech-scroll-pill {
+      position: relative;
+      width: min(88vw, 336px);
+      padding: 13px 20px;
+      border-radius: 999px;
+      background: linear-gradient(180deg, #fffdf7 0%, #f9f1df 100%);
+      border: 3.5px solid #f3b14b;
+      outline: 2px solid #a86414;
+      box-shadow:
+        0 8px 22px rgba(0, 0, 0, 0.42),
+        inset 0 2px 4px #ffffff,
+        inset 0 -3px 6px rgba(215, 155, 65, 0.28);
+      font-size: 15px;
+      font-weight: 800;
+      color: #9c5816;
+      line-height: 1.45;
+      text-align: center;
+      letter-spacing: 0.4px;
+      z-index: 6;
+    }
+    .mech-scroll-pill b {
+      color: #c2410c;
+      font-weight: 900;
+    }
+    /* 图2同款：底部「点击任意位置继续」呼吸文字 */
+    .mech-tap-anywhere {
+      margin-top: 26px;
+      font-size: 16px;
+      font-weight: 800;
+      color: #ffffff;
+      letter-spacing: 1px;
+      text-shadow: 0 2px 6px rgba(0, 0, 0, 0.65);
+      animation: tapContinuePulse 1.8s ease-in-out infinite;
+      z-index: 6;
+    }
+    @keyframes tapContinuePulse {
+      0%, 100% { opacity: 0.68; transform: scale(0.98); }
+      50% { opacity: 1; transform: scale(1.03); }
+    }
+
   </style>
 </head>
 <body data-theme="zen_amber">
@@ -1949,7 +2289,7 @@
       <!-- 居中：上方「第 X 关」 + 下方动态进度/剩余步数副标题（点击打开200关选单） -->
       <div class="top-center-group" id="top-center-level-trigger" title="点击打开200关选单">
         <div class="zen-big-num-wrap" id="zen-big-num-wrap">
-          <div class="zen-big-num" id="zen-header-big-num">1</div>
+          <div class="zen-big-num" id="zen-header-big-num">第 1 关</div>
         </div>
         <div class="level-pill" id="level-pill-title">已封存 0/7</div>
       </div>
@@ -2432,21 +2772,98 @@
     </div>
   </div>
 
-  <!-- ==================== 弹窗 F：新特殊瓶解锁预告弹窗 ==================== -->
+  <!-- ==================== 弹窗 F：100%复刻参考图2 (IMG_6674) 悬浮绶带聚光灯【解锁新玩法】展示层 ==================== -->
   <div class="modal-mask" id="mechanic-modal-mask">
-    <div class="casual-modal-card">
-      <div class="casual-header-pill" id="mech-title">新机关解锁</div>
-      <div class="casual-close-btn" id="mech-close-x-btn">
-        <svg width="19" height="19" viewBox="0 0 24 24" stroke="#ffffff" stroke-width="4.8" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>
+    <div class="mech-ceremony-wrap">
+      <!-- 顶部：3D 彩球金星簇拥 + 橙金折叠绶带横幅（复刻图2「解锁新玩法」） -->
+      <div class="mech-ribbon-header">
+        <svg viewBox="0 0 360 115" width="100%" height="100%" style="overflow:visible;">
+          <defs>
+            <linearGradient id="ribbonMainGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="#ffd27d"/>
+              <stop offset="35%" stop-color="#f89c3e"/>
+              <stop offset="100%" stop-color="#e0741e"/>
+            </linearGradient>
+            <linearGradient id="ribbonWingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#f28829"/>
+              <stop offset="100%" stop-color="#c95b10"/>
+            </linearGradient>
+            <radialGradient id="orbPinkGrad" cx="35%" cy="30%" r="65%">
+              <stop offset="0%" stop-color="#ffd6f5"/><stop offset="45%" stop-color="#e879f9"/><stop offset="100%" stop-color="#a21caf"/>
+            </radialGradient>
+            <radialGradient id="orbBlueGrad" cx="35%" cy="30%" r="65%">
+              <stop offset="0%" stop-color="#dbeafe"/><stop offset="45%" stop-color="#60a5fa"/><stop offset="100%" stop-color="#1d4ed8"/>
+            </radialGradient>
+            <radialGradient id="orbCoralGrad" cx="35%" cy="30%" r="65%">
+              <stop offset="0%" stop-color="#ffe4e6"/><stop offset="45%" stop-color="#fb7185"/><stop offset="100%" stop-color="#be123c"/>
+            </radialGradient>
+            <radialGradient id="orbCyanGrad" cx="35%" cy="30%" r="65%">
+              <stop offset="0%" stop-color="#e0f2fe"/><stop offset="45%" stop-color="#38bdf8"/><stop offset="100%" stop-color="#0369a1"/>
+            </radialGradient>
+          </defs>
+
+          <!-- 绶带后方簇拥的 3D 彩色庆典气球与双金星（100%复刻图2顶部元素） -->
+          <circle cx="84" cy="48" r="15" fill="url(#orbCyanGrad)" />
+          <circle cx="110" cy="36" r="22" fill="url(#orbPinkGrad)" />
+          <circle cx="242" cy="34" r="21" fill="url(#orbBlueGrad)" />
+          <circle cx="272" cy="44" r="24" fill="url(#orbCoralGrad)" />
+
+          <!-- 左侧小金星 -->
+          <g transform="translate(142, 34) rotate(-14)">
+            <path d="M0,-18 L5.2,-6 L18,-4.2 L8.5,4.5 L11,17.5 L0,11 L-11,17.5 L-8.5,4.5 L-18,-4.2 L-5.2,-6 Z"
+                  fill="url(#funnelGoldGrad)" stroke="#d97706" stroke-width="2.2" stroke-linejoin="round"/>
+          </g>
+          <!-- 中央大主金星 -->
+          <g transform="translate(194, 24) rotate(8)">
+            <path d="M0,-29 L8.5,-9.5 L29,-6.8 L13.8,7.2 L17.8,28 L0,17.8 L-17.8,28 L-13.8,7.2 L-29,-6.8 L-8.5,-9.5 Z"
+                  fill="url(#funnelGoldGrad)" stroke="#d97706" stroke-width="2.8" stroke-linejoin="round"
+                  style="filter:drop-shadow(0 4px 8px rgba(180, 83, 9, 0.45));"/>
+            <path d="M0,-23 L6,-7.5 L22,-5 L10,5.5 L13,21 L0,13.5" fill="rgba(255,255,255,0.35)"/>
+          </g>
+
+          <!-- 左右两侧燕尾折叠飘带翼 -->
+          <path d="M 22,68 L 78,60 L 78,96 L 22,102 L 38,85 Z" fill="url(#ribbonWingGrad)" stroke="#b45309" stroke-width="2.2" stroke-linejoin="round"/>
+          <polygon points="62,62 78,60 78,96 62,88" fill="#8c3905"/>
+          <path d="M 338,68 L 282,60 L 282,96 L 338,102 L 322,85 Z" fill="url(#ribbonWingGrad)" stroke="#b45309" stroke-width="2.2" stroke-linejoin="round"/>
+          <polygon points="298,62 282,60 282,96 298,88" fill="#8c3905"/>
+
+          <!-- 中央拱起 3D 橙金主绶带 -->
+          <path d="M 56,56 C 110,36 250,36 304,56 L 294,94 C 242,74 118,74 66,94 Z"
+                fill="url(#ribbonMainGrad)" stroke="#c2590a" stroke-width="2.8" stroke-linejoin="round"/>
+          <!-- 绶带内侧金线描边与高光 -->
+          <path d="M 62,60 C 114,41 246,41 298,60" fill="none" stroke="#fff7ed" stroke-width="2.2" stroke-linecap="round" opacity="0.82"/>
+          <path d="M 70,88 C 120,70 240,70 290,88" fill="none" stroke="#fed7aa" stroke-width="1.5" stroke-linecap="round" opacity="0.65"/>
+
+          <!-- 绶带中央标题文字 -->
+          <text id="mech-title" x="180" y="75" text-anchor="middle" fill="#ffffff" font-size="27" font-weight="900"
+                style="letter-spacing: 2px; paint-order: stroke fill; stroke: #b45309; stroke-width: 5.5px; stroke-linejoin: round; filter: drop-shadow(0 2px 2px rgba(120, 45, 5, 0.55));">解锁新玩法</text>
+        </svg>
       </div>
-      <div style="font-size:12px;font-weight:900;color:#ea580c;margin-bottom:6px;" id="mech-badge">✨ 琉璃工坊新典藏 · NEW</div>
-      <div class="pastel-sunburst-box" style="height: 168px;">
-        <div class="pastel-sunburst-rays"></div>
-        <div class="pastel-sunburst-content" id="mech-preview-stage" style="width:96px;height:148px;"></div>
+
+      <!-- 中央：开放式旋转金芒聚光灯 + 四角闪烁星芒 + 新道具水瓶本体 -->
+      <div class="mech-open-spotlight">
+        <div class="mech-open-rays"></div>
+        <div class="mech-open-glow-core"></div>
+        <svg class="mech-sparkles-layer" viewBox="0 0 280 256">
+          <!-- 左上、左下、右上、右下闪烁四角星与五角星 -->
+          <path d="M46,136 L50,124 L54,136 L66,140 L54,144 L50,156 L46,144 L34,140 Z" fill="#fef08a"/>
+          <path d="M226,98 L230,86 L234,98 L246,102 L234,106 L230,118 L226,106 L214,102 Z" fill="#fef08a"/>
+          <path d="M188,184 L191,176 L194,184 L202,187 L194,190 L191,198 L188,190 L180,187 Z" fill="#ffffff"/>
+          <circle cx="72" cy="96" r="4" fill="#fffbeb" opacity="0.85"/>
+          <circle cx="204" cy="146" r="3.5" fill="#fffbeb" opacity="0.85"/>
+          <circle cx="88" cy="176" r="3" fill="#fde047" opacity="0.75"/>
+        </svg>
+        <div class="mech-bottle-hero" id="mech-preview-stage"></div>
       </div>
-      <div style="font-size:13px;font-weight:900;color:#6e491e;margin-bottom:8px;" id="mech-sub">星雾遮蔽 · 倾注破雾显色</div>
-      <div style="background:rgba(235,220,192,0.55);border:1.5px solid rgba(255,255,255,0.85);border-radius:16px;padding:10px 12px;font-size:12.5px;color:#5c3d18;line-height:1.5;text-align:left;margin-bottom:14px;" id="mech-desc"></div>
-      <button class="casual-green-btn" id="mech-close-btn" style="font-size:18px;padding:10px 26px;">明白啦，开始挑战</button>
+
+      <div class="mech-carousel-dot"></div>
+
+      <!-- 底部：图2同款双层金边米白说明横幅 + 点击任意位置继续 -->
+      <div class="mech-scroll-pill" id="mech-desc">倒出顶层药水，即可揭晓下方隐藏的颜色。</div>
+      <div class="mech-tap-anywhere" id="mech-close-btn">点击任意位置继续</div>
+      <!-- 兼容隐藏字段 -->
+      <div id="mech-badge" style="display:none;"></div>
+      <div id="mech-sub" style="display:none;"></div>
     </div>
   </div>
 
@@ -2810,9 +3227,14 @@
         playRealisticPourSound(extraOpts);
       } else if (type === 'select') {
         const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
-        osc.type = 'sine'; osc.frequency.setValueAtTime(580, now); osc.frequency.exponentialRampToValueAtTime(790, now + 0.055);
-        gain.gain.setValueAtTime(0.09, now); gain.gain.exponentialRampToValueAtTime(0.005, now + 0.06);
-        osc.connect(gain).connect(audioCtx.destination); osc.start(now); osc.stop(now + 0.065);
+        osc.type = 'sine'; osc.frequency.setValueAtTime(540, now); osc.frequency.exponentialRampToValueAtTime(810, now + 0.068);
+        gain.gain.setValueAtTime(0.085, now); gain.gain.exponentialRampToValueAtTime(0.004, now + 0.072);
+        osc.connect(gain).connect(audioCtx.destination); osc.start(now); osc.stop(now + 0.076);
+      } else if (type === 'deselect') {
+        const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+        osc.type = 'sine'; osc.frequency.setValueAtTime(640, now); osc.frequency.exponentialRampToValueAtTime(420, now + 0.065);
+        gain.gain.setValueAtTime(0.065, now); gain.gain.exponentialRampToValueAtTime(0.004, now + 0.07);
+        osc.connect(gain).connect(audioCtx.destination); osc.start(now); osc.stop(now + 0.075);
       } else if (type === 'reject_lock') {
         [240, 175].forEach((freq, i) => {
           const osc = audioCtx.createOscillator(), g = audioCtx.createGain();
@@ -3025,35 +3447,74 @@
       return palette.map((_, i) => Array.from({ length: cap }, (__, k) => palette[(i + k * 2 + 1) % n]));
     }
 
-    // 辅助函数：确保开局未锁定的可拿起水瓶中至少存在 2 对相同的顶层明牌颜色（防死锁规范 4）
-    function ensureOpeningPairs(tubes, minPairs = 2) {
-      if (!tubes || tubes.length < 4) return tubes;
-      const countTopPairs = () => {
-        const freq = {};
-        tubes.forEach(t => {
-          if (t && t.length > 0) {
-            const top = t[t.length - 1];
-            freq[top] = (freq[top] || 0) + 1;
+    // 辅助函数：在自由瓶之间建立互不相同的顶层明牌颜色对，并将这两种首发颜色的其余水层优先排布在自由瓶的中上层，
+    // 确保即使存在购物袋严格匹配、冰座或石座，玩家也能顺畅先集满首发购物袋颜色并解锁后续机关！
+    function ensureOpeningPairs(tubes, minPairs = 2, customFreeIndices = null) {
+      if (!tubes || tubes.length < 3) return tubes;
+      const cap = tubes[0].length;
+      const freeIndices = customFreeIndices ? customFreeIndices.slice() : [];
+      if (freeIndices.length === 0) {
+        for (let i = 0; i < tubes.length; i += 2) freeIndices.push(i);
+        for (let i = 1; i < tubes.length; i += 2) freeIndices.push(i);
+      }
+
+      const usedPairColors = new Set();
+      const pairsToMake = Math.min(minPairs, Math.floor(freeIndices.length / 2));
+      for (let step = 0; step < pairsToMake; step++) {
+        const targetBottleIdx = freeIndices[step * 2];
+        const partnerBottleIdx = freeIndices[step * 2 + 1];
+        if (partnerBottleIdx === undefined || partnerBottleIdx >= tubes.length) break;
+
+        let desiredColor = tubes[targetBottleIdx][cap - 1];
+        // 确保第2对与第1对的颜色不同，保证初始2个购物袋颜色互不相同
+        if (usedPairColors.has(desiredColor)) {
+          for (let m = 0; m < tubes.length; m++) {
+            for (let k = 0; k < cap; k++) {
+              const cand = tubes[m][k];
+              if (!usedPairColors.has(cand)) {
+                const tmp = tubes[targetBottleIdx][cap - 1];
+                tubes[targetBottleIdx][cap - 1] = cand;
+                tubes[m][k] = tmp;
+                desiredColor = cand;
+                break;
+              }
+            }
+            if (!usedPairColors.has(desiredColor)) break;
           }
-        });
-        return Object.values(freq).filter(c => c >= 2).length;
-      };
-      for (let step = 0; step < 2 && countTopPairs() < minPairs; step++) {
-        const targetBottleIdx = step * 2;
-        const partnerBottleIdx = step * 2 + 1;
-        if (partnerBottleIdx >= tubes.length) break;
-        const desiredColor = tubes[targetBottleIdx][tubes[targetBottleIdx].length - 1];
-        if (tubes[partnerBottleIdx][tubes[partnerBottleIdx].length - 1] !== desiredColor) {
-          // 在其它管子的非顶层或其它管子中寻找 desiredColor 与 partnerBottleIdx 的顶层互换
+        }
+        usedPairColors.add(desiredColor);
+
+        if (tubes[partnerBottleIdx][cap - 1] !== desiredColor) {
           let swapped = false;
-          for (let m = partnerBottleIdx; m < tubes.length && !swapped; m++) {
-            for (let k = 0; k < tubes[m].length - 1; k++) {
-              if (tubes[m][k] === desiredColor && tubes[m][k] !== tubes[partnerBottleIdx][tubes[partnerBottleIdx].length - 1]) {
-                const tmp = tubes[partnerBottleIdx][tubes[partnerBottleIdx].length - 1];
-                tubes[partnerBottleIdx][tubes[partnerBottleIdx].length - 1] = desiredColor;
+          for (let m = 0; m < tubes.length && !swapped; m++) {
+            if (m === targetBottleIdx) continue;
+            for (let k = 0; k < cap - 1; k++) {
+              if (tubes[m][k] === desiredColor && tubes[m][k] !== tubes[partnerBottleIdx][cap - 1]) {
+                const tmp = tubes[partnerBottleIdx][cap - 1];
+                tubes[partnerBottleIdx][cap - 1] = desiredColor;
                 tubes[m][k] = tmp;
                 swapped = true;
                 break;
+              }
+            }
+          }
+        }
+      }
+
+      // 将第一顺位首发色 (pairColor0) 的其余水层从深底层提升至自由瓶的次顶层 (cap-2)，防止首发袋颜色被死锁在冰座最底层
+      if (cap === 4 && freeIndices.length >= 4) {
+        const pairColor0 = tubes[freeIndices[0]][cap - 1];
+        const freeSet = new Set(freeIndices.slice(0, Math.min(4, freeIndices.length)));
+        for (let m = 0; m < tubes.length; m++) {
+          for (let k = 0; k < cap - 1; k++) {
+            if (tubes[m][k] === pairColor0 && (!freeSet.has(m) || k === 0)) {
+              for (const fIdx of freeIndices.slice(0, 4)) {
+                if (tubes[fIdx][cap - 2] !== pairColor0 && tubes[fIdx][cap - 1] !== pairColor0) {
+                  const tmp = tubes[fIdx][cap - 2];
+                  tubes[fIdx][cap - 2] = pairColor0;
+                  tubes[m][k] = tmp;
+                  break;
+                }
               }
             }
           }
@@ -3064,58 +3525,58 @@
 
     const MECHANIC_INTROS = {
       mystery: {
-        key: 'mystery', badge: '✨ 第 4 关 · 新玩法解锁', title: '❓ 问号盲盒瓶', sub: '倒出顶层水 · 揭开下方颜色',
-        desc: '💡 <b>玩法说明：</b>瓶身下方带有 <b>?</b> 标记。只要把最上面的水倒出来，下面盖住的真实颜色就会立刻显现！',
+        key: 'mystery', title: '解锁新玩法',
+        desc: '倒出顶层药水，即可揭晓下方 <b>?</b> 隐藏的颜色。',
         sampleBottle: () => ({ id: 99, maxCap: 4, layers: ['blue', 'red', 'green'], special: 'none', mysteryCount: 2 })
       },
       giant_cat: {
-        key: 'giant_cat', badge: '🐱 第 5 关 · BOSS挑战', title: '🐱 灵猫大水瓶', sub: '装满 8 层 · 大猫水晶瓶',
-        desc: '💡 <b>玩法说明：</b>中间是一只容量为 <b>8 层</b> 的大猫水瓶，把对应颜色的水全部倒入中间的大猫瓶就能通关！',
+        key: 'giant_cat', title: '解锁新玩法',
+        desc: '将对应颜色的药水全部倒入中央 <b>8层灵猫瓶</b> 即可通关。',
         sampleBottle: () => ({ id: 99, maxCap: 8, isGiantCat: true, catTargetColor: 'pink', layers: ['pink', 'pink', 'pink', 'pink'], special: 'none' })
       },
       ice_base: {
-        key: 'ice_base', badge: '❄️ 第 6 关 · 新机关', title: '❄️ 冰晶凝霜瓶', sub: '同色注入或满瓶共鸣 · 消融凝霜',
-        desc: '💡 <b>玩法说明：</b>瓶身下半部凝结冰霜，暂时不能向外倒水。唯有<b>直接向该瓶注入同色药水</b>，或<b>在场上凑满封存一整瓶药水</b>，才能消融冰霜解锁（随便乱倒其它水瓶不会破冰哦）！',
+        key: 'ice_base', title: '解锁新玩法',
+        desc: '进行 <b>同色药水合并</b> 或装满整瓶，即可震碎瓶底凝霜。',
         sampleBottle: () => ({ id: 99, maxCap: 4, layers: ['yellow', 'blue'], special: 'ice_base', poursToBreak: 2 })
       },
       silk_drape: {
-        key: 'silk_drape', badge: '🧣 第 7 关 · 新机关', title: '🧣 丝绒磨砂封印瓶', sub: '封存满瓶 · 揭开丝绒琉璃罩',
-        desc: '💡 <b>玩法说明：</b>瓶身被皇家丝绒磨砂琉璃笼罩。先将场上其它药水凑满封存达到印章星数，磨砂封印即会碎裂显色！',
+        key: 'silk_drape', title: '解锁新玩法',
+        desc: '打包任意满瓶药水，即可解开 <b>丝绒磨砂封印瓶</b>。',
         sampleBottle: () => ({ id: 99, maxCap: 4, layers: ['red', 'orange', 'yellow', 'blue'], special: 'silk_drape', unlockOrder: 1 })
       },
       varied_height: {
-        key: 'varied_height', badge: '🏺 第 8 关 · 新器型', title: '🏺 高低不同瓶', sub: '高低三阶 · 容量各不同',
-        desc: '💡 <b>玩法说明：</b>桌上同时有 <b>2层矮瓶、4层标准瓶、6层高瓶</b>，小瓶装满也能随时倒入高瓶，非常灵活自由！',
+        key: 'varied_height', title: '解锁新玩法',
+        desc: '包含 <b>2层、4层、6层</b> 三种高度水瓶，集齐同色即自动封存。',
         sampleBottle: () => ({ id: 99, maxCap: 2, layers: ['green', 'green'], special: 'none' })
       },
       tall_8: {
-        key: 'tall_8', badge: '👑 第 9 关 · 新器型', title: '👑 8层超长管瓶', sub: '八层刻度 · 考验布局',
-        desc: '💡 <b>玩法说明：</b>长管瓶容量多达 <b>8 层</b>，需要将同一种颜色的水凑满整整 8 层才能完成，注意多用空瓶周转！',
+        key: 'tall_8', title: '解锁新玩法',
+        desc: '超长皇冠瓶需集满整整 <b>8层同色药水</b> 方可完成封存。',
         sampleBottle: () => ({ id: 99, maxCap: 8, layers: ['red', 'orange', 'yellow', 'green', 'cyan', 'blue'], special: 'none' })
       },
       grand_obstacles: {
-        key: 'grand_obstacles', badge: '🧊 第 10 关 · 综合关卡', title: '🧊 机关大冲关', sub: '冰雕礼袋石座多重挑战',
-        desc: '💡 <b>玩法说明：</b>汇集全冰雕、礼袋包装与石座等多种机关，通过不断倒水和装好礼袋逐个化解通关！',
+        key: 'grand_obstacles', title: '解锁新玩法',
+        desc: '装满并打包指定数量水瓶，即可破除 <b>极寒冰封与磨砂封印</b>。',
         sampleBottle: () => ({ id: 99, maxCap: 4, layers: ['cyan', 'yellow', 'purple', 'red'], special: 'full_ice', unlockOrder: 2 })
       },
       color_lock: {
-        key: 'color_lock', badge: '🔒 第 12 关 · 新机关', title: '🔒 专属色环瓶', sub: '只能倒入与色环相同颜色的水',
-        desc: '💡 <b>玩法说明：</b>瓶口带有颜色宝石环，<b>只能倒入与色环相同颜色的水</b>（瓶里原有的水可以正常往外倒）。',
+        key: 'color_lock', title: '解锁新玩法',
+        desc: '带有专属色标的水瓶，<b>只能倒入对应颜色的药水</b>。',
         sampleBottle: () => ({ id: 99, maxCap: 4, layers: ['blue', 'blue'], special: 'color_lock', requiredColor: 'blue' })
       },
       one_way_in: {
-        key: 'one_way_in', badge: '⏬ 第 16 关 · 新机关', title: '⏬ 单向漏斗瓶', sub: '只能进不能出 · 看准再倒',
-        desc: '💡 <b>玩法说明：</b>瓶口装有漏斗，<b>只能往里倒水，不能向外倒出</b>。看准目标颜色后再倒进去哦！',
+        key: 'one_way_in', title: '解锁新玩法',
+        desc: '瓶口装有单向漏斗，<b>只能往里倒水，不能向外倒出</b>。',
         sampleBottle: () => ({ id: 99, maxCap: 4, layers: ['green', 'green'], special: 'one_way_in' })
       },
       one_way_out: {
-        key: 'one_way_out', badge: '⏫ 第 22 关 · 新机关', title: '⏫ 单向古瓶', sub: '只能出不能进 · 倒空后消失',
-        desc: '💡 <b>玩法说明：</b>该瓶<b>只能向外倒水，不能往里接水</b>；里面的水全部倒空后会自动消失，腾出桌面空间！',
+        key: 'one_way_out', title: '解锁新玩法',
+        desc: '单向古瓶<b>只能向外倒水</b>，排空后自动变为普通空瓶。',
         sampleBottle: () => ({ id: 99, maxCap: 4, layers: ['orange', 'purple', 'cyan'], special: 'one_way_out' })
       },
       hourglass_bomb: {
-        key: 'hourglass_bomb', badge: '⏳ 第 26 关 · 新挑战', title: '⏳ 倒计时沙漏瓶', sub: '归零前倒空或装满整瓶',
-        desc: '💡 <b>玩法说明：</b>瓶身挂有倒计时，每次倒水数字减 1！请在数字变成 0 之前<b>将水倒空或装满整瓶</b>，否则瓶口会被冰冻！',
+        key: 'hourglass_bomb', title: '解锁新玩法',
+        desc: '在怀表倒计时归零前<b>将该瓶倒空或装满</b>，否则瓶口将冰封。',
         sampleBottle: () => ({ id: 99, maxCap: 4, layers: ['red', 'yellow', 'pink'], special: 'none', countdownMoves: 6 })
       }
     };
@@ -3163,11 +3624,13 @@
         cfg.hasBags = true; cfg.optimalMoves = levelNum === 2 ? 19 : 21;
         const pal = COLOR_KEYS.slice().sort(() => rng() - 0.5).slice(0, 8);
         const filled = ensureOpeningPairs(buildVerifiedColorTubes(pal, 4, rng), 2);
+        const bagCol0 = filled[0][3];
+        const bagCol1 = filled.map(t => t[3]).find(c => c !== bagCol0) || pal.find(c => c !== bagCol0);
         cfg.bags = [
-          { slot: 0, color: filled[0][3], locked: false, packedBottle: null },
-          { slot: 1, color: filled[2][3], locked: false, packedBottle: null },
-          { slot: 2, color: filled[4][3], locked: false, packedBottle: null },
-          { slot: 3, color: null,         locked: true,  packedBottle: null }
+          { slot: 0, color: bagCol0, locked: false, packedBottle: null },
+          { slot: 1, color: bagCol1, locked: false, packedBottle: null },
+          { slot: 2, color: null,    locked: true,  packedBottle: null },
+          { slot: 3, color: null,    locked: true,  packedBottle: null }
         ];
         cfg.bottles = () => [
           ...filled.map((layers, idx) => ({ id: idx, maxCap: 4, layers: layers.slice(), special: 'none' })),
@@ -3201,7 +3664,7 @@
         cfg.hasBags = false; cfg.isCatBossLevel = true; cfg.gridClass = 'layout-cat-boss';
         cfg.optimalMoves = 18 + Math.min(8, Math.floor(chapter / 2));
         const subTubes = ensureOpeningPairs(buildVerifiedColorTubes(otherColors, 4, rng), 2);
-        const f0 = [catColorKey, subTubes[0][0], catColorKey, subTubes[0][1]];
+        const f0 = [catColorKey, subTubes[0][0], subTubes[0][1], catColorKey];
         const f1 = [catColorKey, subTubes[1][0], subTubes[1][1], subTubes[1][2]];
         const f2 = [catColorKey, subTubes[2][0], subTubes[2][1], subTubes[2][2]];
         const f3 = [catColorKey, subTubes[3][0], subTubes[3][1], subTubes[0][2]];
@@ -3213,14 +3676,14 @@
 
         cfg.bottles = () => [
           { id: 0, maxCap: 4, layers: f0.slice(), special: 'none', mysteryCount: useMyst },
-          { id: 1, maxCap: 4, layers: f1.slice(), special: useIce ? 'ice_base' : 'none', poursToBreak: useIce ? 2 : 0 },
+          { id: 1, maxCap: 4, layers: f1.slice(), special: useIce ? 'ice_base' : 'none', poursToBreak: useIce ? 1 : 0 },
           { id: 2, maxCap: 8, isGiantCat: true, catTargetColor: catColorKey, layers: [catColorKey, catColorKey], special: 'none' },
           { id: 3, maxCap: 4, layers: f2.slice(), special: 'none', mysteryCount: useMyst },
-          { id: 4, maxCap: 4, layers: f3.slice(), special: 'none', countdownMoves: chapter >= 4 ? 7 : null },
+          { id: 4, maxCap: 4, layers: f3.slice(), special: 'none', countdownMoves: chapter >= 4 ? 9 : null },
           { id: 5, maxCap: 4, layers: f4.slice(), special: chapter >= 2 ? 'stone_base' : 'none', poursToBreak: 2 },
           { id: 6, maxCap: 4, layers: f5.slice(), special: useOutAncient ? 'one_way_out' : 'none' },
           { id: 7, maxCap: 4, layers: [], special: 'none' },
-          { id: 8, maxCap: 4, layers: [], special: useOutAncient ? 'none' : 'ad_cam' }
+          { id: 8, maxCap: 4, layers: [], special: 'none' }
         ];
         return cfg;
       }
@@ -3236,16 +3699,17 @@
         const c2A = shuffledAll[0], c2B = shuffledAll[1];
         const c4A = shuffledAll[2], c4B = shuffledAll[3], c4C = shuffledAll[4];
         const c6A = shuffledAll[5], c6B = shuffledAll[6];
-        const tubes4 = ensureOpeningPairs(buildVerifiedColorTubes([c4A, c4B, c4C], 4, rng), 1);
+        const tubes4 = ensureOpeningPairs(buildVerifiedColorTubes([c4A, c4B, c4C], 4, rng), 1, [0, 2, 1]);
         const tubes6 = buildVerifiedColorTubes([c6A, c6B], 6, rng);
         const lockCol4 = tubes4[0][3] || c4A;
         const useColorLockHere = (pos === 3 && chapter >= 2);
         const useFunnelAndBombHere = (pos === 8 && levelNum >= 28);
 
+        // 铁律：绝不在装满杂色的瓶(B7)上挂 color_lock！将 color_lock 挂在空瓶 B9 上，并在异形色环局开放 B11 为免费空瓶，确保100%可解！
         cfg.bottles = () => [
           { id: 0,  maxCap: 2, layers: [c2A, c2B], special: 'none' },
-          { id: 1,  maxCap: 6, layers: tubes6[0].slice(0, 5), special: 'ice_base', poursToBreak: 2 },
-          { id: 2,  maxCap: 4, layers: tubes4[0].slice(), special: 'none', mysteryCount: 1, countdownMoves: useFunnelAndBombHere ? 7 : null },
+          { id: 1,  maxCap: 6, layers: tubes6[0].slice(0, 5), special: 'ice_base', poursToBreak: 1 },
+          { id: 2,  maxCap: 4, layers: tubes4[0].slice(), special: 'none', mysteryCount: useFunnelAndBombHere ? 0 : 1, countdownMoves: useFunnelAndBombHere ? 9 : null },
           { id: 3,  maxCap: 6, layers: tubes6[1].slice(0, 5), special: 'none', mysteryCount: 2 },
           { id: 4,  maxCap: 2, layers: [c2B, c2A], special: 'none' },
           { id: 5,  maxCap: 4, layers: tubes4[1].slice(), special: 'stone_base', poursToBreak: 2 },
@@ -3254,29 +3718,45 @@
           { id: 8,  maxCap: 6, layers: [tubes6[0][5], tubes6[1][5]], special: 'none' },
           { id: 9,  maxCap: 4, layers: [], special: useColorLockHere ? 'color_lock' : 'none', requiredColor: useColorLockHere ? lockCol4 : null },
           { id: 10, maxCap: 6, layers: [], special: 'none' },
-          { id: 11, maxCap: 4, layers: [], special: 'ad_cam' }
+          { id: 11, maxCap: 4, layers: [], special: useColorLockHere ? 'none' : 'ad_cam' }
         ];
         return cfg;
       }
 
-      // ==================== Pos 9：第二波峰 · 八色皇冠长管瓶（7只8层管 + 专属色环长管） ====================
+      // ==================== Pos 9：第二波峰 · 八色皇冠长管瓶（7只8层管） ====================
       if (pos === 9) {
         cfg.title = `第 ${levelNum} 关 · 皇冠长管瓶`;
-        cfg.shortTag = chapter >= 2 ? '8层+色环' : '8层皇冠管';
+        cfg.shortTag = chapter >= 3 ? '8层+流沙' : '8层皇冠管';
         cfg.hasBags = false; cfg.gridClass = 'layout-tall8';
         cfg.optimalMoves = 24 + Math.min(10, Math.floor(chapter / 2));
         const shuffledAll = COLOR_KEYS.slice().sort(() => rng() - 0.5);
         const tallColors = shuffledAll.slice(0, 5);
-        const tallTubes = ensureOpeningPairs(buildVerifiedColorTubes(tallColors, 8, rng), 2);
-        const lockCol8 = tallTubes[0][7] || tallColors[0];
+        const tallTubes = ensureOpeningPairs(buildVerifiedColorTubes(tallColors, 8, rng), 1, [0, 2, 4]);
+        // 确保第3支自由管 B4 顶层与 B0 次顶层同色，使得首轮合并后立刻衔接第2次合并，100%顺畅破除冰座与石座！
+        const secondColor = tallTubes[0][6];
+        if (tallTubes[4][7] !== secondColor) {
+          for (let m of [0, 2, 4, 1, 3]) {
+            let done = false;
+            for (let k = 0; k < 6; k++) {
+              if (tallTubes[m][k] === secondColor) {
+                const tmp = tallTubes[4][7];
+                tallTubes[4][7] = secondColor;
+                tallTubes[m][k] = tmp;
+                done = true;
+                break;
+              }
+            }
+            if (done) break;
+          }
+        }
 
         cfg.bottles = () => [
           { id: 0, maxCap: 8, layers: tallTubes[0].slice(), special: 'none', mysteryCount: 2 },
-          { id: 1, maxCap: 8, layers: tallTubes[1].slice(), special: 'ice_base', poursToBreak: 2 },
-          { id: 2, maxCap: 8, layers: tallTubes[2].slice(), special: 'none', mysteryCount: 2, countdownMoves: chapter >= 3 ? 8 : null },
-          { id: 3, maxCap: 8, layers: tallTubes[3].slice(), special: 'stone_base', poursToBreak: 3 },
-          { id: 4, maxCap: 8, layers: tallTubes[4].slice(), special: 'none', mysteryCount: 2 },
-          { id: 5, maxCap: 8, layers: [], special: chapter >= 2 ? 'color_lock' : 'none', requiredColor: chapter >= 2 ? lockCol8 : null },
+          { id: 1, maxCap: 8, layers: tallTubes[1].slice(), special: 'ice_base', poursToBreak: 1 },
+          { id: 2, maxCap: 8, layers: tallTubes[2].slice(), special: 'none', mysteryCount: 1, countdownMoves: chapter >= 3 ? 14 : null },
+          { id: 3, maxCap: 8, layers: tallTubes[3].slice(), special: 'stone_base', poursToBreak: 2 },
+          { id: 4, maxCap: 8, layers: tallTubes[4].slice(), special: 'none', mysteryCount: 1 },
+          { id: 5, maxCap: 8, layers: [], special: 'none' },
           { id: 6, maxCap: 8, layers: [], special: 'none' }
         ];
         return cfg;
@@ -3295,7 +3775,7 @@
         cfg.bags = [
           { slot: 0, color: openPalette[0], locked: false, packedBottle: null },
           { slot: 1, color: openPalette[1], locked: false, packedBottle: null },
-          { slot: 2, color: openPalette[2], locked: false, packedBottle: null },
+          { slot: 2, color: null,           locked: true,  packedBottle: null },
           { slot: 3, color: null,           locked: true,  packedBottle: null }
         ];
         const useAdv = chapter >= 2;
@@ -3358,7 +3838,7 @@
       } else if (levelNum === 26) {
         cfg.title = '第 26 关 · 星砂流沙怀表'; cfg.shortTag = '⏳流沙登场'; cfg.hasBags = true;
       } else if (pos === 4) {
-        cfg.moveLimit = cfg.optimalMoves + Math.max(4, 7 - Math.floor(chapter / 4));
+        cfg.moveLimit = cfg.optimalMoves + 18;
         cfg.title = `第 ${levelNum} 关 · ${levelNum >= 24 ? '星晷流沙双限' : '星晷限步局'}`;
         cfg.shortTag = levelNum >= 24 ? `⏳限${cfg.moveLimit}步+流沙` : `✨限${cfg.moveLimit}步`;
       } else if (pos === 2) {
@@ -3372,12 +3852,16 @@
       }
 
       if (cfg.hasBags) {
-        // 防死锁规范 1：优先从当前未锁定且可拿起的 tubesA 顶层颜色中设置初始购物袋颜色
+        // 防死锁规范 1：初始 2 个购物袋颜色必须互不相同，且 100% 选自当前未被封印的 groupAColors 首发色！
+        const bagCol0 = tubesA[0][3] || groupAColors[0];
+        let bagCol1 = (pos === 6 && levelNum >= 16 && tubesA[5][0] !== bagCol0)
+          ? tubesA[5][0]
+          : (tubesA[4][3] !== bagCol0 ? tubesA[4][3] : (groupAColors.find(c => c !== bagCol0) || groupAColors[1]));
         cfg.bags = [
-          { slot: 0, color: tubesA[0][3], locked: false, packedBottle: null },
-          { slot: 1, color: tubesA[2][3], locked: false, packedBottle: null },
-          { slot: 2, color: tubesA[4][3], locked: false, packedBottle: null },
-          { slot: 3, color: null,         locked: true,  packedBottle: null }
+          { slot: 0, color: bagCol0, locked: false, packedBottle: null },
+          { slot: 1, color: bagCol1, locked: false, packedBottle: null },
+          { slot: 2, color: null,    locked: true,  packedBottle: null },
+          { slot: 3, color: null,    locked: true,  packedBottle: null }
         ];
       }
 
@@ -3404,9 +3888,9 @@
         if (levelNum === 6) {
           return [
             { id: 0,  maxCap: 4, layers: tubesA[0].slice(), special: 'none', mysteryCount: 1 },
-            { id: 1,  maxCap: 4, layers: tubesA[1].slice(), special: 'ice_base', poursToBreak: 2 },
+            { id: 1,  maxCap: 4, layers: tubesA[1].slice(), special: 'ice_base', poursToBreak: 1 },
             { id: 2,  maxCap: 4, layers: tubesA[2].slice(), special: 'none', mysteryCount: 1 },
-            { id: 3,  maxCap: 4, layers: tubesA[3].slice(), special: 'ice_base', poursToBreak: 3 },
+            { id: 3,  maxCap: 4, layers: tubesA[3].slice(), special: 'ice_base', poursToBreak: 2 },
             { id: 4,  maxCap: 4, layers: tubesA[4].slice(), special: 'none', mysteryCount: 1 },
             { id: 5,  maxCap: 4, layers: tubesA[5].slice(), special: 'ice_base', poursToBreak: 2 },
             { id: 6,  maxCap: 4, layers: tubesB[0].slice(), special: 'none' },
@@ -3422,9 +3906,9 @@
         if (levelNum === 7) {
           return [
             { id: 0,  maxCap: 4, layers: tubesA[0].slice(), special: 'none', mysteryCount: 1 },
-            { id: 1,  maxCap: 4, layers: tubesA[1].slice(), special: 'ice_base', poursToBreak: 2 },
-            { id: 2,  maxCap: 4, layers: tubesA[2].slice(), special: 'none', mysteryCount: 2 },
-            { id: 3,  maxCap: 4, layers: tubesA[3].slice(), special: 'none', mysteryCount: 2 },
+            { id: 1,  maxCap: 4, layers: tubesA[1].slice(), special: 'ice_base', poursToBreak: 1 },
+            { id: 2,  maxCap: 4, layers: tubesA[2].slice(), special: 'none', mysteryCount: 1 },
+            { id: 3,  maxCap: 4, layers: tubesA[3].slice(), special: 'none', mysteryCount: 1 },
             { id: 4,  maxCap: 4, layers: tubesA[4].slice(), special: 'ice_base', poursToBreak: 2 },
             { id: 5,  maxCap: 4, layers: tubesA[5].slice(), special: 'none' },
             { id: 6,  maxCap: 4, layers: tubesB[0].slice(), special: 'silk_drape', unlockOrder: 1 },
@@ -3440,8 +3924,8 @@
         if (pos === 2 && levelNum !== 22) {
           return [
             { id: 0,  maxCap: 4, layers: tubesA[0].slice(), special: 'none', mysteryCount: 1 },
-            { id: 1,  maxCap: 4, layers: tubesA[1].slice(), special: 'ice_base', poursToBreak: 2 },
-            { id: 2,  maxCap: 4, layers: tubesA[2].slice(), special: 'none', mysteryCount: 2 },
+            { id: 1,  maxCap: 4, layers: tubesA[1].slice(), special: 'ice_base', poursToBreak: 1 },
+            { id: 2,  maxCap: 4, layers: tubesA[2].slice(), special: 'none', mysteryCount: 1 },
             { id: 3,  maxCap: 4, layers: tubesA[3].slice(), special: 'none', mysteryCount: 1 },
             { id: 4,  maxCap: 4, layers: tubesA[4].slice(), special: 'none' },
             { id: 5,  maxCap: 4, layers: tubesA[5].slice(), special: 'none' },
@@ -3458,9 +3942,9 @@
         if (pos === 6 && levelNum >= 16) {
           const hasBombHere = (levelNum >= 26);
           return [
-            { id: 0,  maxCap: 4, layers: tubesA[0].slice(), special: 'none', countdownMoves: hasBombHere ? 7 : null },
+            { id: 0,  maxCap: 4, layers: tubesA[0].slice(), special: 'none', countdownMoves: hasBombHere ? 8 : null },
             { id: 1,  maxCap: 4, layers: tubesA[1].slice(), special: 'none', mysteryCount: 1 },
-            { id: 2,  maxCap: 4, layers: tubesA[2].slice(), special: 'none', mysteryCount: 1, countdownMoves: (levelNum >= 36) ? 8 : null },
+            { id: 2,  maxCap: 4, layers: tubesA[2].slice(), special: 'none', mysteryCount: (levelNum >= 36) ? 0 : 1, countdownMoves: (levelNum >= 36) ? 10 : null },
             { id: 3,  maxCap: 4, layers: tubesA[3].slice(), special: 'none', mysteryCount: 1 },
             { id: 4,  maxCap: 4, layers: tubesA[4].slice(), special: 'none' },
             { id: 5,  maxCap: 4, layers: tubesA[5].slice(1), special: 'none' },
@@ -3473,13 +3957,13 @@
           ];
         }
 
-        // 第 22 关 & Pos 7（levelNum >= 17）：⏫ 单向出水古瓶局（防死锁规范 9：古瓶排空消失，必配足 2 只标准免费空瓶）
+        // 第 22 关 & Pos 7（levelNum >= 17）：⏫ 单向出水古瓶局（消除鸽巢原理死锁：仅 B0 为单向古瓶，B1 破冰仅需1次合并，确保6种颜色拥有充足可接水瓶位！）
         if (levelNum === 22 || (pos === 7 && levelNum >= 17)) {
           return [
             { id: 0,  maxCap: 4, layers: tubesA[0].slice(), special: 'one_way_out' },
-            { id: 1,  maxCap: 4, layers: tubesA[1].slice(), special: 'ice_base', poursToBreak: 2 },
-            { id: 2,  maxCap: 4, layers: tubesA[2].slice(), special: 'one_way_out' },
-            { id: 3,  maxCap: 4, layers: tubesA[3].slice(), special: 'none', mysteryCount: 2 },
+            { id: 1,  maxCap: 4, layers: tubesA[1].slice(), special: 'ice_base', poursToBreak: 1 },
+            { id: 2,  maxCap: 4, layers: tubesA[2].slice(), special: 'none' },
+            { id: 3,  maxCap: 4, layers: tubesA[3].slice(), special: 'none', mysteryCount: 1 },
             { id: 4,  maxCap: 4, layers: tubesA[4].slice(), special: 'none', mysteryCount: 1 },
             { id: 5,  maxCap: 4, layers: tubesA[5].slice(), special: 'none' },
             { id: 6,  maxCap: 4, layers: tubesB[0].slice(), special: 'full_ice', unlockOrder: 1 },
@@ -3495,10 +3979,10 @@
         const useBombInPos4 = (pos === 4 && levelNum >= 24);
         const useAncientInPos1 = (pos === 1 && chapter >= 3);
         return [
-          { id: 0,  maxCap: 4, layers: tubesA[0].slice(), special: useAncientInPos1 ? 'one_way_out' : 'none', mysteryCount: useAncientInPos1 ? 0 : 2, countdownMoves: useBombInPos4 ? 6 : null },
-          { id: 1,  maxCap: 4, layers: tubesA[1].slice(), special: 'none', mysteryCount: 2 },
-          { id: 2,  maxCap: 4, layers: tubesA[2].slice(), special: 'none', mysteryCount: 2, countdownMoves: (useBombInPos4 && chapter >= 4) ? 8 : null },
-          { id: 3,  maxCap: 4, layers: tubesA[3].slice(), special: pos === 4 ? 'stone_base' : 'ice_base', poursToBreak: 2 },
+          { id: 0,  maxCap: 4, layers: tubesA[0].slice(), special: useAncientInPos1 ? 'one_way_out' : 'none', mysteryCount: (useAncientInPos1 || useBombInPos4) ? 0 : 2, countdownMoves: useBombInPos4 ? 8 : null },
+          { id: 1,  maxCap: 4, layers: tubesA[1].slice(), special: 'none', mysteryCount: 1 },
+          { id: 2,  maxCap: 4, layers: tubesA[2].slice(), special: 'none', mysteryCount: (useBombInPos4 && chapter >= 4) ? 0 : 1, countdownMoves: (useBombInPos4 && chapter >= 4) ? 10 : null },
+          { id: 3,  maxCap: 4, layers: tubesA[3].slice(), special: pos === 4 ? 'stone_base' : 'ice_base', poursToBreak: 1 },
           { id: 4,  maxCap: 4, layers: tubesA[4].slice(), special: 'none', mysteryCount: 1 },
           { id: 5,  maxCap: 4, layers: tubesA[5].slice(), special: pos === 4 ? 'stone_base' : 'none', poursToBreak: 2, mysteryCount: 1 },
           { id: 6,  maxCap: 4, layers: tubesB[0].slice(), special: 'none', mysteryCount: 1 },
@@ -3621,8 +4105,111 @@
       selectSloshRaf = requestAnimationFrame(tickSlosh);
     }
 
+    let settleSloshRafMap = {};
     function stopSelectSloshAnimation() {
       if (selectSloshRaf) { cancelAnimationFrame(selectSloshRaf); selectSloshRaf = null; }
+    }
+
+    // 瓶子放下落定时的轻柔余波晃动（模拟瓶底落回麻布软垫时的流体惯性）
+    function startSettleSloshAnimation(bottleIdx, initialAmp = 0.58) {
+      if (bottleIdx === null || bottleIdx === undefined || bottleIdx < 0) return;
+      if (settleSloshRafMap[bottleIdx]) cancelAnimationFrame(settleSloshRafMap[bottleIdx]);
+      const startT = performance.now();
+      function tickSettle(now) {
+        if (selectedIndex === bottleIdx || isAnimating) {
+          delete settleSloshRafMap[bottleIdx];
+          return;
+        }
+        const b = bottles[bottleIdx];
+        const liqGroup = document.getElementById(`liquid-group-${bottleIdx}`);
+        if (!b || b.removed || !liqGroup || b.layers.length === 0) {
+          delete settleSloshRafMap[bottleIdx];
+          return;
+        }
+        const dt = (now - startT) / 1000;
+        const amp = Math.exp(-3.4 * dt) * initialAmp;
+        const phase = dt * 12.8;
+        if (amp < 0.008) {
+          liqGroup.innerHTML = buildLiquidLayersMarkup(b.layers, bottleIdx, {
+            topLayerScale: 1, tiltAngle: 0, mysteryCount: b.mysteryCount || 0,
+            maxCap: b.maxCap || 4, isGiantCat: !!b.isGiantCat, sloshPhase: 0, sloshAmplitude: 0
+          });
+          delete settleSloshRafMap[bottleIdx];
+          return;
+        }
+        liqGroup.innerHTML = buildLiquidLayersMarkup(b.layers, bottleIdx, {
+          topLayerScale: 1, tiltAngle: 0, mysteryCount: b.mysteryCount || 0,
+          maxCap: b.maxCap || 4, isGiantCat: !!b.isGiantCat, sloshPhase: phase, sloshAmplitude: amp
+        });
+        settleSloshRafMap[bottleIdx] = requestAnimationFrame(tickSettle);
+      }
+      settleSloshRafMap[bottleIdx] = requestAnimationFrame(tickSettle);
+    }
+
+    // 原地丝滑更新瓶子选中/放下状态（绝不清空重建 #bottles-grid，从而100%保留 CSS 弹簧过渡动画！）
+    function updateBottleSelectionDOM(prevIdx = null, nextIdx = null) {
+      const gridEl = document.getElementById('bottles-grid');
+      if (!gridEl || gridEl.children.length !== bottles.length) {
+        renderAll();
+        return;
+      }
+      const selB = (nextIdx !== null && bottles[nextIdx]) ? bottles[nextIdx] : null;
+      const selTop = (selB && selB.layers && selB.layers.length > 0) ? selB.layers[selB.layers.length - 1] : null;
+
+      bottles.forEach((b, idx) => {
+        const slot = gridEl.children[idx];
+        if (!slot || b.removed) return;
+
+        // 清除入场动画残留类，避免干扰选中或放下过渡
+        slot.classList.remove('level-enter-anim');
+        slot.style.animationDelay = '';
+
+        const isNowSelected = (nextIdx === idx);
+        const wasSelected = (prevIdx === idx && nextIdx !== idx);
+
+        slot.classList.toggle('selected', isNowSelected);
+
+        if (wasSelected) {
+          slot.classList.remove('settling');
+          void slot.offsetWidth;
+          slot.classList.add('settling');
+          clearTimeout(slot._settleTimer);
+          slot._settleTimer = setTimeout(() => {
+            slot.classList.remove('settling');
+          }, 340);
+          startSettleSloshAnimation(idx, 0.56);
+        } else if (isNowSelected) {
+          slot.classList.remove('settling');
+          clearTimeout(slot._settleTimer);
+        }
+
+        // 更新提示高亮类
+        slot.classList.toggle('hint-source-slot', !!(activeHintPair && activeHintPair.srcIdx === idx));
+        slot.classList.toggle('hint-target-slot', !!(activeHintPair && activeHintPair.dstIdx === idx));
+
+        // 实时更新色环契约瓶的匹配/不匹配光效与盾章描边
+        const isColorLockActive = (nextIdx !== null && nextIdx !== idx && b.special === 'color_lock' && !b.corked && !!selTop);
+        const isMatch = isColorLockActive && (selTop === b.requiredColor);
+        const isMismatch = isColorLockActive && (selTop !== b.requiredColor);
+        slot.classList.toggle('color-lock-match', isMatch);
+        slot.classList.toggle('color-lock-mismatch', isMismatch);
+
+        const shieldGroup = document.getElementById(`color-lock-shield-${idx}`);
+        if (shieldGroup) {
+          const outerPath = shieldGroup.querySelector('path');
+          if (outerPath) {
+            outerPath.setAttribute('stroke', isMatch ? '#4ade80' : (isMismatch ? '#fb7185' : '#ffffff'));
+            outerPath.setAttribute('stroke-width', (isMatch || isMismatch) ? '2.6' : '1.9');
+          }
+        }
+      });
+
+      if (activeHintPair && !isAnimating) {
+        requestAnimationFrame(renderHintGuideOverlay);
+      } else if (!isAnimating) {
+        const fxSvg = document.getElementById('fx-overlay');
+        if (fxSvg) fxSvg.innerHTML = '';
+      }
     }
 
     function renderBagSVG(bag, bagIdx = 0) {
@@ -3816,7 +4403,7 @@
               <path d="M ${leftX},${revYTop.toFixed(2)} L ${rightX},${revYTop.toFixed(2)} L ${rightX},${(revYTop + curtainH).toFixed(2)} A ${rx},${ry} 0 0,1 ${leftX},${(revYTop + curtainH).toFixed(2)} Z" fill="url(#liq-mystery)" opacity="${(1 - revealProgress * 0.75).toFixed(2)}"/>
               <ellipse cx="50" cy="${(revYTop + curtainH).toFixed(2)}" rx="${ringRx.toFixed(1)}" ry="${(ry * 0.75).toFixed(1)}" fill="none" stroke="#fff59d" stroke-width="2.6" opacity="${ringOp.toFixed(2)}"/>
               <g transform="translate(50, ${qCenterY.toFixed(1)}) scale(${qScale.toFixed(2)})" opacity="${qOp.toFixed(2)}">
-                <text x="0" y="0" text-anchor="middle" dominant-baseline="central" fill="#ffffff" font-size="20" font-weight="900">?</text>
+                <text x="0" y="0" text-anchor="middle" dominant-baseline="central" fill="#fffef0" font-size="26" font-weight="900">?</text>
               </g>
             `;
           }
@@ -3825,7 +4412,7 @@
         if (mysteryCount > 0) {
           for (let m = 0; m < Math.min(mysteryCount, layers.length); m++) {
             const qCenterY = bottomY - (m + 0.5) * layerH + ry * 0.92 + (m === 0 ? 1.5 : 0);
-            html += `<g transform="translate(50, ${qCenterY.toFixed(1)})"><text x="0" y="0" text-anchor="middle" dominant-baseline="central" fill="#ffffff" font-size="20" font-weight="900" style="filter: drop-shadow(0 2px 3px rgba(0,0,0,0.92));">?</text></g>`;
+            html += `<g transform="translate(50, ${qCenterY.toFixed(1)})"><text x="0" y="0" text-anchor="middle" dominant-baseline="central" fill="#fffef0" font-size="26" font-weight="900" style="filter: drop-shadow(0 2px 3px rgba(0,0,0,0.92));">?</text></g>`;
           }
         }
 
@@ -4268,138 +4855,129 @@
         underGlassFX += `
           <g>
             <ellipse cx="50" cy="${bBotY + 4}" rx="44" ry="11" fill="url(#purpleVortexGrad)" />
-            <ellipse cx="50" cy="${bBotY + 4}" rx="38" ry="8.5" fill="none" stroke="#e879f9" stroke-width="1.6" stroke-dasharray="22 8" opacity="0.85"/>
-            <ellipse cx="50" cy="${bBotY + 4}" rx="28" ry="5.8" fill="none" stroke="#f0abfc" stroke-width="1.4" stroke-dasharray="14 6" opacity="0.9"/>
+            <ellipse cx="50" cy="${bBotY + 4}" rx="38" ry="8.5" fill="none" stroke="#e879f9" stroke-width="1.8" stroke-dasharray="22 8" opacity="0.88"/>
+            <ellipse cx="50" cy="${bBotY + 4}" rx="28" ry="5.8" fill="none" stroke="#f0abfc" stroke-width="1.5" stroke-dasharray="14 6" opacity="0.92"/>
             <ellipse cx="13" cy="122" rx="5" ry="55" fill="url(#purpleSideGlow)" />
             <ellipse cx="87" cy="122" rx="5" ry="55" fill="url(#purpleSideGlow)" />
           </g>
         `;
         overGlassFX += `
-          <g transform="translate(50, 108) rotate(-14)">
-            <rect x="-15" y="-6" width="30" height="22" rx="4.5" fill="#581c87" stroke="#c084fc" stroke-width="1.2"/>
+          <g transform="translate(50, ${112 + neckOffsetY * 0.4}) rotate(-12) scale(1.28)" style="filter:drop-shadow(0 4px 8px rgba(59, 7, 100, 0.45));">
+            <rect x="-15" y="-6" width="30" height="22" rx="4.5" fill="#581c87" stroke="#e9d5ff" stroke-width="1.4"/>
             <rect x="-15" y="-8" width="30" height="21" rx="4.5" fill="url(#camPurpleFaceGrad)" />
             <g transform="rotate(-10, -15, -8)">
-              <rect x="-15" y="-14" width="30" height="6.5" rx="2" fill="#3b0764" stroke="#e9d5ff" stroke-width="0.8"/>
+              <rect x="-15" y="-14" width="30" height="6.5" rx="2" fill="#3b0764" stroke="#ffffff" stroke-width="0.9"/>
               <polygon points="-11,-14 -6,-14 -9,-7.5 -14,-7.5" fill="#ffffff"/>
               <polygon points="-1,-14 4,-14 1,-7.5 -4,-7.5" fill="#ffffff"/>
               <polygon points="9,-14 14,-14 11,-7.5 6,-7.5" fill="#ffffff"/>
             </g>
-            <polygon points="-4,-3 -4,8 6,2.5" fill="#a3e635" stroke="#365314" stroke-width="0.8" stroke-linejoin="round"/>
+            <polygon points="-4,-3 -4,8 6,2.5" fill="#a3e635" stroke="#365314" stroke-width="0.9" stroke-linejoin="round"/>
           </g>
         `;
       }
 
-      // 高定琉璃机关 1：丝绒磨砂琉璃罩 (silk_drape) —— 严格贴合真实玻璃瓶轮廓，保留玻璃高光柱与火漆金章
+      // 高定琉璃机关 1：丝绒磨砂琉璃罩 (silk_drape) —— 严格贴合真实玻璃瓶轮廓，配醒目大号火漆金章
       if (b.special === 'silk_drape') {
         const leftCnt = Math.max(1, (b.unlockOrder || 1) - packedTotal);
         overGlassFX += `
           <g id="special-cover-${idx}">
             <g clip-path="url(#bclip-${idx})">
               <rect x="14" y="${shoulderTopY}" width="72" height="${bBotY - shoulderTopY + 12}" fill="url(#royalVelvetFrostedGrad)" />
-              <!-- 磨砂玻璃内部斜向丝绒暗纹与玻璃高光柱 -->
               <path d="M 18,75 Q 50,92 82,75 M 18,118 Q 50,135 82,118 M 18,160 Q 50,177 82,160"
-                    fill="none" stroke="rgba(255, 255, 255, 0.16)" stroke-width="1.3" />
-              <rect x="21.0" y="${pillarTopY}" width="5.5" height="${pillarH}" rx="2.7" fill="url(#leftWallSheen)" opacity="0.85" />
-              <rect x="63.0" y="${pillarTopY}" width="10.5" height="${pillarH}" rx="2.4" fill="url(#rightPillarSheen)" opacity="0.85" />
+                    fill="none" stroke="rgba(255, 255, 255, 0.22)" stroke-width="1.5" />
+              <rect x="21.0" y="${pillarTopY}" width="5.5" height="${pillarH}" rx="2.7" fill="url(#leftWallSheen)" opacity="0.88" />
+              <rect x="63.0" y="${pillarTopY}" width="10.5" height="${pillarH}" rx="2.4" fill="url(#rightPillarSheen)" opacity="0.88" />
             </g>
-            <!-- 瓶颈鎏金丝带束环与火漆印章 -->
             <path d="M 35.5,${25.5 + neckOffsetY} A 14.5,3.2 0 0,0 64.5,${25.5 + neckOffsetY}"
-                  fill="none" stroke="url(#funnelGoldGrad)" stroke-width="3.2" stroke-linecap="round" />
-            <g transform="translate(50, ${116 + neckOffsetY * 0.4})" style="filter:drop-shadow(0 3px 6px rgba(10, 18, 42, 0.45));">
-              <circle cx="0" cy="0" r="15" fill="url(#funnelGoldGrad)" stroke="#ffffff" stroke-width="1.3" />
-              <circle cx="0" cy="0" r="11.8" fill="#1e3a8a" stroke="#93c5fd" stroke-width="0.9" />
-              <text x="0" y="4.2" text-anchor="middle" fill="#ffffff" font-size="11.5" font-weight="900">★${leftCnt}</text>
+                  fill="none" stroke="url(#funnelGoldGrad)" stroke-width="3.6" stroke-linecap="round" />
+            <g transform="translate(50, ${114 + neckOffsetY * 0.4})" style="filter:drop-shadow(0 4px 8px rgba(10, 18, 42, 0.55));">
+              <circle cx="0" cy="0" r="21" fill="url(#funnelGoldGrad)" stroke="#ffffff" stroke-width="1.8" />
+              <circle cx="0" cy="0" r="17" fill="#1e3a8a" stroke="#93c5fd" stroke-width="1.2" />
+              <text x="0" y="6.2" text-anchor="middle" fill="#ffffff" font-size="17" font-weight="900">★${leftCnt}</text>
             </g>
           </g>
         `;
       }
 
-      // 高定琉璃机关 2：冰晶凝霜瓶 (ice_base) —— 贴合玻璃瓶身下半部的通透凝霜层与冰裂纹理（告别突兀塑料块）
+      // 高定琉璃机关 2：冰晶凝霜瓶 (ice_base) —— 贴合玻璃瓶身下半部的通透凝霜层 + 醒目大号冰晶菱章
       if (b.special === 'ice_base') {
-        const frostTopY = bBotY - 64;
+        const frostTopY = bBotY - 72;
         overGlassFX += `
           <g id="special-cover-${idx}">
             <g clip-path="url(#bclip-${idx})">
-              <!-- 贴合瓶壁的自然起伏凝霜层 -->
               <path d="M 18,${frostTopY + 8}
-                       Q 29,${frostTopY - 4} 39,${frostTopY + 6}
-                       Q 50,${frostTopY - 6} 62,${frostTopY + 5}
-                       Q 73,${frostTopY - 3} 82,${frostTopY + 7}
+                       Q 29,${frostTopY - 5} 39,${frostTopY + 6}
+                       Q 50,${frostTopY - 7} 62,${frostTopY + 5}
+                       Q 73,${frostTopY - 4} 82,${frostTopY + 7}
                        L 82,${bBotY + 6} L 18,${bBotY + 6} Z"
                     fill="url(#frostGlazeVertGrad)" />
-              <!-- 玻璃内壁冰裂纹与晶莹折光棱面 -->
-              <path d="M 26,${frostTopY + 14} L 35,${frostTopY + 30} L 29,${frostTopY + 48}
-                       M 35,${frostTopY + 30} L 46,${frostTopY + 36}
-                       M 68,${frostTopY + 12} L 59,${frostTopY + 32} L 66,${frostTopY + 52}
-                       M 59,${frostTopY + 32} L 48,${frostTopY + 42}"
-                    fill="none" stroke="rgba(255, 255, 255, 0.78)" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round" />
+              <path d="M 26,${frostTopY + 14} L 35,${frostTopY + 32} L 28,${frostTopY + 52}
+                       M 35,${frostTopY + 32} L 46,${frostTopY + 38}
+                       M 68,${frostTopY + 12} L 59,${frostTopY + 34} L 66,${frostTopY + 54}
+                       M 59,${frostTopY + 34} L 48,${frostTopY + 44}"
+                    fill="none" stroke="rgba(255, 255, 255, 0.85)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
               <path d="M 18,${frostTopY + 8}
-                       Q 29,${frostTopY - 4} 39,${frostTopY + 6}
-                       Q 50,${frostTopY - 6} 62,${frostTopY + 5}
-                       Q 73,${frostTopY - 3} 82,${frostTopY + 7}"
-                    fill="none" stroke="#ffffff" stroke-width="1.6" stroke-linecap="round" opacity="0.9" />
+                       Q 29,${frostTopY - 5} 39,${frostTopY + 6}
+                       Q 50,${frostTopY - 7} 62,${frostTopY + 5}
+                       Q 73,${frostTopY - 4} 82,${frostTopY + 7}"
+                    fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" opacity="0.95" />
             </g>
-            <!-- 瓶底外沿纤巧冰凌晶环与半透明冰晶菱章 -->
             <path d="M 17.8,${bBotY + 1.5} A 32.2,8.8 0 0,0 82.2,${bBotY + 1.5}"
-                  fill="none" stroke="#bae6fd" stroke-width="2.2" stroke-linecap="round" />
-            <g transform="translate(50, ${bBotY - 24})" style="filter:drop-shadow(0 2px 5px rgba(3, 105, 161, 0.45));">
-              <polygon points="0,-13 13,0 0,13 -13,0" fill="rgba(12, 74, 110, 0.78)" stroke="#ffffff" stroke-width="1.4" stroke-linejoin="round"/>
-              <text x="0" y="4.2" text-anchor="middle" fill="#e0f2fe" font-size="11.5" font-weight="900">${b.poursToBreak || 1}</text>
+                  fill="none" stroke="#bae6fd" stroke-width="2.6" stroke-linecap="round" />
+            <g transform="translate(50, ${bBotY - 28})" style="filter:drop-shadow(0 3px 7px rgba(3, 105, 161, 0.55));">
+              <polygon points="0,-20 20,0 0,20 -20,0" fill="rgba(7, 89, 133, 0.90)" stroke="#ffffff" stroke-width="2.0" stroke-linejoin="round"/>
+              <polygon points="0,-15 15,0 0,15 -15,0" fill="none" stroke="#7dd3fc" stroke-width="1.0" stroke-linejoin="round"/>
+              <text x="0" y="6.2" text-anchor="middle" fill="#ffffff" font-size="18" font-weight="900">${b.poursToBreak || 1}</text>
             </g>
           </g>
         `;
       }
 
-      // 高定琉璃机关 3：极寒冰封琉璃瓶 (full_ice) —— 100%贴合玻璃瓶身曲线的冰晶通透折射层
+      // 高定琉璃机关 3：极寒冰封琉璃瓶 (full_ice) —— 100%贴合玻璃瓶身曲线的冰晶通透折射层 + 醒目大号冰章
       if (b.special === 'full_ice') {
         const leftCnt = Math.max(1, (b.unlockOrder || 1) - packedTotal);
         overGlassFX += `
           <g id="special-cover-${idx}">
             <g clip-path="url(#bclip-${idx})">
               <rect x="14" y="${neckLipTopY}" width="72" height="${bBotY - neckLipTopY + 12}" fill="url(#fullFrostGlassGrad)" />
-              <!-- 内部斜向冰晶折射光束与冰裂纹 -->
-              <polygon points="18,65 82,42 82,68 18,91" fill="rgba(255, 255, 255, 0.28)" />
-              <polygon points="18,125 82,102 82,120 18,143" fill="rgba(255, 255, 255, 0.22)" />
+              <polygon points="18,65 82,42 82,68 18,91" fill="rgba(255, 255, 255, 0.30)" />
+              <polygon points="18,125 82,102 82,120 18,143" fill="rgba(255, 255, 255, 0.24)" />
               <path d="M 28,56 L 42,78 L 34,104 M 68,82 L 54,108 L 64,138"
-                    fill="none" stroke="rgba(255, 255, 255, 0.82)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                    fill="none" stroke="rgba(255, 255, 255, 0.85)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" />
               <rect x="63.0" y="${pillarTopY}" width="10.5" height="${pillarH}" rx="2.4" fill="url(#rightPillarSheen)" opacity="0.9" />
             </g>
-            <g transform="translate(50, ${116 + neckOffsetY * 0.4})" style="filter:drop-shadow(0 3px 6px rgba(3, 105, 161, 0.48));">
-              <polygon points="0,-15 15,0 0,15 -15,0" fill="rgba(7, 89, 133, 0.86)" stroke="#ffffff" stroke-width="1.5" stroke-linejoin="round"/>
-              <text x="0" y="4.2" text-anchor="middle" fill="#ffffff" font-size="11.5" font-weight="900">❄${leftCnt}</text>
+            <g transform="translate(50, ${114 + neckOffsetY * 0.4})" style="filter:drop-shadow(0 4px 8px rgba(3, 105, 161, 0.55));">
+              <polygon points="0,-22 22,0 0,22 -22,0" fill="rgba(7, 89, 133, 0.92)" stroke="#ffffff" stroke-width="2.0" stroke-linejoin="round"/>
+              <text x="0" y="6.2" text-anchor="middle" fill="#ffffff" font-size="16.5" font-weight="900">❄${leftCnt}</text>
             </g>
           </g>
         `;
       }
 
-      // 高定琉璃机关 4：黑曜鎏金箍瓶 (stone_base) —— 顺应圆柱玻璃瓶身弧度的双道3D鎏金黑曜环箍（取代粗糙褐色石头块）
+      // 高定琉璃机关 4：黑曜鎏金箍瓶 (stone_base) —— 顺应圆柱玻璃瓶身弧度的双道3D鎏金环箍 + 醒目大号金盾章
       if (b.special === 'stone_base') {
-        const bandY1 = bBotY - 38;
-        const bandY2 = bBotY - 14;
+        const bandY1 = bBotY - 44;
+        const bandY2 = bBotY - 15;
         overGlassFX += `
           <g id="special-cover-${idx}">
-            <!-- 上道3D鎏金环箍 -->
             <path d="M 17.6,${bandY1} A 32.4,7.6 0 0,0 82.4,${bandY1}
-                     L 82.4,${bandY1 + 7} A 32.4,7.6 0 0,1 17.6,${bandY1 + 7} Z"
-                  fill="url(#ancientSpoutGrad)" stroke="#fef08a" stroke-width="0.95" />
-            <!-- 下道3D鎏金环箍 -->
+                     L 82.4,${bandY1 + 8.5} A 32.4,7.6 0 0,1 17.6,${bandY1 + 8.5} Z"
+                  fill="url(#ancientSpoutGrad)" stroke="#fef08a" stroke-width="1.1" />
             <path d="M 17.6,${bandY2} A 32.4,8.0 0 0,0 82.4,${bandY2}
-                     L 82.4,${bandY2 + 7.5} A 32.4,8.0 0 0,1 17.6,${bandY2 + 7.5} Z"
-                  fill="url(#ancientSpoutGrad)" stroke="#fef08a" stroke-width="0.95" />
-            <!-- 两侧竖向鎏金锁条 -->
-            <line x1="25" y1="${bandY1 + 3}" x2="25" y2="${bandY2 + 4}" stroke="url(#funnelGoldGrad)" stroke-width="2.6" stroke-linecap="round" />
-            <line x1="75" y1="${bandY1 + 3}" x2="75" y2="${bandY2 + 4}" stroke="url(#funnelGoldGrad)" stroke-width="2.6" stroke-linecap="round" />
-            <!-- 中央黑曜金盾章 -->
-            <g transform="translate(50, ${bBotY - 22})" style="filter:drop-shadow(0 3px 5px rgba(45, 20, 4, 0.52));">
-              <circle cx="0" cy="0" r="12.5" fill="url(#funnelGoldGrad)" stroke="#ffffff" stroke-width="1.3" />
-              <circle cx="0" cy="0" r="9.6" fill="#291507" stroke="#fbbf24" stroke-width="0.8" />
-              <text x="0" y="4.0" text-anchor="middle" fill="#fef08a" font-size="11.5" font-weight="900">${b.poursToBreak || 1}</text>
+                     L 82.4,${bandY2 + 8.5} A 32.4,8.0 0 0,1 17.6,${bandY2 + 8.5} Z"
+                  fill="url(#ancientSpoutGrad)" stroke="#fef08a" stroke-width="1.1" />
+            <line x1="25" y1="${bandY1 + 4}" x2="25" y2="${bandY2 + 4}" stroke="url(#funnelGoldGrad)" stroke-width="3.0" stroke-linecap="round" />
+            <line x1="75" y1="${bandY1 + 4}" x2="75" y2="${bandY2 + 4}" stroke="url(#funnelGoldGrad)" stroke-width="3.0" stroke-linecap="round" />
+            <g transform="translate(50, ${bBotY - 26})" style="filter:drop-shadow(0 4px 7px rgba(45, 20, 4, 0.58));">
+              <circle cx="0" cy="0" r="18.5" fill="url(#funnelGoldGrad)" stroke="#ffffff" stroke-width="1.8" />
+              <circle cx="0" cy="0" r="14.5" fill="#291507" stroke="#fbbf24" stroke-width="1.1" />
+              <text x="0" y="6.2" text-anchor="middle" fill="#fef08a" font-size="18" font-weight="900">${b.poursToBreak || 1}</text>
             </g>
           </g>
         `;
       }
 
-      // 高定琉璃机关 5：琥珀磨砂琉璃盲盒瓶 (paper_bag) —— 保持优雅玻璃瓶身曲线与高光折射，告别死板方纸袋
+      // 高定琉璃机关 5：琥珀磨砂琉璃盲盒瓶 (paper_bag) —— 保持优雅玻璃瓶身曲线 + 醒目大号火漆金章
       if (b.special === 'paper_bag') {
         const leftCnt = Math.max(1, (b.unlockOrder || 1) - packedTotal);
         overGlassFX += `
@@ -4407,25 +4985,25 @@
             <g clip-path="url(#bclip-${idx})">
               <rect x="14" y="${shoulderTopY}" width="72" height="${bBotY - shoulderTopY + 12}" fill="url(#smokedAmberFrostedGrad)" />
               <path d="M 18,82 Q 50,98 82,82 M 18,136 Q 50,152 82,136"
-                    fill="none" stroke="rgba(255, 236, 195, 0.22)" stroke-width="1.3" />
-              <rect x="21.0" y="${pillarTopY}" width="5.5" height="${pillarH}" rx="2.7" fill="url(#leftWallSheen)" opacity="0.85" />
-              <rect x="63.0" y="${pillarTopY}" width="10.5" height="${pillarH}" rx="2.4" fill="url(#rightPillarSheen)" opacity="0.85" />
+                    fill="none" stroke="rgba(255, 236, 195, 0.25)" stroke-width="1.5" />
+              <rect x="21.0" y="${pillarTopY}" width="5.5" height="${pillarH}" rx="2.7" fill="url(#leftWallSheen)" opacity="0.88" />
+              <rect x="63.0" y="${pillarTopY}" width="10.5" height="${pillarH}" rx="2.4" fill="url(#rightPillarSheen)" opacity="0.88" />
             </g>
             <path d="M 35.5,${25.5 + neckOffsetY} A 14.5,3.2 0 0,0 64.5,${25.5 + neckOffsetY}"
-                  fill="none" stroke="url(#funnelGoldGrad)" stroke-width="3.2" stroke-linecap="round" />
-            <g transform="translate(50, ${116 + neckOffsetY * 0.4})" style="filter:drop-shadow(0 3px 6px rgba(45, 20, 4, 0.48));">
-              <circle cx="0" cy="0" r="15" fill="url(#funnelGoldGrad)" stroke="#ffffff" stroke-width="1.3" />
-              <circle cx="0" cy="0" r="11.8" fill="#7c2d12" stroke="#fdba74" stroke-width="0.9" />
-              <text x="0" y="4.2" text-anchor="middle" fill="#fef08a" font-size="11.5" font-weight="900">★${leftCnt}</text>
+                  fill="none" stroke="url(#funnelGoldGrad)" stroke-width="3.6" stroke-linecap="round" />
+            <g transform="translate(50, ${114 + neckOffsetY * 0.4})" style="filter:drop-shadow(0 4px 8px rgba(45, 20, 4, 0.55));">
+              <circle cx="0" cy="0" r="21" fill="url(#funnelGoldGrad)" stroke="#ffffff" stroke-width="1.8" />
+              <circle cx="0" cy="0" r="17" fill="#7c2d12" stroke="#fdba74" stroke-width="1.2" />
+              <text x="0" y="6.2" text-anchor="middle" fill="#fef08a" font-size="17" font-weight="900">★${leftCnt}</text>
             </g>
           </g>
         `;
       }
 
-      // 问题 5 美术精修 + 明确颜色契约标识：12) 🔒 专属色环契约瓶 (color_lock)
+      // 高定琉璃机关 6：🔒 专属色环契约瓶 (color_lock) —— 放大版宝石盾章与醒目「仅X色」大字胶囊
       if (b.special === 'color_lock') {
         const reqCol = COLORS[b.requiredColor || 'blue'] || COLORS.blue;
-        const shortColName = (reqCol.name || '同色').slice(0, 2);
+        const shortColName = (reqCol.name || '同色').slice(0, 1);
         const selBottle = (selectedIndex !== null && selectedIndex !== idx) ? bottles[selectedIndex] : null;
         const selTopColor = (selBottle && selBottle.layers && selBottle.layers.length > 0) ? selBottle.layers[selBottle.layers.length - 1] : null;
         const isSelMatch = selTopColor && selTopColor === b.requiredColor;
@@ -4434,129 +5012,93 @@
         overGlassFX += `
           <g id="color-lock-fx-${idx}">
             <g transform="translate(0, ${neckOffsetY})">
-              <!-- 瓶口专属颜色流光环提示 -->
-              <ellipse cx="50" cy="9.2" rx="19.2" ry="4.2" fill="none" stroke="${reqCol.topLight}" stroke-width="2.0" opacity="0.9"/>
-              <!-- 瓶颈3D黄金宝石契约环 -->
-              <path d="M 33.5,21.5 A 16.5,4.2 0 0,0 66.5,21.5 L 66.5,26.5 A 16.5,4.2 0 0,1 33.5,26.5 Z"
-                    fill="url(#funnelGoldGrad)" stroke="#78350f" stroke-width="1.0"/>
-              <path d="M 34.5,22.8 A 15.5,3.8 0 0,0 65.5,22.8 L 65.5,25.4 A 15.5,3.8 0 0,1 34.5,25.4 Z"
-                    fill="${reqCol.mid}" stroke="#ffffff" stroke-width="0.9"/>
-              <!-- 瓶颈中央金镶水滴切面宝石 -->
-              <circle cx="50" cy="24.2" r="6.8" fill="url(#funnelGoldGrad)" stroke="#ffffff" stroke-width="1.2"/>
-              <polygon points="50,18.8 54.8,24.2 50,29.6 45.2,24.2" fill="${reqCol.mid}" stroke="${reqCol.topLight}" stroke-width="1.0"/>
-              <polygon points="50,20.2 52.6,23.5 50,25.2 47.4,23.5" fill="${reqCol.topLight}" opacity="0.88"/>
+              <ellipse cx="50" cy="9.2" rx="19.5" ry="4.4" fill="none" stroke="${reqCol.topLight}" stroke-width="2.4" opacity="0.95"/>
+              <path d="M 33.5,21.0 A 16.5,4.2 0 0,0 66.5,21.0 L 66.5,26.8 A 16.5,4.2 0 0,1 33.5,26.8 Z"
+                    fill="url(#funnelGoldGrad)" stroke="#78350f" stroke-width="1.1"/>
+              <path d="M 34.5,22.4 A 15.5,3.8 0 0,0 65.5,22.4 L 65.5,25.6 A 15.5,3.8 0 0,1 34.5,25.6 Z"
+                    fill="${reqCol.mid}" stroke="#ffffff" stroke-width="1.0"/>
+              <circle cx="50" cy="24.2" r="7.6" fill="url(#funnelGoldGrad)" stroke="#ffffff" stroke-width="1.3"/>
+              <polygon points="50,18.2 55.4,24.2 50,30.2 44.6,24.2" fill="${reqCol.mid}" stroke="${reqCol.topLight}" stroke-width="1.1"/>
             </g>
             ${!b.corked ? `
-              <!-- 瓶胸悬挂式3D皇家宝石契约盾章 + 专属色标胶囊 -->
-              <g id="color-lock-shield-${idx}" transform="translate(50, ${78 + neckOffsetY * 0.45})" style="filter:drop-shadow(0 3px 5px rgba(0,0,0,0.48));">
-                <path d="M -14,-16 L 14,-16 L 16,-2 C 16,9 0,17 0,17 C 0,17 -16,9 -16,-2 Z"
-                      fill="url(#funnelGoldGrad)" stroke="${isSelMatch ? '#4ade80' : (isSelMismatch ? '#fb7185' : '#ffffff')}" stroke-width="${(isSelMatch || isSelMismatch) ? 2.2 : 1.6}" stroke-linejoin="round"/>
-                <path d="M -11,-13 L 11,-13 L 12.5,-2 C 12.5,6.5 0,13 0,13 C 0,13 -12.5,6.5 -12.5,-2 Z"
-                      fill="${reqCol.mid}" stroke="${reqCol.topLight}" stroke-width="1.2" stroke-linejoin="round"/>
-                <polygon points="0,-10 7,-3 0,7 -7,-3" fill="${reqCol.highlight}" opacity="0.75"/>
-                <polygon points="-2,-8 3,-4 -1,-1 -5,-4" fill="#ffffff" opacity="0.75"/>
-                <circle cx="0" cy="-1.5" r="3.2" fill="#fef08a" stroke="#78350f" stroke-width="1.0"/>
-                <path d="M -1.5,0.5 L 1.5,0.5 L 2.2,6.5 L -2.2,6.5 Z" fill="#fef08a" stroke="#78350f" stroke-width="0.9"/>
-                <!-- 盾章下方直觉文字色标：让玩家一眼看懂该瓶仅收哪种颜色 -->
-                <rect x="-21" y="14.5" width="42" height="13.5" rx="6.7" fill="${reqCol.bagDark}" stroke="#ffffff" stroke-width="1.2"/>
-                <circle cx="-12.5" cy="21.2" r="3.4" fill="${reqCol.topRim}" stroke="#ffffff" stroke-width="0.8"/>
-                <text x="4" y="24.4" text-anchor="middle" fill="#ffffff" font-size="8.6" font-weight="900">限${shortColName}</text>
-                ${isSelMatch ? `
-                  <circle cx="13" cy="-13" r="6.5" fill="#22c55e" stroke="#ffffff" stroke-width="1.3"/>
-                  <polyline points="9.8,-13 12.2,-10.5 16.5,-15.5" fill="none" stroke="#ffffff" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
-                ` : (isSelMismatch ? `
-                  <circle cx="13" cy="-13" r="6.5" fill="#e11d48" stroke="#ffffff" stroke-width="1.3"/>
-                  <path d="M10.2,-15.8 L15.8,-10.2 M15.8,-15.8 L10.2,-10.2" stroke="#ffffff" stroke-width="2.0" stroke-linecap="round"/>
-                ` : '')}
+              <g id="color-lock-shield-${idx}" transform="translate(50, ${84 + neckOffsetY * 0.45})" style="filter:drop-shadow(0 4px 7px rgba(0,0,0,0.52));">
+                <path d="M -18,-20 L 18,-20 L 20,-2 C 20,12 0,22 0,22 C 0,22 -20,12 -20,-2 Z"
+                      fill="url(#funnelGoldGrad)" stroke="${isSelMatch ? '#4ade80' : (isSelMismatch ? '#fb7185' : '#ffffff')}" stroke-width="${(isSelMatch || isSelMismatch) ? 2.6 : 1.9}" stroke-linejoin="round"/>
+                <path d="M -14.5,-16.5 L 14.5,-16.5 L 16,-2 C 16,9 0,17.5 0,17.5 C 0,17.5 -16,9 -16,-2 Z"
+                      fill="${reqCol.mid}" stroke="${reqCol.topLight}" stroke-width="1.4" stroke-linejoin="round"/>
+                <rect x="-27" y="16" width="54" height="19" rx="9.5" fill="${reqCol.bagDark}" stroke="#ffffff" stroke-width="1.6"/>
+                <circle cx="-15.5" cy="25.5" r="4.8" fill="${reqCol.topRim}" stroke="#ffffff" stroke-width="1.0"/>
+                <text x="5" y="30.2" text-anchor="middle" fill="#ffffff" font-size="12.5" font-weight="900">仅${shortColName}色</text>
               </g>
             ` : ''}
           </g>
         `;
       }
 
-      // 问题 5 美术精修：13) ⏬ 单向接水漏斗瓶 (one_way_in) — 3D鎏金棱镜琉璃漏斗 + 翡翠金辉双V箭头章
+      // 高定琉璃机关 7：⏬ 单向接水漏斗瓶 (one_way_in) —— 放大版鎏金琉璃漏斗与大号箭头章
       if (b.special === 'one_way_in' && !b.corked) {
         overGlassFX += `
-          <g id="funnel-in-fx-${idx}" transform="translate(0, ${neckOffsetY})" style="filter:drop-shadow(0 3px 4px rgba(0,0,0,0.38));">
-            <!-- 漏斗锥体与折射棱线 -->
-            <path d="M 24,-1 L 76,-1 L 59,23 L 56,33 L 44,33 L 41,23 Z"
-                  fill="rgba(253, 224, 71, 0.34)" stroke="url(#funnelGoldGrad)" stroke-width="2.2" stroke-linejoin="round"/>
-            <line x1="34" y1="2" x2="44" y2="23" stroke="rgba(255,255,255,0.65)" stroke-width="1.6" stroke-linecap="round"/>
-            <line x1="66" y1="2" x2="56" y2="23" stroke="rgba(254,240,138,0.55)" stroke-width="1.4" stroke-linecap="round"/>
-            <!-- 漏斗顶部3D黄金宽口环 -->
-            <ellipse cx="50" cy="-1" rx="26" ry="4.8" fill="rgba(120, 53, 15, 0.55)" stroke="url(#funnelGoldGrad)" stroke-width="2.6"/>
-            <path d="M 27,0.5 A 23,3.8 0 0,0 73,0.5" fill="none" stroke="#ffffff" stroke-width="1.4" stroke-linecap="round"/>
-            <!-- 漏斗颈部黄金束环与翡翠单向流入章 -->
-            <rect x="39" y="21" width="22" height="4.5" rx="2.2" fill="url(#funnelGoldGrad)" stroke="#78350f" stroke-width="1.0"/>
-            <circle cx="50" cy="13.5" r="9.5" fill="#064e3b" stroke="url(#funnelGoldGrad)" stroke-width="2.0"/>
-            <path d="M 44.5,10 L 55.5,10 L 50,18.5 Z" fill="#34d399" stroke="#ffffff" stroke-width="1.0" stroke-linejoin="round"/>
+          <g id="funnel-in-fx-${idx}" transform="translate(0, ${neckOffsetY})" style="filter:drop-shadow(0 3px 6px rgba(0,0,0,0.45));">
+            <path d="M 22,-2 L 78,-2 L 60,24 L 57,35 L 43,35 L 40,24 Z"
+                  fill="rgba(253, 224, 71, 0.38)" stroke="url(#funnelGoldGrad)" stroke-width="2.4" stroke-linejoin="round"/>
+            <ellipse cx="50" cy="-2" rx="28" ry="5.2" fill="rgba(120, 53, 15, 0.58)" stroke="url(#funnelGoldGrad)" stroke-width="2.8"/>
+            <circle cx="50" cy="16" r="13.5" fill="#064e3b" stroke="url(#funnelGoldGrad)" stroke-width="2.2"/>
+            <path d="M 42.5,11.5 L 57.5,11.5 L 50,23.5 Z" fill="#34d399" stroke="#ffffff" stroke-width="1.2" stroke-linejoin="round"/>
           </g>
         `;
       }
 
-      // 问题 5 美术精修：14) ⏫ 单向出水古瓶 (one_way_out) — 3D皇家鎏金双翼防逆流喷泉嘴 + 炼金法阵
+      // 高定琉璃机关 8：⏫ 单向出水古瓶 (one_way_out) —— 放大版鎏金双翼喷泉嘴与大号上箭头章
       if (b.special === 'one_way_out' && !b.corked) {
         underGlassFX += `
           <g>
-            <ellipse cx="50" cy="${bBotY + 5}" rx="42" ry="8.8" fill="rgba(245, 158, 11, 0.18)"
-                     stroke="#fbbf24" stroke-width="1.6" stroke-dasharray="8 4"/>
-            <ellipse cx="50" cy="${bBotY + 5}" rx="34" ry="6.2" fill="none"
-                     stroke="#fef08a" stroke-width="1.0" stroke-dasharray="4 4" opacity="0.75"/>
+            <ellipse cx="50" cy="${bBotY + 5}" rx="42" ry="8.8" fill="rgba(245, 158, 11, 0.22)"
+                     stroke="#fbbf24" stroke-width="1.8" stroke-dasharray="8 4"/>
           </g>
         `;
         overGlassFX += `
-          <g id="ancient-out-fx-${idx}" transform="translate(0, ${neckOffsetY})" style="filter:drop-shadow(0 3px 4px rgba(0,0,0,0.42));">
-            <!-- 瓶颈两侧复古黄金双翼耳柄 -->
-            <path d="M 35,16 C 22,12 22,28 35,28" fill="none" stroke="url(#funnelGoldGrad)" stroke-width="3.2" stroke-linecap="round"/>
-            <path d="M 65,16 C 78,12 78,28 65,28" fill="none" stroke="url(#funnelGoldGrad)" stroke-width="3.2" stroke-linecap="round"/>
-            <!-- 瓶口上方3D收束黄金防逆流滴嘴 -->
-            <path d="M 32,12 L 41,-1.5 L 59,-1.5 L 68,12 Z" fill="url(#ancientSpoutGrad)" stroke="#fef08a" stroke-width="1.5" stroke-linejoin="round"/>
-            <ellipse cx="50" cy="-1.5" rx="9" ry="2.0" fill="#451a03" stroke="#fde047" stroke-width="1.2"/>
-            <rect x="33" y="11" width="34" height="4.5" rx="2.2" fill="url(#funnelGoldGrad)" stroke="#78350f" stroke-width="1.0"/>
-            <!-- 紫金单向涌出徽章 -->
-            <circle cx="50" cy="22.5" r="9.5" fill="#3b0764" stroke="url(#funnelGoldGrad)" stroke-width="2.0"/>
-            <path d="M 44.5,26 L 55.5,26 L 50,17.2 Z" fill="#fde047" stroke="#ffffff" stroke-width="1.0" stroke-linejoin="round"/>
+          <g id="ancient-out-fx-${idx}" transform="translate(0, ${neckOffsetY})" style="filter:drop-shadow(0 3px 6px rgba(0,0,0,0.48));">
+            <path d="M 35,16 C 20,11 20,30 35,30" fill="none" stroke="url(#funnelGoldGrad)" stroke-width="3.6" stroke-linecap="round"/>
+            <path d="M 65,16 C 80,11 80,30 65,30" fill="none" stroke="url(#funnelGoldGrad)" stroke-width="3.6" stroke-linecap="round"/>
+            <path d="M 31,12 L 40,-2 L 60,-2 L 69,12 Z" fill="url(#ancientSpoutGrad)" stroke="#fef08a" stroke-width="1.6" stroke-linejoin="round"/>
+            <circle cx="50" cy="24" r="13.5" fill="#3b0764" stroke="url(#funnelGoldGrad)" stroke-width="2.2"/>
+            <path d="M 42.5,28.5 L 57.5,28.5 L 50,16.5 Z" fill="#fde047" stroke="#ffffff" stroke-width="1.2" stroke-linejoin="round"/>
           </g>
         `;
       }
 
-      // 问题 5 美术精修：15A) ⏳ 星砂流沙炸弹瓶 (countdownMoves > 0) — 3D黄金链条沙漏怀表
+      // 高定琉璃机关 9A：⏳ 星砂流沙炸弹瓶 (countdownMoves > 0) —— 放大版3D黄金沙漏怀表与大号倒计时数字
       if (typeof b.countdownMoves === 'number' && b.countdownMoves > 0 && !b.corked) {
         const isDanger = b.countdownMoves <= 2;
         overGlassFX += `
           <g>
-            <!-- 瓶身悬挂金链 -->
-            <path d="M 14,68 Q 50,88 86,68" fill="none" stroke="url(#funnelGoldGrad)" stroke-width="2.2" stroke-dasharray="3 2"/>
-            <g class="${isDanger ? 'bomb-badge-danger' : ''}" transform="translate(50, 86)">
-              <!-- 怀表顶冠与表环 -->
-              <circle cx="0" cy="-21" r="3.5" fill="none" stroke="#fde047" stroke-width="1.6"/>
-              <rect x="-4.5" y="-19.5" width="9" height="4" rx="1.8" fill="url(#funnelGoldGrad)" stroke="#78350f" stroke-width="1.0"/>
-              <!-- 3D怀表外框 -->
-              <circle cx="0" cy="0" r="17.5" fill="${isDanger ? 'url(#bombRedBadgeGrad)' : 'url(#bombGoldBadgeGrad)'}"
-                      stroke="#ffffff" stroke-width="2.0" style="filter:drop-shadow(0 4px 6px rgba(0,0,0,0.55));"/>
-              <circle cx="0" cy="0" r="14.2" fill="${isDanger ? '#4c0519' : '#1e1b4b'}" stroke="${isDanger ? '#fda4af' : '#fde047'}" stroke-width="1.2"/>
-              <!-- 左侧纯矢量微缩黄金沙漏图标 -->
-              <g transform="translate(-5.5, 0)">
-                <line x1="-4.2" y1="-6.5" x2="4.2" y2="-6.5" stroke="#fde047" stroke-width="1.6" stroke-linecap="round"/>
-                <line x1="-4.2" y1="6.5" x2="4.2" y2="6.5" stroke="#fde047" stroke-width="1.6" stroke-linecap="round"/>
-                <polygon points="-3.6,-5.5 3.6,-5.5 0,0" fill="#fbbf24" opacity="0.9"/>
+            <path d="M 14,68 Q 50,90 86,68" fill="none" stroke="url(#funnelGoldGrad)" stroke-width="2.6" stroke-dasharray="3 2"/>
+            <g class="${isDanger ? 'bomb-badge-danger' : ''}" transform="translate(50, 88)">
+              <circle cx="0" cy="-25" r="4.2" fill="none" stroke="#fde047" stroke-width="1.8"/>
+              <rect x="-5.5" y="-23" width="11" height="4.8" rx="2" fill="url(#funnelGoldGrad)" stroke="#78350f" stroke-width="1.1"/>
+              <circle cx="0" cy="0" r="22" fill="${isDanger ? 'url(#bombRedBadgeGrad)' : 'url(#bombGoldBadgeGrad)'}"
+                      stroke="#ffffff" stroke-width="2.2" style="filter:drop-shadow(0 4px 8px rgba(0,0,0,0.58));"/>
+              <circle cx="0" cy="0" r="18" fill="${isDanger ? '#4c0519' : '#1e1b4b'}" stroke="${isDanger ? '#fda4af' : '#fde047'}" stroke-width="1.4"/>
+              <g transform="translate(-7.5, 0) scale(1.18)">
+                <line x1="-4.2" y1="-6.5" x2="4.2" y2="-6.5" stroke="#fde047" stroke-width="1.8" stroke-linecap="round"/>
+                <line x1="-4.2" y1="6.5" x2="4.2" y2="6.5" stroke="#fde047" stroke-width="1.8" stroke-linecap="round"/>
+                <polygon points="-3.6,-5.5 3.6,-5.5 0,0" fill="#fbbf24"/>
                 <polygon points="0,0 3.6,5.5 -3.6,5.5" fill="#fde047"/>
               </g>
-              <!-- 右侧高对比度倒计时数字 -->
-              <text x="5.2" y="4.8" text-anchor="middle" fill="#ffffff" font-size="13.5" font-weight="900">${b.countdownMoves}</text>
+              <text x="6.5" y="6.5" text-anchor="middle" fill="#ffffff" font-size="18.5" font-weight="900">${b.countdownMoves}</text>
             </g>
           </g>
         `;
       }
 
-      // 15B) 🧊 流沙超时寒冰封口冠 (frozenTurns > 0)
+      // 高定琉璃机关 9B：🧊 流沙超时寒冰封口冠 (frozenTurns > 0) —— 放大版冰封口徽章
       if (typeof b.frozenTurns === 'number' && b.frozenTurns > 0 && !b.corked) {
         overGlassFX += `
           <g id="frozen-mouth-fx-${idx}" transform="translate(0, ${neckOffsetY})">
-            <polygon points="22,10 32,1 44,6 50,-1 58,6 69,1 78,10 76,34 62,42 50,36 38,42 24,34"
-                     fill="url(#iceFacetMidGrad)" stroke="#ffffff" stroke-width="1.6" stroke-linejoin="round" opacity="0.95"/>
-            <polygon points="0,-12 11,-6 11,6 0,12 -11,6 -11,-6" transform="translate(50, 21)" fill="#024b78" stroke="#ffffff" stroke-width="1.6"/>
-            <text x="50" y="25.2" text-anchor="middle" fill="#b8f8ff" font-size="11.5" font-weight="900">${b.frozenTurns}</text>
+            <polygon points="20,10 31,0 44,5 50,-2 58,5 70,0 80,10 78,36 62,45 50,38 38,45 22,36"
+                     fill="url(#iceFacetMidGrad)" stroke="#ffffff" stroke-width="1.8" stroke-linejoin="round" opacity="0.96"/>
+            <polygon points="0,-16 16,0 0,16 -16,0" transform="translate(50, 22)" fill="#024b78" stroke="#ffffff" stroke-width="1.8"/>
+            <text x="50" y="28" text-anchor="middle" fill="#ffffff" font-size="16.5" font-weight="900">${b.frozenTurns}</text>
           </g>
         `;
       }
@@ -5073,7 +5615,8 @@
         const isActive = activeThemeId === item.id;
 
         const card = document.createElement('div');
-        card.className = 'shop-item-card' + (isActive ? ' active-theme' : '');
+        card.className = 'shop-item-card shop-wave-enter' + (isActive ? ' active-theme' : '');
+        card.style.animationDelay = `${SHOP_THEMES.indexOf(item) * 36}ms`;
 
         let btnClass = 'shop-action-btn ';
         let btnHTML = '';
@@ -5156,20 +5699,16 @@
 
       shownMechanicIntros.add(key);
       const info = MECHANIC_INTROS[key];
-      const badgeEl = document.getElementById('mech-badge');
       const titleEl = document.getElementById('mech-title');
-      const subEl = document.getElementById('mech-sub');
       const descEl = document.getElementById('mech-desc');
 
-      if (badgeEl) badgeEl.textContent = info.badge || '✨ 琉璃工坊新典藏 · NEW';
-      if (titleEl) titleEl.textContent = info.title || '';
-      if (subEl) subEl.textContent = info.sub || '';
+      if (titleEl) titleEl.textContent = info.title || '解锁新玩法';
       if (descEl) descEl.innerHTML = info.desc || '';
 
       const previewEl = document.getElementById('mech-preview-stage');
       if (previewEl) {
         previewEl.style.width = '96px';
-        previewEl.style.height = '148px';
+        previewEl.style.height = '204px';
         const sampleB = typeof info.sampleBottle === 'function' ? info.sampleBottle() : info.sampleBottle;
         previewEl.innerHTML = renderBottleSVG(sampleB, 99);
       }
@@ -5193,10 +5732,13 @@
       for (let lv = startLv; lv <= endLv; lv++) {
         const cfg = getLevelConfig(lv);
         const cell = document.createElement('div');
-        let cls = 'level-cell';
+        let cls = 'level-cell wave-enter';
         if (lv === currentLevelId) cls += ' active';
         else if (cfg.isCatBossLevel || cfg.pos === 10) cls += ' boss-cell';
         cell.className = cls;
+        const localIdx = lv - startLv;
+        const r = Math.floor(localIdx / 4), c = localIdx % 4;
+        cell.style.animationDelay = `${(r + c) * 18}ms`;
 
         const starsStr = '★'.repeat(cfg.waveStars) + '☆'.repeat(5 - cfg.waveStars);
         cell.innerHTML = `
@@ -5215,6 +5757,170 @@
       }
     }
 
+    // 借鉴参考图1 (image_8a1481 瀑布流错落矩阵) 与防碰撞同向位移定律的程序化多拓扑空间排布引擎：
+    // 1) 彻底解决图2中「上排瓶底与下排瓶口挨得过近」的问题：同列上下排严格遵循【同向平行位移 + 逐排递增下移 (botY >= topY + 6px)】，上下瓶间距永远恒定宽敞！
+    // 2) 突破单调的固定2x6模板循环：结合关卡号与随机种子，动态生成【4x3瀑布流矩阵】、【4x3梅花桩错缝砖阵】、【5-4-3 / 3-5-4 / 4-5-3 / 3-4-5 多阶星钻群落】以及【连续黄金谐波6列流光阵】，千关千面！
+    function computeProceduralStageLayout(levelId, totalBottles, cfg) {
+      const seed = ((levelId * 1664525 + (currentLevelAttemptSeed || 1013904223)) >>> 0);
+      const rand01 = (k) => {
+        const x = Math.sin((seed % 9973) * 0.173 + k * 12.9898 + levelId * 4.1415) * 43758.5453;
+        return x - Math.floor(x);
+      };
+
+      // 特殊 BOSS 关 / 长管关 / 高低异形关 / 21瓶关：采用专属防碰撞同列平行波浪排布
+      if (cfg && cfg.isCatBossLevel) {
+        // 灵猫BOSS关：同列上下瓶同向偏移 (下排比上排额外 +6px)，绝不挤压间距
+        const topWave = [-10, 8, 0, -8, 10];
+        return {
+          gridClass: 'layout-cat-boss',
+          slots: Array.from({ length: totalBottles }, (_, idx) => {
+            if (idx === 2) return { topPx: 0, leftPx: 0, gridCol: '' };
+            const col = idx < 5 ? idx : (idx - 5);
+            const isBot = idx >= 5;
+            const base = topWave[col % topWave.length] || 0;
+            return { topPx: isBot ? (base + 6) : base, leftPx: 0, gridCol: '' };
+          })
+        };
+      }
+
+      if (cfg && cfg.gridClass === 'layout-tall8') {
+        const phase = rand01(1) * Math.PI * 2;
+        const freq = 0.85 + rand01(2) * 0.65;
+        return {
+          gridClass: 'layout-tall8',
+          slots: Array.from({ length: totalBottles }, (_, idx) => ({
+            topPx: Math.round(Math.sin(idx * freq + phase) * 12),
+            leftPx: 0,
+            gridCol: ''
+          }))
+        };
+      }
+
+      if (cfg && cfg.gridClass === 'layout-21') {
+        const phase = rand01(3) * Math.PI * 2;
+        return {
+          gridClass: 'layout-21',
+          slots: Array.from({ length: totalBottles }, (_, idx) => {
+            const r = Math.floor(idx / 7);
+            const c = idx % 7;
+            const colWave = Math.round(Math.sin(c * 1.15 + phase) * 6);
+            return { topPx: colWave + (r - 1) * 3, leftPx: 0, gridCol: '' };
+          })
+        };
+      }
+
+      if (cfg && cfg.isVariedHeight) {
+        // 高低异形瓶关：由于2/4/6层瓶自身已有明显高度差，同列采用柔和平行波浪 (下排 = 上排 + 6px)，确保高瓶底与矮瓶口绝不挨近
+        const phase = rand01(4) * Math.PI * 2;
+        const freq = 0.95 + rand01(5) * 0.55;
+        return {
+          gridClass: 'layout-varied',
+          slots: Array.from({ length: totalBottles }, (_, idx) => {
+            const r = Math.floor(idx / 6);
+            const c = idx % 6;
+            const colShift = Math.round(Math.sin(c * freq + phase) * 9);
+            return { topPx: colShift + (r === 0 ? -4 : 4), leftPx: 0, gridCol: '' };
+          })
+        };
+      }
+
+      // 标准 12 瓶关卡：100% 保持原尺寸大瓶（绝不缩小瓶身），通过 9 种空间编舞 + 连续黄金分割谐波参数，
+      // 动态生成高低瀑布流与横向微错位群落，同时严格满足同列「botY - topY >= 10px」防碰撞定律！
+      if (totalBottles === 12) {
+        const modePool = [
+          'harmonic_waterfall', // 连续双频正弦瀑布流
+          'honeycomb_stagger',  // 奇偶列蜂巢交错 + 上下排横向错缝
+          'triptych_2_2_2',     // 三联画廊群落 (2+2+2 分组高低错落)
+          'twin_peaks_3_3',     // 双子星群落 (左3右3双拱桥)
+          'diamond_atrium',     // 中央星钻中庭 (中央上下豁口拉大 + 两侧垂落)
+          'soaring_wings',      // 飞翼展翅阵 (中央高耸 + 两翼阶梯垂落)
+          'valley_stream',      // 幽谷溪流阵 (两侧高耸 + 中央深谷)
+          'jazz_syncopation',   // 黄金分割爵士切分波 (非对称律动)
+          'spiral_cascade'      // 流光回旋阶梯阵
+        ];
+        const modeIdx = (Math.floor(levelId * 1.6180339887 * 5) + Math.floor(rand01(6) * 4)) % modePool.length;
+        const mode = modePool[modeIdx];
+        const phase1 = rand01(7) * Math.PI * 2;
+        const phase2 = rand01(8) * Math.PI * 2;
+        const freq1 = 0.82 + rand01(9) * 0.92;
+        const freq2 = 1.48 + rand01(10) * 1.05;
+        const flipSign = rand01(11) > 0.5 ? 1 : -1;
+        const maxAmp = (cfg && cfg.hasBags) ? 12 : 16;
+
+        const slots = Array.from({ length: 12 }, (_, idx) => {
+          const r = Math.floor(idx / 6);
+          const c = idx % 6;
+          const normC = (c - 2.5) / 2.5; // [-1, +1]
+          let colBaseY = 0;
+          let extraRowSep = 6; // 默认上排 -6px，下排 +6px，同列净间距额外增加 +12px
+          let leftPx = 0;
+
+          if (mode === 'harmonic_waterfall') {
+            const w1 = Math.sin(c * freq1 + phase1);
+            const w2 = Math.cos(c * freq2 + phase2);
+            colBaseY = Math.round((w1 * 0.65 + w2 * 0.35) * maxAmp);
+            leftPx = (r === 0 ? -1 : 1) * Math.round(Math.sin(c * 1.3 + phase1) * 3);
+          } else if (mode === 'honeycomb_stagger') {
+            const parity = (c % 2 === 0) ? 1 : -1;
+            const mod = Math.round(Math.sin(c * 0.9 + phase1) * 4);
+            colBaseY = parity * flipSign * Math.round(maxAmp * 0.85) + mod;
+            leftPx = (r === 0) ? -4 : 4;
+          } else if (mode === 'triptych_2_2_2') {
+            const pairIdx = Math.floor(c / 2); // 0, 1, 2
+            const pairHeights = [
+              Math.round(Math.sin(phase1) * maxAmp),
+              Math.round(Math.sin(phase1 + 2.094) * maxAmp),
+              Math.round(Math.sin(phase1 + 4.188) * maxAmp)
+            ];
+            colBaseY = pairHeights[pairIdx] + ((c % 2 === 0) ? -3 : 3) * flipSign;
+            // 让每2列微微靠拢成三联群落
+            leftPx = (c % 2 === 0) ? 3 : -3;
+          } else if (mode === 'twin_peaks_3_3') {
+            const localC = (c < 3) ? (c - 1) : (c - 4); // -1, 0, +1
+            const arch = (1 - Math.abs(localC) * 1.35) * flipSign;
+            colBaseY = Math.round(arch * maxAmp * 0.88 + Math.sin(c + phase2) * 3);
+            leftPx = (c < 3) ? -3 : 3;
+          } else if (mode === 'diamond_atrium') {
+            // 中央两列上排更高、下排更低，留出宽敞的中央星钻中庭，且绝不縮小上下间距
+            const centerWeight = 1 - Math.abs(normC);
+            colBaseY = Math.round((Math.abs(normC) - 0.45) * maxAmp * 0.7 * flipSign);
+            extraRowSep = Math.round(5 + centerWeight * 9); // 中央列上下额外拉开 +28px！
+          } else if (mode === 'soaring_wings') {
+            colBaseY = Math.round((Math.pow(Math.abs(normC), 1.35) * 2 - 0.9) * maxAmp * 0.85 * flipSign);
+            extraRowSep = Math.round(5 + (1 - Math.abs(normC)) * 5);
+          } else if (mode === 'valley_stream') {
+            colBaseY = Math.round((0.85 - Math.pow(Math.abs(normC), 1.25) * 1.8) * maxAmp * 0.85 * flipSign);
+            leftPx = Math.round(normC * (r === 0 ? -3 : 3));
+          } else if (mode === 'jazz_syncopation') {
+            const fib = [1, -1, 0.45, -0.85, 0.95, -0.55];
+            const shift = (c + levelId) % 6;
+            colBaseY = Math.round(fib[shift] * maxAmp * 0.92 + Math.cos(c * freq1 + phase1) * 3);
+            leftPx = ((c + r) % 2 === 0) ? 3 : -3;
+          } else {
+            // spiral_cascade
+            const cascade = normC * 0.65 * flipSign + Math.sin(normC * Math.PI + phase1) * 0.45;
+            colBaseY = Math.round(cascade * maxAmp);
+            leftPx = (r === 0 ? -3 : 3) * flipSign;
+          }
+
+          // 铁律：同一列 c 的上排 (r=0) 为 colBaseY - extraRowSep，下排 (r=1) 为 colBaseY + extraRowSep，
+          // 因此 botY - topY = 2 * extraRowSep >= +10px，彻底杜绝上排瓶底挨近下排瓶口！
+          const topPx = colBaseY + (r === 0 ? -extraRowSep : extraRowSep);
+          return { topPx, leftPx, gridCol: '' };
+        });
+
+        return {
+          gridClass: 'layout-dynamic-12',
+          slots
+        };
+      }
+
+      return {
+        gridClass: (cfg && cfg.gridClass) || '',
+        slots: Array.from({ length: totalBottles }, () => ({ topPx: 0, leftPx: 0, gridCol: '' }))
+      };
+    }
+
     function renderAll() {
       const cfg = getLevelConfig(currentLevelId);
       const bigNumEl = document.getElementById('zen-header-big-num');
@@ -5226,7 +5932,7 @@
       const doneCnt = cfg.isCatBossLevel ? (catBottleNow ? catBottleNow.layers.length : 0) : (cfg.hasBags ? packedTotal : corkedCnt);
 
       if (bigNumEl) {
-        bigNumEl.textContent = `${currentLevelId}`;
+        bigNumEl.textContent = `第 ${currentLevelId} 关`;
         bigNumEl.classList.toggle('danger-low', remainingMoves !== null && remainingMoves <= 5);
       }
       if (remainingMoves !== null) {
@@ -5306,10 +6012,16 @@
       }
 
       const grid = document.getElementById('bottles-grid');
-      grid.className = 'bottles-grid ' + (cfg.gridClass || '') + (userSettings.zoom ? ' zoomed-stage' : '');
+      const stageLayout = computeProceduralStageLayout(currentLevelId, bottles.length, cfg);
+      grid.className = 'bottles-grid ' + (stageLayout.gridClass || cfg.gridClass || '') + (userSettings.zoom ? ' zoomed-stage' : '');
       grid.innerHTML = '';
       bottles.forEach((b, idx) => {
         const slot = document.createElement('div');
+        const slotPose = (stageLayout.slots && stageLayout.slots[idx]) || { topPx: 0, leftPx: 0, gridCol: '' };
+        if (slotPose.gridCol) slot.style.gridColumn = slotPose.gridCol;
+        if (slotPose.topPx) slot.style.top = `${slotPose.topPx}px`;
+        if (slotPose.leftPx) slot.style.left = `${slotPose.leftPx}px`;
+
         let cls = 'bottle-slot';
         if (b.isGiantCat) cls += ' giant-cat-slot';
         else if (b.maxCap === 8) cls += ' tall-8-slot';
@@ -5494,7 +6206,7 @@
         bag.removed = false;
         bag.color = nextCol;
         playSound('pack');
-        showToast('🎬 已开启第 4 个高定礼盒槽位！');
+        showToast('🎬 已为您额外开启 +1 个高定礼盒槽位！');
         renderAll();
         setTimeout(() => checkAndPackWaitingCorkedBottles(), 180);
       } else if (bag.packedBottle) {
@@ -5504,11 +6216,14 @@
       }
     }
 
-    // 精准统计场上每种颜色实际还需几个购物袋（杜绝场上只剩2瓶水却出现3个袋子或重复颜色袋子）
+    // 精准统计场上每种颜色实际还需几个购物袋，并区分「当前可独立凑满的颜色 (completableColors)」与「被封印在礼袍/冰雕/纸袋中的颜色 (sealedColors)」，
+    // 严格遵守「购物袋每次只出现2个、无对应颜色购物袋时满瓶不收起」的核心规则，同时100%杜绝购物袋索要被封印颜色导致死循环！
     function computeNeededBagsByColor() {
       const totalNeed = {};
       const corkedNeed = {};
       const layerCounts = {};
+      const unsealedLayerCounts = {};
+      const sealedColors = new Set();
       const topUnlockedColors = [];
       const unlockedColors = [];
       const allRemainingColors = [];
@@ -5522,13 +6237,19 @@
           if (!allRemainingColors.includes(c)) allRemainingColors.push(c);
           return;
         }
-        const isUnlockedSource = !(b.frozenTurns > 0) && ['none', 'one_way_out', 'color_lock'].includes(b.special);
+        const isBagSealed = ['silk_drape', 'full_ice', 'paper_bag'].includes(b.special) && packedTotal < (b.unlockOrder || 1);
+        const isUnlockedSource = !isBagSealed && !(b.frozenTurns > 0) && ['none', 'one_way_out', 'color_lock'].includes(b.special);
         const topC = b.layers[b.layers.length - 1];
         if (isUnlockedSource && topC && !topUnlockedColors.includes(topC)) {
           topUnlockedColors.push(topC);
         }
         b.layers.forEach(c => {
           layerCounts[c] = (layerCounts[c] || 0) + 1;
+          if (isBagSealed) {
+            sealedColors.add(c);
+          } else {
+            unsealedLayerCounts[c] = (unsealedLayerCounts[c] || 0) + 1;
+          }
           if (isUnlockedSource && !unlockedColors.includes(c)) unlockedColors.push(c);
           if (!allRemainingColors.includes(c)) allRemainingColors.push(c);
         });
@@ -5539,11 +6260,16 @@
         totalNeed[c] = (totalNeed[c] || 0) + bottlesOfC;
       });
 
-      return { totalNeed, corkedNeed, topUnlockedColors, unlockedColors, allRemainingColors };
+      // 当前在不解锁新礼袋封印的前提下就能凑满至少1整瓶(4层)的颜色集合
+      const completableColors = allRemainingColors.filter(c =>
+        (corkedNeed[c] || 0) > 0 || (unsealedLayerCounts[c] || 0) >= 4 || !sealedColors.has(c)
+      );
+
+      return { totalNeed, corkedNeed, topUnlockedColors, unlockedColors, completableColors, allRemainingColors };
     }
 
     function pickNextNeededBagColor(excludeBagIdx = -1) {
-      const { totalNeed, corkedNeed, topUnlockedColors, unlockedColors, allRemainingColors } = computeNeededBagsByColor();
+      const { totalNeed, corkedNeed, topUnlockedColors, unlockedColors, completableColors, allRemainingColors } = computeNeededBagsByColor();
       const activeCounts = {};
       bags.forEach((bg, idx) => {
         if (idx === excludeBagIdx) return;
@@ -5558,29 +6284,34 @@
         return null;
       }
 
+      // 第一优先级：桌上已经满瓶落塞、正在等待对应颜色购物袋收起的瓶子颜色 (corkedUnmatched)
       const corkedUnmatched = candidates.filter(c => (corkedNeed[c] || 0) > (activeCounts[c] || 0));
+      // 第二优先级：当前未被封印（4层都在外）且顶层已暴露的可凑满色
+      const completableCandidates = candidates.filter(c => completableColors.includes(c));
       return corkedUnmatched.find(c => !activeCounts[c])
           || corkedUnmatched[0]
+          || topUnlockedColors.find(c => completableCandidates.includes(c) && !activeCounts[c])
+          || unlockedColors.find(c => completableCandidates.includes(c) && !activeCounts[c])
+          || completableCandidates.find(c => !activeCounts[c])
+          || completableCandidates[0]
           || topUnlockedColors.find(c => candidates.includes(c) && !activeCounts[c])
           || unlockedColors.find(c => candidates.includes(c) && !activeCounts[c])
           || candidates.find(c => !activeCounts[c])
-          || topUnlockedColors.find(c => candidates.includes(c))
-          || unlockedColors.find(c => candidates.includes(c))
           || candidates[0];
     }
 
     function reconcileActiveBagsWithBottles() {
       const cfg = getLevelConfig(currentLevelId);
       if (!cfg.hasBags || !bags || bags.length === 0) return;
-      const { totalNeed } = computeNeededBagsByColor();
+      const { totalNeed, completableColors } = computeNeededBagsByColor();
       const assigned = {};
       const toReassign = [];
 
-      // 第一轮：优先保留互不重复且场上确实需要的购物袋颜色
+      // 第一轮：仅保留互不重复、场上确实需要、且当前未被封印锁死的购物袋颜色
       bags.forEach((bg, idx) => {
         if (!bg || bg.locked || bg.removed || bg.packedBottle) return;
         const c = bg.color;
-        if (c && !assigned[c] && (totalNeed[c] || 0) > 0) {
+        if (c && !assigned[c] && (totalNeed[c] || 0) > 0 && completableColors.includes(c)) {
           assigned[c] = 1;
         } else {
           toReassign.push(idx);
@@ -5608,8 +6339,7 @@
       if (b.special === 'one_way_out') return false;
       if (!['none', 'color_lock', 'one_way_in'].includes(b.special)) return false;
       if (b.mysteryCount && b.mysteryCount > 0) return false;
-      const cap = b.maxCap || 4;
-      if (b.layers.length !== cap) return false;
+      if (b.layers.length === 0) return false;
       const firstCol = b.layers[0];
       if (!b.layers.every(c => c === firstCol)) return false;
       if (b.special === 'color_lock' && b.requiredColor && firstCol !== b.requiredColor) return false;
@@ -5622,7 +6352,8 @@
         if (firstCol === catTarget) return false;
       }
 
-      // 规范 3：高低异形瓶（2/4/6层混排）全局同色余量校验：只要场上其它瓶子中仍有该颜色余水，小瓶严禁提前落塞，确保6层色绝不会在2层瓶中误封存！
+      const cap = b.maxCap || 4;
+      // 规范 3：高低异形瓶（2/4/6层混排）全局同色余量校验与容量智能自适应（彻底解决图1中2层紫水装在6层高瓶中无法封存的痛点！）
       if (cfg.isVariedHeight) {
         let otherSameCount = 0;
         bottles.forEach(other => {
@@ -5632,8 +6363,24 @@
         if (otherSameCount > 0) {
           return false;
         }
+        // 若场上该颜色的所有水层已100%汇聚在此瓶中 (otherSameCount === 0)，但当前瓶容量偏大 (如2层水在6层瓶中)：
+        // 自动与场上一只容量为 b.layers.length 的未封存瓶互换器型容量，使本瓶立即满瓶落塞，同时场上高瓶/矮瓶总数100%守恒！
+        if (b.layers.length !== cap && b.layers.length >= 2) {
+          const targetLen = b.layers.length;
+          const swapPartner = bottles.find(other =>
+            other !== b && !other.removed && !other.corked &&
+            (other.maxCap || 4) === targetLen &&
+            other.layers.length <= targetLen
+          );
+          if (swapPartner) {
+            swapPartner.maxCap = cap;
+            b.maxCap = targetLen;
+            return true;
+          }
+        }
       }
 
+      if (b.layers.length !== (b.maxCap || 4)) return false;
       return true;
     }
 
@@ -5684,51 +6431,41 @@
       }, 1350);
     }
 
-    // 统一倾倒状态机条件 1 & 2：源瓶可拿起判定（附带瓶身动态摇晃与气泡反馈）
+    // 统一倾倒状态机条件 1 & 2：源瓶可拿起判定（极简清晰提示气泡）
     function canSelectBottle(b, bottleIdx = -1) {
       if (!b || b.removed || b.corked) return false;
       if (b.frozenTurns && b.frozenTurns > 0) {
-        if (bottleIdx >= 0) triggerBottleRejectFeedback(bottleIdx, `🧊 冰封剩 ${b.frozenTurns} 步`, '#38bdf8');
-        showToast(`🧊 瓶口寒冰封印中！再完成 ${b.frozenTurns} 次倾倒解封（或点【+空瓶】破冰）`);
+        if (bottleIdx >= 0) triggerBottleRejectFeedback(bottleIdx, `🧊 冰封${b.frozenTurns}步`);
+        showToast(`🧊 再倒水 ${b.frozenTurns} 步解封`);
         return false;
       }
       if (b.isGiantCat) {
         const colObj = COLORS[b.catTargetColor || 'pink'] || COLORS.pink;
-        if (bottleIdx >= 0) triggerBottleRejectFeedback(bottleIdx, `🐱 请倒入${colObj.name}`, colObj.topRim);
-        showToast(`🐱 中央为灵猫大瓶，请将【${colObj.name}】倒入其中！`);
+        if (bottleIdx >= 0) triggerBottleRejectFeedback(bottleIdx, `🐱 倒入${colObj.name}`);
+        showToast(`🐱 请把${colObj.name}倒入大猫瓶`);
         return false;
       }
       if (b.special === 'one_way_in') {
-        if (bottleIdx >= 0) triggerBottleRejectFeedback(bottleIdx, '⏬ 漏斗只进不出', '#34d399');
-        showToast('⏬ 单向漏斗瓶：仅可注入秘药，不可向外倾倒！');
+        if (bottleIdx >= 0) triggerBottleRejectFeedback(bottleIdx, '⏬ 只进不出');
+        showToast('⏬ 漏斗瓶：只进不出');
         return false;
       }
-      if (b.special === 'silk_drape') {
+      if (b.special === 'silk_drape' || b.special === 'full_ice' || b.special === 'paper_bag') {
         const leftBags = Math.max(1, (b.unlockOrder || 1) - packedTotal);
-        if (bottleIdx >= 0) triggerBottleRejectFeedback(bottleIdx, `🧣 需再封存 ${leftBags} 袋`, '#60a5fa');
-        showToast(`🧣 遮光布包裹中：再完成 ${b.unlockOrder} 个礼袋即可揭开！`);
-        return false;
-      }
-      if (b.special === 'full_ice') {
-        const leftBags = Math.max(1, (b.unlockOrder || 1) - packedTotal);
-        if (bottleIdx >= 0) triggerBottleRejectFeedback(bottleIdx, `🧊 需再封存 ${leftBags} 袋`, '#38bdf8');
-        showToast(`🧊 冰雕封印中：再完成 ${b.unlockOrder} 个礼袋即可破冰！`);
-        return false;
-      }
-      if (b.special === 'paper_bag') {
-        const leftBags = Math.max(1, (b.unlockOrder || 1) - packedTotal);
-        if (bottleIdx >= 0) triggerBottleRejectFeedback(bottleIdx, `🛍️ 需再封存 ${leftBags} 袋`, '#f59e0b');
-        showToast(`🛍️ 礼袋封印中：再完成 ${b.unlockOrder} 个礼袋即可解袋！`);
+        if (bottleIdx >= 0) triggerBottleRejectFeedback(bottleIdx, `🔒 满${leftBags}瓶解锁`);
+        showToast(`🔒 再装满 ${leftBags} 瓶自动解锁`);
         return false;
       }
       if (b.special === 'ice_base') {
-        if (bottleIdx >= 0) triggerBottleRejectFeedback(bottleIdx, `❄️ 注入同色或满瓶破冰(${b.poursToBreak || 1})`, '#38bdf8');
-        showToast(`❄️ 冰霜封印中：向该瓶注入同色药水或封存满瓶可破冰（剩 ${b.poursToBreak || 1} 层）！`);
+        const leftCnt = b.poursToBreak || 1;
+        if (bottleIdx >= 0) triggerBottleRejectFeedback(bottleIdx, `❄️ 合并${leftCnt}次破冰`);
+        showToast(`❄️ 同色合并 ${leftCnt} 次破冰（可接水）`);
         return false;
       }
       if (b.special === 'stone_base') {
-        if (bottleIdx >= 0) triggerBottleRejectFeedback(bottleIdx, `🔒 需封存 ${b.poursToBreak || 1} 瓶解箍`, '#fbbf24');
-        showToast(`🔒 鎏金箍锁定中：需在场上凑满封存 ${b.poursToBreak || 1} 瓶药水方可解开！`);
+        const leftCnt = b.poursToBreak || 1;
+        if (bottleIdx >= 0) triggerBottleRejectFeedback(bottleIdx, `🔒 合并${leftCnt}次解锁`);
+        showToast(`🔒 同色合并 ${leftCnt} 次解锁（可接水）`);
         return false;
       }
       if (b.special === 'ad_cam' || b.special === 'ad_cam_blue') return false;
@@ -5780,9 +6517,10 @@
 
       if (selectedIndex === null) {
         if (canSelectBottle(clicked, idx)) {
+          const prevIdx = selectedIndex;
           selectedIndex = idx;
           playSound('select');
-          renderAll();
+          updateBottleSelectionDOM(prevIdx, idx);
           startSelectSloshAnimation(idx);
         }
         return;
@@ -5790,9 +6528,10 @@
 
       if (selectedIndex === idx) {
         stopSelectSloshAnimation();
+        const prevIdx = selectedIndex;
         selectedIndex = null;
-        playSound('select');
-        renderAll();
+        playSound('deselect');
+        updateBottleSelectionDOM(prevIdx, null);
         return;
       }
 
@@ -5803,50 +6542,50 @@
         stopSelectSloshAnimation();
         performLiquidPour(selectedIndex, idx);
       } else {
-        // 针对所有不可倒入的目标瓶给出直接作用在瓶身本体的摇晃+气泡+光环反馈，绝不让玩家困惑！
+        // 针对所有不可倒入的目标瓶给出极简直白的气泡反馈
         const pourColor = src.layers[src.layers.length - 1];
         if (dst.frozenTurns && dst.frozenTurns > 0) {
-          triggerBottleRejectFeedback(idx, `🧊 冰封剩 ${dst.frozenTurns} 步`, '#38bdf8');
-          showToast(`🧊 目标瓶口已被寒冰封印，还需 ${dst.frozenTurns} 步自动解封！`);
+          triggerBottleRejectFeedback(idx, `🧊 冰封${dst.frozenTurns}步`);
+          showToast(`🧊 瓶口冰封，还需 ${dst.frozenTurns} 步`);
           return;
         }
         if (dst.special === 'one_way_out') {
-          triggerBottleRejectFeedback(idx, '⏫ 古瓶只出不进', '#f59e0b');
-          showToast('⏫ 单向源泉古瓶：仅可向外倾倒，不可注入秘药！');
+          triggerBottleRejectFeedback(idx, '⏫ 只出不进');
+          showToast('⏫ 古瓶：只能倒出，不能倒入');
           return;
         }
         if (dst.special === 'color_lock' && dst.requiredColor && pourColor !== dst.requiredColor) {
           const reqObj = COLORS[dst.requiredColor] || COLORS.blue;
-          triggerBottleRejectFeedback(idx, `🔒 仅限${reqObj.name.slice(0, 2)}药水`, reqObj.topRim);
-          showToast(`🔒 此瓶只能倒入【${reqObj.name}】！`);
+          triggerBottleRejectFeedback(idx, `🔒 仅限${reqObj.name}`);
+          showToast(`🔒 此瓶仅可倒入${reqObj.name}`);
           return;
         }
         if (['silk_drape', 'full_ice', 'paper_bag'].includes(dst.special)) {
           const leftBags = Math.max(1, (dst.unlockOrder || 1) - packedTotal);
-          triggerBottleRejectFeedback(idx, `🔒 需再封存 ${leftBags} 袋`, '#60a5fa');
-          showToast(`🔒 该瓶封印中：再完成 ${leftBags} 个礼袋即可解锁！`);
+          triggerBottleRejectFeedback(idx, `🔒 满${leftBags}瓶解锁`);
+          showToast(`🔒 再装满 ${leftBags} 瓶自动解锁`);
           return;
         }
-        // 若目标瓶是因已满或顶层颜色不同无法承接，但玩家本身可以切换选中该瓶：
-        // 若目标瓶不可拿起（如冰座/石座且颜色不匹配或已满），直接在目标瓶上弹出原因气泡！
         const dstCap = dst.maxCap || 4;
         if (!canSelectBottleNoToast(dst)) {
           if (dst.layers.length >= dstCap) {
-            triggerBottleRejectFeedback(idx, '🍾 该瓶已装满', '#f43f5e');
-            showToast('🍾 目标瓶已装满，无法继续倒入！');
+            triggerBottleRejectFeedback(idx, '🍾 已装满');
+            showToast('🍾 该瓶已装满');
           } else if (dst.layers.length > 0 && dst.layers[dst.layers.length - 1] !== pourColor) {
             const dstTopObj = COLORS[dst.layers[dst.layers.length - 1]] || COLORS.blue;
-            triggerBottleRejectFeedback(idx, `✕ 需注入${dstTopObj.name.slice(0, 2)}`, dstTopObj.topRim);
-            showToast(`⚠️ 颜色不同：需倒入相同的【${dstTopObj.name}】！`);
+            triggerBottleRejectFeedback(idx, `✕ 需倒${dstTopObj.name}`);
+            showToast(`⚠️ 请倒入相同的${dstTopObj.name}`);
           } else {
             canSelectBottle(dst, idx);
           }
           return;
         }
-        // 若目标瓶是另一个正常可拿起的瓶子，切换选中目标瓶（符合主流倒水直觉）
+        // 若目标瓶是另一个正常可拿起的瓶子，丝滑放下原瓶并弹起新瓶（原地DOM过渡）
+        stopSelectSloshAnimation();
+        const prevIdx = selectedIndex;
         selectedIndex = idx;
         playSound('select');
-        renderAll();
+        updateBottleSelectionDOM(prevIdx, idx);
         startSelectSloshAnimation(idx);
       }
     }
@@ -5907,10 +6646,18 @@
           showToast('🎬 激励视频奖励：已为您免费补充 +3 次提示机会！');
         }
         stopSelectSloshAnimation();
+        const prevIdx = selectedIndex;
         activeHintPair = { srcIdx: move.srcIdx, dstIdx: move.dstIdx };
         selectedIndex = move.srcIdx;
         playSound('select');
-        renderAll();
+        const hintBadge = document.getElementById('hint-count');
+        if (hintBadge) {
+          hintBadge.textContent = hintUses > 0 ? hintUses : '+';
+          hintBadge.classList.remove('badge-bump');
+          void hintBadge.offsetWidth;
+          hintBadge.classList.add('badge-bump');
+        }
+        updateBottleSelectionDOM(prevIdx, move.srcIdx);
         startSelectSloshAnimation(move.srcIdx);
         // 去除冗余遮挡的提示语条，盘面上的高亮瓶身、流光弧线与 ① ② 标签已清晰直白表达操作
       } else {
@@ -5974,8 +6721,21 @@
           }
         });
 
-        // 再将其余药水填充到普通瓶中
-        const nonFull = targetBottles.filter(b => b.special !== 'color_lock');
+        // 再将其余药水填充到普通瓶中（优先保留末尾至少 2 只空瓶作为周转空间，绝不把所有空瓶填满！）
+        const allNormal = targetBottles.filter(b => b.special !== 'color_lock');
+        const totalCapAll = allNormal.reduce((acc, b) => acc + (b.maxCap || 4), 0);
+        let reserveCount = 0;
+        let reservedCap = 0;
+        for (let r = allNormal.length - 1; r >= 0 && reserveCount < 2; r--) {
+          const c = allNormal[r].maxCap || 4;
+          if (totalCapAll - reservedCap - c >= curPool.length) {
+            reservedCap += c;
+            reserveCount++;
+          } else {
+            break;
+          }
+        }
+        const nonFull = allNormal.slice(0, allNormal.length - reserveCount);
         let ptr = 0;
         while (curPool.length > 0 && nonFull.length > 0) {
           const targetB = nonFull[ptr % nonFull.length];
@@ -6000,6 +6760,27 @@
       playSound('pack');
       showToast('🔀 已为您打乱重排盘面剩余药水（药水总数保持不变）！');
       renderAll();
+      const shuffleBadge = document.getElementById('shuffle-count');
+      if (shuffleBadge) {
+        shuffleBadge.classList.remove('badge-bump');
+        void shuffleBadge.offsetWidth;
+        shuffleBadge.classList.add('badge-bump');
+      }
+      const gridEl = document.getElementById('bottles-grid');
+      if (gridEl) {
+        Array.from(gridEl.children).forEach((slotEl, idx) => {
+          const b = bottles[idx];
+          if (b && !b.removed && !b.corked && b.layers.length > 0) {
+            slotEl.classList.remove('level-enter-anim', 'shuffle-wave-anim');
+            slotEl.style.animationDelay = `${(idx % 6) * 26 + Math.floor(idx / 6) * 45}ms`;
+            slotEl.classList.add('shuffle-wave-anim');
+            setTimeout(() => {
+              slotEl.classList.remove('shuffle-wave-anim');
+              slotEl.style.animationDelay = '';
+            }, 620);
+          }
+        });
+      }
       startLevelEntranceSlosh();
     }
     function buildGravityStreamSVG(spoutX, spoutY, mouthX, mouthY, surfaceY, dstRect, pourDir, colObj, pourProgress, splashCtx) {
@@ -6325,10 +7106,11 @@
       }
 
       const gridEl = document.getElementById('bottles-grid');
-      Array.from(gridEl.children).forEach(el => {
-        el.classList.remove('selected', 'hint-source-slot', 'hint-target-slot');
-      });
       const srcEl = gridEl.children[srcIdx];
+      const wasAlreadyLifted = srcEl ? (srcEl.classList.contains('selected') || srcEl.classList.contains('hint-source-slot')) : false;
+      Array.from(gridEl.children).forEach(el => {
+        el.classList.remove('selected', 'settling', 'hint-source-slot', 'hint-target-slot', 'color-lock-match', 'color-lock-mismatch');
+      });
       const dstEl = gridEl.children[dstIdx];
       const srcSvgEl = srcEl.querySelector('.bottle-svg') || srcEl;
 
@@ -6505,8 +7287,12 @@
         if (elapsed < moveDuration) {
           const p = elapsed / moveDuration;
           const ease = 1 - Math.pow(1 - p, 3);
+          // 从当前已抬起的悬停高度 (-22px) 无缝起飞，并沿柔美抛物线弧线飞向目标瓶口，彻底告别先瞬移回桌面再飞起的生硬跳帧！
+          const initialLiftScreenY = wasAlreadyLifted ? (-22 * zoomScale) : 0;
+          const startFlightLipY = srcLipY + initialLiftScreenY;
+          const arcLiftY = -Math.sin(p * Math.PI) * 14 * zoomScale;
           const curLipX = srcLipX + (targetLipX - srcLipX) * ease;
-          const curLipY = srcLipY + (targetLipY - srcLipY) * ease;
+          const curLipY = startFlightLipY + (targetLipY - startFlightLipY) * ease + arcLiftY;
           const curDeg = startTiltDeg * ease;
 
           applyLockedBottleTransform(curLipX, curLipY, curDeg);
@@ -6665,10 +7451,10 @@
           pourCountTotal++;
           const brokenObstacles = [];
 
-          // A. 检查单向出水古瓶 (one_way_out) 是否已排空 -> 原地化作金星消散，不留空瓶占位（规范 9）
+          // A. 检查单向出水古瓶 (one_way_out) 是否已排空 -> 排空后解除单向古瓶封口，化作普通可用空瓶（彻底杜绝因瓶位消失导致的死锁！）
           let ancientVanished = false;
           if (srcBottle.special === 'one_way_out' && srcBottle.layers.length === 0) {
-            srcBottle.removed = true;
+            srcBottle.special = 'none';
             srcBottle.countdownMoves = null;
             ancientVanished = true;
           }
@@ -6684,32 +7470,23 @@
             bombDefusedIdx = dstIdx;
           }
 
-          // C. 策略机关步进结算：
-          //    - 冰晶凝霜瓶 (ice_base)：唯有【直接向该冰瓶注入同色药水】或【本次倒水凑满封存了一整瓶】时才消融 1 层（随便乱倒其它瓶子不破冰！）
-          //    - 鎏金锁扣瓶 (stone_base)：唯有【本次倒水凑满封存了一整瓶】或【将该瓶自身凑满】时才崩解 1 层锁扣！
+          // C. 策略机关步进结算（防刷步 + 100%防死锁）：
+          //    - 仅当本次倒水是【有效同色合并 (initialDstLayers > 0)】或【凑满整瓶】时，才触发共鸣破冰/解箍；
+          //    - 往空瓶里来回倒水 (initialDstLayers === 0) 绝不触发破冰或解箍！
+          const isEffectiveColorMerge = (initialDstLayers > 0);
           const dstWillCompleteNow = isCompleteBottle(dstBottle) || (dstBottle.layers.length === (dstBottle.maxCap || 4) && dstBottle.layers.every(c => c === dstBottle.layers[0]));
           bottles.forEach((b, bIdx) => {
             if (b.removed || b.corked) return;
 
-            if (b.special === 'ice_base' && b.poursToBreak) {
-              const directThermalHit = (bIdx === dstIdx);
-              if (directThermalHit || dstWillCompleteNow) {
+            if ((b.special === 'ice_base' || b.special === 'stone_base') && b.poursToBreak) {
+              const wasIce = (b.special === 'ice_base');
+              if (isEffectiveColorMerge || dstWillCompleteNow || bIdx === dstIdx) {
                 b.poursToBreak = (bIdx === dstIdx && dstWillCompleteNow) ? 0 : (b.poursToBreak - 1);
                 if (b.poursToBreak <= 0) {
                   b.special = 'none';
-                  brokenObstacles.push({ bIdx, type: 'ice_shatter', wasIce: true, broke: true });
+                  brokenObstacles.push({ bIdx, type: wasIce ? 'ice_shatter' : 'stone_shatter', wasIce, broke: true });
                 } else {
-                  brokenObstacles.push({ bIdx, type: 'ice_crack', wasIce: true, broke: false });
-                }
-              }
-            } else if (b.special === 'stone_base' && b.poursToBreak) {
-              if (dstWillCompleteNow || (bIdx === dstIdx && dstBottle.layers.length === (dstBottle.maxCap || 4))) {
-                b.poursToBreak = (bIdx === dstIdx && dstWillCompleteNow) ? 0 : (b.poursToBreak - 1);
-                if (b.poursToBreak <= 0) {
-                  b.special = 'none';
-                  brokenObstacles.push({ bIdx, type: 'stone_shatter', wasIce: false, broke: true });
-                } else {
-                  brokenObstacles.push({ bIdx, type: 'stone_hit', wasIce: false, broke: false });
+                  brokenObstacles.push({ bIdx, type: wasIce ? 'ice_crack' : 'stone_hit', wasIce, broke: false });
                 }
               }
             }
@@ -6766,7 +7543,7 @@
             const corkStart = performance.now();
             const hasBagMode = !!cfg.hasBags;
             const useBagSpiral = true;
-            const corkDur = 640 / getSpeedMultiplier();
+            const corkDur = (hasBagMode ? 390 : 580) / getSpeedMultiplier();
             let slamSoundPlayed = false;
             let packSoundPlayed = false;
 
@@ -6847,6 +7624,14 @@
           } else {
             isAnimating = false;
             renderAll();
+            const landedSlot = document.getElementById('bottles-grid')?.children[srcIdx];
+            if (landedSlot && !bottles[srcIdx]?.removed) {
+              landedSlot.classList.remove('level-enter-anim');
+              landedSlot.style.animationDelay = '';
+              landedSlot.classList.add('settling');
+              setTimeout(() => landedSlot.classList.remove('settling'), 340);
+            }
+            startSettleSloshAnimation(srcIdx, 0.44);
 
             if (revealedMysteryLayerIdx !== null && revealedMysteryLayerIdx >= 0) {
               playSound('mystery_reveal');
@@ -6858,7 +7643,7 @@
             }
             if (ancientVanished) {
               playSound('mystery_reveal');
-              showToast('✨ 单向古瓶已排空，化作星尘消散！');
+              showToast('✨ 古瓶已排空，解锁为普通空瓶！');
             } else if (bombDefusedIdx !== null) {
               playSound('mystery_reveal');
               triggerBottleVFX(bombDefusedIdx, 'bomb_defuse');
@@ -6944,6 +7729,7 @@
     }
 
     function findMatchingOpenBagIndex(colorKey) {
+      // 严格规则：购物袋每次只出现两个（其余需点击解锁），若顶部没有对应颜色的购物袋，满瓶落塞后留在原位等待，绝不强行收起！
       return bags.findIndex(b => b && !b.locked && !b.removed && !b.packedBottle && b.color === colorKey);
     }
 
@@ -7038,8 +7824,8 @@
       const fxSvg = document.getElementById('fx-overlay');
       const colObj = COLORS[colorKey] || COLORS.green;
       const spdMult = getSpeedMultiplier();
-      const flyDur = 360 / spdMult;
-      const dropInDur = 230 / spdMult;
+      const flyDur = 220 / spdMult;
+      const dropInDur = 135 / spdMult;
       const flyStart = performance.now();
       const flyHistory = [];
 
@@ -7160,7 +7946,7 @@
 
             const bSlotRect = bagSlotNow.getBoundingClientRect();
             const trailStart = performance.now();
-            const trailDur = 460 / spdMult;
+            const trailDur = 270 / spdMult;
             function stepBagCarryTrail(tNow) {
               const p = Math.min(1, (tNow - trailStart) / trailDur);
               if (p < 1) {
@@ -7218,9 +8004,9 @@
                 renderAll();
                 // 新购物袋落下后，若场上有等待中的对应颜色满瓶，立即接连飞走！
                 checkAndPackWaitingCorkedBottles();
-              }, 380 / spdMult);
-            }, 480 / spdMult);
-          }, 360 / spdMult);
+              }, 210 / spdMult);
+            }, 280 / spdMult);
+          }, 170 / spdMult);
         }
       }
 
@@ -7383,8 +8169,9 @@
           const dstCap = dst.maxCap || 4;
           const freeSpace = dstCap - dst.layers.length;
 
-          // 避免把纯色瓶倒入空瓶做无意义搬家（除非目标瓶是专属契约色环瓶或皇冠大瓶）
-          if (dst.layers.length === 0 && isSrcPure && dst.special !== 'color_lock' && dstCap <= (src.maxCap || 4)) {
+          // 避免把纯色瓶倒入同尺寸空瓶做无意义搬家（但高低异形关中，将纯色水倒入恰好匹配其层数的空瓶可直接满瓶落塞！）
+          const isExactFitEmpty = (dst.layers.length === 0 && dstCap === src.layers.length && dstCap !== (src.maxCap || 4));
+          if (dst.layers.length === 0 && isSrcPure && dst.special !== 'color_lock' && dstCap <= (src.maxCap || 4) && !isExactFitEmpty) {
             continue;
           }
           // 避免将未凑齐的杂色误倒入单向漏斗瓶
@@ -7393,7 +8180,11 @@
           }
 
           let score = 0;
-          if (dst.special === 'ice_base') score += 65;
+          const matchesOpenBag = bags && bags.some(bg => bg && !bg.locked && !bg.removed && !bg.packedBottle && bg.color === pourCol);
+          if (matchesOpenBag) score += 68;
+          if (dst.special === 'ice_base' || dst.special === 'stone_base') score += 65;
+          if (dst.special === 'color_lock' && dst.requiredColor === pourCol) score += 75;
+          if (dst.special === 'one_way_in') score += 55;
           if (dst.layers.length > 0) {
             score += 100;
             // 如果能一次性把源瓶顶层同色全部转移过去，防止拆分同色层
@@ -7410,7 +8201,7 @@
             }
           } else {
             // 目标为空瓶
-            score += 25;
+            score += isExactFitEmpty ? 220 : 25;
             if (src.mysteryCount > 0 && src.layers.length - srcTopSame <= src.mysteryCount) score += 45;
             if (new Set(src.layers).size > 1) score += 20;
           }
@@ -7547,18 +8338,16 @@
         if (descEl) descEl.innerHTML = info.desc || '';
         if (previewEl) {
           previewEl.style.width = '96px';
-          previewEl.style.height = '148px';
+          previewEl.style.height = '204px';
           const sampleB = typeof info.sampleBottle === 'function' ? info.sampleBottle() : info.sampleBottle;
           previewEl.innerHTML = renderBottleSVG(sampleB, 99);
         }
       } else {
-        if (badgeEl) badgeEl.textContent = `✨ 第 ${currentLevelId} 关 · 玩法指南`;
         if (titleEl) titleEl.textContent = '游戏规则';
-        if (subEl) subEl.textContent = '同色水相连即可倾倒 · 装满4层自动封存';
-        if (descEl) descEl.innerHTML = '💡 <b>核心规则：</b>点击任意水瓶拿起，再点击另一只<b>空瓶</b>或<b>顶层颜色相同且未满</b>的水瓶即可倒入。<br/>✨ <b>选关捷径：</b>点击画面正上方中央数字即可随时切换 1～200 关！';
+        if (descEl) descEl.innerHTML = '将<b>相同颜色</b>的药水倒入同一瓶中，装满即可自动落塞封存（点击顶部数字可自由选关）。';
         if (previewEl) {
           previewEl.style.width = '186px';
-          previewEl.style.height = '148px';
+          previewEl.style.height = '204px';
           const bLeft = { id: 98, maxCap: 4, layers: ['blue', 'yellow', 'red'], special: 'none' };
           const bRight = { id: 99, maxCap: 4, layers: ['green', 'red', 'red'], special: 'none' };
           previewEl.innerHTML = `
@@ -7582,17 +8371,10 @@
       playSound('select');
     });
 
-    const mechCloseBtn = document.getElementById('mech-close-btn');
-    if (mechCloseBtn) {
-      mechCloseBtn.addEventListener('click', () => {
-        document.getElementById('mechanic-modal-mask').classList.remove('show');
-        playSound('select');
-      });
-    }
-    const mechXBtn = document.getElementById('mech-close-x-btn');
-    if (mechXBtn) {
-      mechXBtn.addEventListener('click', () => {
-        document.getElementById('mechanic-modal-mask').classList.remove('show');
+    const mechModalMaskEl = document.getElementById('mechanic-modal-mask');
+    if (mechModalMaskEl) {
+      mechModalMaskEl.addEventListener('click', () => {
+        mechModalMaskEl.classList.remove('show');
         playSound('select');
       });
     }
@@ -7753,9 +8535,31 @@
       undoUses = Math.max(0, (undoUses || 1) - 1);
       selectedIndex = null;
       activeHintPair = null;
-      playSound('select');
+      playSound('deselect');
       showToast('↩️ 已为您撤回至上一步');
       renderAll();
+      const undoBadge = document.getElementById('undo-count-badge');
+      if (undoBadge) {
+        undoBadge.classList.remove('badge-bump');
+        void undoBadge.offsetWidth;
+        undoBadge.classList.add('badge-bump');
+      }
+      const gridEl = document.getElementById('bottles-grid');
+      if (gridEl) {
+        Array.from(gridEl.children).forEach((slotEl, idx) => {
+          const b = bottles[idx];
+          if (b && !b.removed) {
+            slotEl.classList.remove('level-enter-anim', 'undo-rewind-anim');
+            slotEl.style.animationDelay = `${(idx % 6) * 18}ms`;
+            slotEl.classList.add('undo-rewind-anim');
+            setTimeout(() => {
+              slotEl.classList.remove('undo-rewind-anim');
+              slotEl.style.animationDelay = '';
+            }, 420);
+          }
+        });
+      }
+      startLevelEntranceSlosh();
     });
 
     function unlockAllSpecials() {

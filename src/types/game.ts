@@ -66,7 +66,7 @@ export interface Bag {
 
 export interface MechanicIntro {
   key?: string;
-  badge: string;
+  badge?: string;
   title: string;
   sub?: string;
   desc: string;
