@@ -542,8 +542,8 @@
     }
     @keyframes bottleLandingSettle {
       0%   { transform: translateY(-22px) scale(1.035); }
-      70%  { transform: translateY(1.2px) scale(1.01, 0.985); }
-      88%  { transform: translateY(-0.4px) scale(0.998, 1.002); }
+      62%  { transform: translateY(2.2px) scale(1.018, 0.975); }
+      84%  { transform: translateY(-1.2px) scale(0.995, 1.008); }
       100% { transform: translateY(0) scale(1, 1); }
     }
     @keyframes bottleShuffleWave {
@@ -567,18 +567,14 @@
       z-index: 50;
     }
     .bottle-slot.selected .bottle-svg {
-      transform: translateY(-22px) scale(1.035);
-      filter: drop-shadow(0 15px 16px rgba(62, 34, 6, 0.36)) drop-shadow(0 0 10px rgba(255, 238, 155, 0.38));
-      animation: selectedBottleFloat 2.1s ease-in-out 0.34s infinite;
-    }
-    .bottle-slot.settling .bottle-svg {
-      animation: bottleLandingSettle 0.32s cubic-bezier(0.25, 0.96, 0.38, 1) forwards;
+      transform: translateY(-20px) scale(1.03);
+      filter: drop-shadow(0 14px 15px rgba(62, 34, 6, 0.34)) drop-shadow(0 0 9px rgba(255, 238, 155, 0.35));
     }
     .bottle-slot.selected .burlap-coaster-pad {
-      transform: translateY(-1.2px) scale(0.985, 1.02);
+      transform: translateY(-1.0px) scale(0.988, 1.015);
     }
     .bottle-slot.settling .burlap-coaster-pad {
-      animation: coasterLandingSquish 0.32s cubic-bezier(0.25, 0.96, 0.38, 1);
+      animation: coasterLandingSquish 0.28s cubic-bezier(0.25, 0.96, 0.38, 1);
     }
     .bottle-slot.shuffle-wave-anim .bottle-svg {
       animation: bottleShuffleWave 0.44s cubic-bezier(0.22, 1.28, 0.36, 1);
@@ -616,7 +612,7 @@
       display: block;
       overflow: visible;
       transform-origin: 50% 92%;
-      transition: transform 0.32s cubic-bezier(0.20, 1.38, 0.34, 1), filter 0.26s ease;
+      transition: transform 0.26s cubic-bezier(0.22, 1.08, 0.36, 1), filter 0.24s ease;
       will-change: transform, filter;
     }
     .bottle-slot.pouring-source .bottle-svg {
@@ -1823,8 +1819,8 @@
       z-index: 65;
     }
     .bottle-slot.hint-source-slot .bottle-svg {
-      transform: translateY(-22px) scale(1.035);
-      filter: drop-shadow(0 0 11px rgba(250, 204, 21, 0.88)) drop-shadow(0 14px 16px rgba(68, 38, 8, 0.36));
+      transform: translateY(-20px) scale(1.03);
+      filter: drop-shadow(0 0 11px rgba(250, 204, 21, 0.88)) drop-shadow(0 14px 15px rgba(68, 38, 8, 0.34));
     }
     .bottle-slot.hint-target-slot {
       filter: drop-shadow(0 0 12px rgba(56, 189, 248, 0.95)) drop-shadow(0 8px 12px rgba(0, 0, 0, 0.55));
@@ -3386,8 +3382,51 @@
       }
     }
 
+    // 真实生活级物理拟音辅助函数：产生温润木质/玻璃/软木塞/亚麻布原声质感，绝不刺耳吵闹
+    function playWarmAcousticNote(freqStart, freqEnd, startTime, duration, peakGain = 0.065, waveType = 'sine', cutoffHz = 1100) {
+      if (!audioCtx) return;
+      const osc = audioCtx.createOscillator();
+      const lp = audioCtx.createBiquadFilter();
+      const g = audioCtx.createGain();
+      osc.type = waveType;
+      osc.frequency.setValueAtTime(Math.max(24, freqStart), startTime);
+      if (freqEnd && Math.abs(freqEnd - freqStart) > 1) {
+        osc.frequency.exponentialRampToValueAtTime(Math.max(24, freqEnd), startTime + duration);
+      }
+      lp.type = 'lowpass';
+      lp.frequency.setValueAtTime(cutoffHz, startTime);
+      g.gain.setValueAtTime(0.0004, startTime);
+      g.gain.linearRampToValueAtTime(peakGain, startTime + Math.min(0.008, duration * 0.22));
+      g.gain.exponentialRampToValueAtTime(0.0004, startTime + duration);
+      osc.connect(lp).connect(g).connect(audioCtx.destination);
+      osc.start(startTime);
+      osc.stop(startTime + duration + 0.008);
+    }
+
+    function playNoiseBrush(startTime, duration, freqStart, freqEnd, qVal = 3.0, peakGain = 0.05) {
+      if (!audioCtx) return;
+      const noiseBuf = getPinkNoiseBuffer();
+      if (!noiseBuf) return;
+      const src = audioCtx.createBufferSource();
+      src.buffer = noiseBuf;
+      const bp = audioCtx.createBiquadFilter();
+      bp.type = 'bandpass';
+      bp.Q.setValueAtTime(qVal, startTime);
+      bp.frequency.setValueAtTime(freqStart, startTime);
+      if (freqEnd && Math.abs(freqEnd - freqStart) > 5) {
+        bp.frequency.exponentialRampToValueAtTime(freqEnd, startTime + duration);
+      }
+      const g = audioCtx.createGain();
+      g.gain.setValueAtTime(0.0004, startTime);
+      g.gain.linearRampToValueAtTime(peakGain, startTime + Math.min(0.012, duration * 0.28));
+      g.gain.exponentialRampToValueAtTime(0.0004, startTime + duration);
+      src.connect(bp).connect(g).connect(audioCtx.destination);
+      src.start(startTime);
+      src.stop(startTime + duration + 0.01);
+    }
+
     function playSound(type, extraOpts) {
-      triggerHaptic(type === 'cork_slam' || type === 'service_bell' ? 20 : 10);
+      triggerHaptic(type === 'cork_slam' || type === 'service_bell' ? 16 : 8);
       if (!userSettings.sound) return;
       ensureAudio();
       if (!audioCtx) return;
@@ -3396,112 +3435,111 @@
       if (type === 'pour') {
         playRealisticPourSound(extraOpts);
       } else if (type === 'select') {
-        const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
-        osc.type = 'sine'; osc.frequency.setValueAtTime(540, now); osc.frequency.exponentialRampToValueAtTime(810, now + 0.068);
-        gain.gain.setValueAtTime(0.085, now); gain.gain.exponentialRampToValueAtTime(0.004, now + 0.072);
-        osc.connect(gain).connect(audioCtx.destination); osc.start(now); osc.stop(now + 0.076);
-      } else if (type === 'deselect') {
-        const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
-        osc.type = 'sine'; osc.frequency.setValueAtTime(640, now); osc.frequency.exponentialRampToValueAtTime(420, now + 0.065);
-        gain.gain.setValueAtTime(0.065, now); gain.gain.exponentialRampToValueAtTime(0.004, now + 0.07);
-        osc.connect(gain).connect(audioCtx.destination); osc.start(now); osc.stop(now + 0.075);
-      } else if (type === 'reject_lock') {
-        [240, 175].forEach((freq, i) => {
-          const osc = audioCtx.createOscillator(), g = audioCtx.createGain();
-          osc.type = 'sawtooth';
-          osc.frequency.setValueAtTime(freq, now + i * 0.065);
-          g.gain.setValueAtTime(0.11, now + i * 0.065);
-          g.gain.exponentialRampToValueAtTime(0.004, now + i * 0.065 + 0.075);
-          osc.connect(g).connect(audioCtx.destination);
-          osc.start(now + i * 0.065);
-          osc.stop(now + i * 0.065 + 0.08);
+        // 拿起水瓶：指尖轻触磨砂琉璃瓶的温润微音 + 离开麻布垫的极轻摩擦声
+        playNoiseBrush(now, 0.032, 620, 880, 3.5, 0.025);
+        playWarmAcousticNote(395, 555, now, 0.062, 0.058, 'sine', 950);
+      } else if (type === 'deselect' || type === 'bottle_land') {
+        // 放下水瓶 / 倒完水瓶底落回粗麻布软垫：真实生活里厚玻璃瓶底轻落亚麻软垫的温润闷响
+        playNoiseBrush(now, 0.042, 420, 220, 2.4, 0.036);
+        playWarmAcousticNote(175, 76, now, 0.068, 0.085, 'sine', 420);
+      } else if (type === 'ui_tap') {
+        // 通用按钮点击：如同指腹轻叩温润胡桃木鹅卵石
+        playNoiseBrush(now, 0.018, 950, 680, 4.0, 0.022);
+        playWarmAcousticNote(480, 360, now, 0.045, 0.055, 'sine', 880);
+      } else if (type === 'toggle_on') {
+        // 打开拨动开关：真实实木机械拨片清脆上拨声 ("Tick-Up")
+        playNoiseBrush(now, 0.016, 1200, 1550, 4.5, 0.028);
+        playWarmAcousticNote(360, 540, now, 0.048, 0.062, 'sine', 1100);
+        playWarmAcousticNote(540, 680, now + 0.022, 0.045, 0.042, 'sine', 1200);
+      } else if (type === 'toggle_off') {
+        // 关闭拨动开关：真实实木机械拨片沉稳下拨声 ("Tock-Down")
+        playNoiseBrush(now, 0.016, 1100, 760, 4.5, 0.026);
+        playWarmAcousticNote(510, 330, now, 0.052, 0.058, 'sine', 920);
+      } else if (type === 'modal_open') {
+        // 打开弹窗面板：轻柔舒缓的木琴双音微升
+        playWarmAcousticNote(392, 405, now, 0.075, 0.048, 'sine', 900);
+        playWarmAcousticNote(523.25, 535, now + 0.045, 0.095, 0.052, 'sine', 1050);
+      } else if (type === 'modal_close') {
+        // 关闭弹窗面板：柔和收敛的木质双音微降
+        playWarmAcousticNote(493.88, 470, now, 0.065, 0.045, 'sine', 850);
+        playWarmAcousticNote(369.99, 345, now + 0.04, 0.08, 0.048, 'sine', 750);
+      } else if (type === 'btn_restart') {
+        // 点击【重玩】：温润木珠双连回拨声
+        playWarmAcousticNote(440, 350, now, 0.055, 0.052, 'sine', 880);
+        playWarmAcousticNote(523.25, 540, now + 0.055, 0.085, 0.056, 'sine', 980);
+      } else if (type === 'btn_shuffle') {
+        // 点击【打乱】：柔和清泉微漾与温润木琴三连音
+        playNoiseBrush(now, 0.18, 420, 780, 2.2, 0.042);
+        [440, 523.25, 659.25].forEach((f, i) => {
+          playWarmAcousticNote(f, f * 1.02, now + i * 0.048, 0.11, 0.050, 'sine', 1100);
         });
+      } else if (type === 'btn_undo') {
+        // 点击【撤回】：轻巧舒适的时光回拨木琴双音
+        playWarmAcousticNote(587.33, 560, now, 0.065, 0.052, 'sine', 950);
+        playWarmAcousticNote(440, 415, now + 0.048, 0.085, 0.050, 'sine', 820);
+      } else if (type === 'btn_hint') {
+        // 点击【提示】：温润通透的颂钵轻叩泛音（不刺耳、余韵柔和）
+        playWarmAcousticNote(587.33, 587.33, now, 0.24, 0.052, 'sine', 1100);
+        playWarmAcousticNote(880.0, 880.0, now + 0.035, 0.28, 0.038, 'sine', 1200);
+      } else if (type === 'reject_lock') {
+        // 受阻提示：柔和的实木双连轻叩声（“笃-笃”），彻底告别刺耳锯齿波
+        playNoiseBrush(now, 0.022, 520, 340, 3.8, 0.028);
+        playWarmAcousticNote(195, 128, now, 0.058, 0.068, 'sine', 480);
+        playNoiseBrush(now + 0.072, 0.022, 480, 310, 3.8, 0.024);
+        playWarmAcousticNote(172, 112, now + 0.072, 0.062, 0.058, 'sine', 450);
       } else if (type === 'mystery_reveal') {
-        [660, 880, 1174.66, 1567.98].forEach((f, i) => {
-          const osc = audioCtx.createOscillator(), g = audioCtx.createGain();
-          osc.type = 'sine'; osc.frequency.setValueAtTime(f, now + i * 0.045);
-          g.gain.setValueAtTime(0.11, now + i * 0.045); g.gain.exponentialRampToValueAtTime(0.004, now + 0.22 + i * 0.045);
-          osc.connect(g).connect(audioCtx.destination); osc.start(now + i * 0.045); osc.stop(now + 0.24 + i * 0.045);
+        // 星雾揭晓：温暖柔和的竖琴/卡林巴拇指琴泛音
+        [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => {
+          playWarmAcousticNote(f, f * 1.005, now + i * 0.048, 0.20, 0.052, 'sine', 1250);
         });
       } else if (type === 'ice_break') {
-        [1480, 1960, 2480].forEach((f, i) => {
-          const osc = audioCtx.createOscillator(), g = audioCtx.createGain();
-          osc.type = 'triangle'; osc.frequency.setValueAtTime(f, now + i * 0.03); osc.frequency.exponentialRampToValueAtTime(f * 0.55, now + 0.14 + i * 0.03);
-          g.gain.setValueAtTime(0.14, now + i * 0.03); g.gain.exponentialRampToValueAtTime(0.005, now + 0.15 + i * 0.03);
-          osc.connect(g).connect(audioCtx.destination); osc.start(now + i * 0.03); osc.stop(now + 0.16 + i * 0.03);
+        // 凝霜消融：清润不刺耳的冰块轻裂声
+        playNoiseBrush(now, 0.09, 1100, 680, 2.8, 0.045);
+        [880, 1174.66, 987.77].forEach((f, i) => {
+          playWarmAcousticNote(f, f * 0.72, now + i * 0.032, 0.11, 0.055, 'triangle', 1350);
         });
       } else if (type === 'stone_break') {
-        [220, 155, 110].forEach((f, i) => {
-          const osc = audioCtx.createOscillator(), g = audioCtx.createGain();
-          osc.type = 'triangle'; osc.frequency.setValueAtTime(f, now + i * 0.04); osc.frequency.exponentialRampToValueAtTime(48, now + 0.16 + i * 0.04);
-          g.gain.setValueAtTime(0.16, now + i * 0.04); g.gain.exponentialRampToValueAtTime(0.005, now + 0.17 + i * 0.04);
-          osc.connect(g).connect(audioCtx.destination); osc.start(now + i * 0.04); osc.stop(now + 0.18 + i * 0.04);
+        // 金箍解锁：浑厚温润的古铜木栓开启声
+        playNoiseBrush(now, 0.07, 380, 190, 3.0, 0.048);
+        [196, 146.83, 110].forEach((f, i) => {
+          playWarmAcousticNote(f, f * 0.65, now + i * 0.038, 0.12, 0.075, 'sine', 480);
         });
       } else if (type === 'cork_slam') {
-        const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
-        osc.type = 'triangle'; osc.frequency.setValueAtTime(185, now); osc.frequency.exponentialRampToValueAtTime(48, now + 0.095);
-        gain.gain.setValueAtTime(0.32, now); gain.gain.exponentialRampToValueAtTime(0.008, now + 0.115);
-        osc.connect(gain).connect(audioCtx.destination); osc.start(now); osc.stop(now + 0.12);
-        const popOsc = audioCtx.createOscillator(), popGain = audioCtx.createGain();
-        popOsc.type = 'sine'; popOsc.frequency.setValueAtTime(380, now + 0.02); popOsc.frequency.exponentialRampToValueAtTime(720, now + 0.08);
-        popGain.gain.setValueAtTime(0.15, now + 0.02); popGain.gain.exponentialRampToValueAtTime(0.008, now + 0.09);
-        popOsc.connect(popGain).connect(audioCtx.destination); popOsc.start(now + 0.02); popOsc.stop(now + 0.10);
+        // 真实生活中天然软木塞缓缓塞入玻璃瓶口并严丝合缝落座的 ASMR 级物理声效：
+        // 1) 软木与玻璃瓶口内壁的细腻阻尼摩擦声 ("Squeak-Rub", 0 ~ 68ms)
+        playNoiseBrush(now, 0.068, 410, 235, 3.8, 0.058);
+        // 2) 软木塞底部空气微压缩与温润橡木落座闷响 ("Muted Oak Thud", 28 ~ 115ms)
+        playWarmAcousticNote(162, 58, now + 0.026, 0.088, 0.135, 'sine', 360);
+        playWarmAcousticNote(245, 142, now + 0.030, 0.065, 0.068, 'triangle', 520);
+        // 3) 瓶腔气密瞬间的极轻柔水润腔体回响 ("Sealed Glass Cavity Bloop", 52 ~ 135ms)
+        playWarmAcousticNote(285, 428, now + 0.052, 0.078, 0.052, 'sine', 780);
+        // 4) 轻柔舒适的满瓶木琴温暖和弦余韵（音量克制、温润悦耳）
+        playWarmAcousticNote(523.25, 525, now + 0.095, 0.22, 0.045, 'sine', 1050);
+        playWarmAcousticNote(659.25, 662, now + 0.135, 0.26, 0.048, 'sine', 1150);
       } else if (type === 'service_bell') {
-        const strikeOsc = audioCtx.createOscillator(), strikeGain = audioCtx.createGain();
-        strikeOsc.type = 'triangle'; strikeOsc.frequency.setValueAtTime(340, now); strikeOsc.frequency.exponentialRampToValueAtTime(95, now + 0.028);
-        strikeGain.gain.setValueAtTime(0.24, now); strikeGain.gain.exponentialRampToValueAtTime(0.001, now + 0.032);
-        strikeOsc.connect(strikeGain).connect(audioCtx.destination); strikeOsc.start(now); strikeOsc.stop(now + 0.035);
-        [{ freq: 2093.0, gain: 0.20, decay: 0.68 }, { freq: 3135.96, gain: 0.12, decay: 0.52 }, { freq: 4186.01, gain: 0.09, decay: 0.40 }, { freq: 5274.04, gain: 0.05, decay: 0.28 }].forEach(h => {
-          const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
-          osc.type = 'sine'; osc.frequency.setValueAtTime(h.freq, now);
-          gain.gain.setValueAtTime(0.001, now); gain.gain.linearRampToValueAtTime(h.gain, now + 0.006); gain.gain.exponentialRampToValueAtTime(0.0005, now + h.decay);
-          osc.connect(gain).connect(audioCtx.destination); osc.start(now); osc.stop(now + h.decay + 0.02);
+        // 装入礼盒时的温润铜铃轻响（降低高频增益并加柔化包络，清甜不刺耳）
+        playWarmAcousticNote(260, 92, now, 0.032, 0.08, 'sine', 480);
+        [{ freq: 1046.5, gain: 0.065, decay: 0.42 }, { freq: 1567.98, gain: 0.042, decay: 0.34 }, { freq: 2093.0, gain: 0.024, decay: 0.25 }].forEach(h => {
+          playWarmAcousticNote(h.freq, h.freq, now + 0.005, h.decay, h.gain, 'sine', 2200);
         });
       } else if (type === 'bag_whoosh') {
-        const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
-        osc.type = 'sine'; osc.frequency.setValueAtTime(280, now); osc.frequency.exponentialRampToValueAtTime(690, now + 0.22);
-        gain.gain.setValueAtTime(0.001, now); gain.gain.linearRampToValueAtTime(0.11, now + 0.05); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.24);
-        osc.connect(gain).connect(audioCtx.destination); osc.start(now); osc.stop(now + 0.25);
+        // 礼袋轻巧提起：柔和亚麻布料轻拂声
+        playNoiseBrush(now, 0.16, 320, 620, 1.8, 0.042);
+        playWarmAcousticNote(240, 420, now, 0.16, 0.045, 'sine', 680);
       } else if (type === 'bag_drop') {
-        const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
-        osc.type = 'sine'; osc.frequency.setValueAtTime(520, now); osc.frequency.exponentialRampToValueAtTime(360, now + 0.08); osc.frequency.exponentialRampToValueAtTime(480, now + 0.16);
-        gain.gain.setValueAtTime(0.10, now); gain.gain.exponentialRampToValueAtTime(0.002, now + 0.18);
-        osc.connect(gain).connect(audioCtx.destination); osc.start(now); osc.stop(now + 0.19);
+        // 新礼袋轻落：纸袋落定温润微响
+        playNoiseBrush(now, 0.045, 460, 260, 2.5, 0.032);
+        playWarmAcousticNote(320, 210, now, 0.085, 0.052, 'sine', 580);
       } else if (type === 'bag_burn') {
-        const noiseBuf = getPinkNoiseBuffer();
-        if (noiseBuf) {
-          const src = audioCtx.createBufferSource();
-          src.buffer = noiseBuf;
-          const bp = audioCtx.createBiquadFilter();
-          bp.type = 'bandpass';
-          bp.frequency.setValueAtTime(520, now);
-          bp.frequency.exponentialRampToValueAtTime(1480, now + 0.68);
-          bp.Q.setValueAtTime(1.8, now);
-          const g = audioCtx.createGain();
-          g.gain.setValueAtTime(0.001, now);
-          g.gain.linearRampToValueAtTime(0.22, now + 0.08);
-          g.gain.exponentialRampToValueAtTime(0.002, now + 0.72);
-          src.connect(bp).connect(g).connect(audioCtx.destination);
-          src.start(now);
-          src.stop(now + 0.75);
-        }
-        [920, 1380, 1840, 1120, 1640].forEach((f, i) => {
-          const osc = audioCtx.createOscillator(), cg = audioCtx.createGain();
-          osc.type = 'sawtooth';
-          osc.frequency.setValueAtTime(f, now + 0.06 + i * 0.11);
-          osc.frequency.exponentialRampToValueAtTime(f * 0.45, now + 0.12 + i * 0.11);
-          cg.gain.setValueAtTime(0.08, now + 0.06 + i * 0.11);
-          cg.gain.exponentialRampToValueAtTime(0.002, now + 0.13 + i * 0.11);
-          osc.connect(cg).connect(audioCtx.destination);
-          osc.start(now + 0.06 + i * 0.11);
-          osc.stop(now + 0.14 + i * 0.11);
+        // 羊皮礼袋消散：温暖柔和的篝火微拂声（去除刺耳锯齿波）
+        playNoiseBrush(now, 0.45, 380, 820, 1.8, 0.065);
+        [392, 493.88, 587.33].forEach((f, i) => {
+          playWarmAcousticNote(f, f * 1.02, now + 0.05 + i * 0.08, 0.18, 0.045, 'sine', 950);
         });
       } else if (type === 'pack') {
+        // 过关/解锁奖励：温暖舒缓的木琴琶音（C大调温润和弦）
         [523.25, 659.25, 783.99, 1046.5].forEach((freq, idx) => {
-          const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
-          osc.type = 'triangle'; osc.frequency.setValueAtTime(freq, now + idx * 0.055);
-          gain.gain.setValueAtTime(0.13, now + idx * 0.055); gain.gain.exponentialRampToValueAtTime(0.008, now + 0.25 + idx * 0.055);
-          osc.connect(gain).connect(audioCtx.destination); osc.start(now + idx * 0.055); osc.stop(now + 0.27 + idx * 0.055);
+          playWarmAcousticNote(freq, freq * 1.003, now + idx * 0.055, 0.24, 0.058, 'sine', 1200);
         });
       }
     }
@@ -4696,87 +4734,107 @@
       return x - Math.floor(x);
     }
 
-    function renderIkeaWoodCorkSVG(idx, isSeated = true, showCompleteBadge = false) {
+    function renderIkeaWoodCorkSVG(idx, isSeated = true, showCompleteBadge = false, plugCompressX = 1.0) {
+      const pL = (50 - 9.8 * plugCompressX).toFixed(2);
+      const pR = (50 + 9.8 * plugCompressX).toFixed(2);
+      const pBotL = (50 - 6.6 * plugCompressX).toFixed(2);
+      const pBotR = (50 + 6.6 * plugCompressX).toFixed(2);
       return `
         <g>
-          <path d="M 40.2,10.2 L 59.8,10.2 L 56.6,25.5 A 6.8,2.0 0 0,1 43.4,25.5 Z" fill="url(#ikeaCorkPlugGrad)" opacity="0.92"/>
+          <!-- 塞入玻璃瓶颈内部的锥形软木塞下段（带真实软木气孔纹理与玻璃内壁折射压迫感） -->
+          <path d="M ${pL},10.0 L ${pR},10.0 L ${pBotR},24.8 A ${(6.6 * plugCompressX).toFixed(2)},2.0 0 0,1 ${pBotL},24.8 Z"
+                fill="url(#ikeaCorkPlugGrad)" opacity="0.94"/>
+          <line x1="46.2" y1="13.5" x2="46.5" y2="21.5" stroke="#5c2808" stroke-width="0.7" stroke-linecap="round" opacity="0.45"/>
+          <line x1="53.2" y1="14.2" x2="52.8" y2="22.0" stroke="#5c2808" stroke-width="0.65" stroke-linecap="round" opacity="0.40"/>
           ${isSeated ? `
-            <path d="M 31.8,9.2 C 30.2,13.4 31.4,18.2 36.5,20.4 A 13.8,3.2 0 0,0 63.5,20.4 C 68.6,18.2 69.8,13.4 68.2,9.2 A 18.2,3.7 0 0,0 31.8,9.2 Z" fill="url(#neckLipGrad)" opacity="0.58"/>
-            <path d="M 36.2,20.2 A 14.0,3.2 0 0,0 63.8,20.2" fill="none" stroke="#6ea6f7" stroke-width="1.25" stroke-linecap="round" opacity="0.85"/>
+            <!-- 玻璃瓶口外唇半透明包裹折射层（让木塞下段看起来真正塞在玻璃瓶颈内部而非贴在表面） -->
+            <path d="M 31.8,9.2 C 30.2,13.4 31.4,18.2 36.5,20.4 A 13.8,3.2 0 0,0 63.5,20.4 C 68.6,18.2 69.8,13.4 68.2,9.2 A 18.2,3.7 0 0,0 31.8,9.2 Z"
+                  fill="url(#neckLipGrad)" opacity="0.62"/>
+            <path d="M 36.2,20.2 A 14.0,3.2 0 0,0 63.8,20.2" fill="none" stroke="#6ea6f7" stroke-width="1.2" stroke-linecap="round" opacity="0.82"/>
           ` : ''}
-          <path d="M 36.2,3.2 L 38.2,10.8 A 11.8,2.6 0 0,0 61.8,10.8 L 63.8,3.2 A 13.8,3.0 0 0,1 36.2,3.2 Z" fill="url(#ikeaCorkSideGrad)" stroke="#b88b58" stroke-width="0.85"/>
-          <ellipse cx="50" cy="3.2" rx="13.8" ry="2.9" fill="url(#ikeaCorkTopGrad)" stroke="#f7e7ce" stroke-width="0.8"/>
-          <ellipse cx="50" cy="3.1" rx="8.4" ry="1.5" fill="none" stroke="#c99c68" stroke-width="0.65" opacity="0.55"/>
-          <path d="M 38.2,4.5 A 11.8,2.4 0 0,0 61.8,4.5" fill="none" stroke="#fff9ed" stroke-width="1.0" stroke-linecap="round" opacity="0.85"/>
-          ${isSeated ? `<path d="M 32.4,9.5 A 17.8,3.5 0 0,0 67.6,9.5" fill="none" stroke="#b8d8ff" stroke-width="1.3" stroke-linecap="round" opacity="0.9"/>` : ''}
-          <!-- 按用户要求：去掉满瓶后的绿色对号徽章，保持纯净高定软木塞与星级麻布底座质感 -->
+          <!-- 瓶口上方的 3D 倒角橡木塞帽（带天然木纹年轮与暖阳高光边） -->
+          <path d="M 36.2,3.0 L 38.2,10.6 A 11.8,2.6 0 0,0 61.8,10.6 L 63.8,3.0 A 13.8,3.0 0 0,1 36.2,3.0 Z"
+                fill="url(#ikeaCorkSideGrad)" stroke="#a36a2c" stroke-width="0.85"/>
+          <line x1="42.5" y1="5.2" x2="43.0" y2="9.2" stroke="#8c5218" stroke-width="0.65" stroke-linecap="round" opacity="0.42"/>
+          <line x1="56.5" y1="5.0" x2="56.0" y2="9.0" stroke="#8c5218" stroke-width="0.65" stroke-linecap="round" opacity="0.38"/>
+          <ellipse cx="50" cy="3.0" rx="13.8" ry="2.9" fill="url(#ikeaCorkTopGrad)" stroke="#fff3db" stroke-width="0.85"/>
+          <ellipse cx="50" cy="2.9" rx="8.6" ry="1.55" fill="none" stroke="#b87d3e" stroke-width="0.65" opacity="0.52"/>
+          <ellipse cx="50" cy="2.9" rx="3.8" ry="0.68" fill="none" stroke="#b87d3e" stroke-width="0.55" opacity="0.40"/>
+          <path d="M 38.2,4.3 A 11.8,2.4 0 0,0 61.8,4.3" fill="none" stroke="#fffdf7" stroke-width="1.05" stroke-linecap="round" opacity="0.88"/>
+          ${isSeated ? `<path d="M 32.4,9.5 A 17.8,3.5 0 0,0 67.6,9.5" fill="none" stroke="#cde2ff" stroke-width="1.25" stroke-linecap="round" opacity="0.9"/>` : ''}
         </g>
       `;
     }
 
+    // 四段式自然物理塞木塞特效：
+    // 1) 0.00~0.24：木塞从瓶口正上方轻巧垂直对准下落；
+    // 2) 0.24~0.54：木塞下半截挤入玻璃瓶颈（锥塞受瓶口内壁挤压微缩、塞帽受压微扁），瓶口绽开一圈细腻气密微雾环与暖金星尘；
+    // 3) 0.54~1.00：木塞弹性回弹严丝合缝落座于玻璃瓶口内，干净自然、毫无杂乱遮挡！
     function renderRibbonAndDroppingCorkMarkup(idx, animP = 0.0, neckOffsetY = 0, bBotY = 193, useSpiral = true) {
       let fx = `<g transform="translate(0, ${neckOffsetY})">`;
-      if (animP < 0.16) {
-        const t = animP / 0.16;
-        const corkY = -88 * (1 - t * t * t);
-        fx += `<rect x="37" y="${(corkY - 22).toFixed(1)}" width="26" height="22" rx="8" fill="rgba(245, 226, 196, ${(0.35 * t).toFixed(2)})"/>`;
-        fx += `<g transform="translate(50, ${corkY.toFixed(1)}) scale(${(1 - 0.06 * t).toFixed(3)}, ${(1 + 0.18 * t).toFixed(3)}) translate(-50, 0)">${renderIkeaWoodCorkSVG(idx, false, false)}</g>`;
-      } else {
-        let impactOffsetY = 0, impactScaleX = 1, impactScaleY = 1;
-        if (animP < 0.34) {
-          const hitP = (animP - 0.16) / 0.18;
-          const squash = Math.sin(hitP * Math.PI * 2.2) * Math.exp(-3.2 * hitP);
-          impactOffsetY = squash * 5.2; impactScaleX = 1 + squash * 0.11; impactScaleY = 1 - squash * 0.14;
-          const shockP = Math.min(1, hitP * 1.4);
-          const bubbleR = 22 + shockP * 26;
-          const bubbleAlpha = Math.max(0, (1 - shockP) * 0.88);
-          /* 100% 借鉴原图 image_55d85b 的半透明金色魔法气泡（左上新月高光斑 + 暖金菲涅尔边缘） */
-          fx += `
-            <g transform="translate(50, 22)" opacity="${bubbleAlpha.toFixed(2)}">
-              <circle cx="0" cy="0" r="${bubbleR.toFixed(1)}" fill="rgba(255, 232, 110, 0.14)" stroke="#ffe566" stroke-width="2.2"/>
-              <path d="M ${(-bubbleR * 0.68).toFixed(1)},${(-bubbleR * 0.25).toFixed(1)} A ${(bubbleR * 0.78).toFixed(1)},${(bubbleR * 0.78).toFixed(1)} 0 0,1 ${(bubbleR * 0.25).toFixed(1)},${(-bubbleR * 0.68).toFixed(1)}"
-                    fill="none" stroke="#ffffff" stroke-width="3.2" stroke-linecap="round" opacity="0.85"/>
-            </g>
-          `;
-        }
-        const showCheck = (!useSpiral && animP >= 0.40);
-        fx += `<g transform="translate(50, ${(11.5 + impactOffsetY).toFixed(2)}) scale(${impactScaleX.toFixed(3)}, ${impactScaleY.toFixed(3)}) translate(-50, -11.5)">${renderIkeaWoodCorkSVG(idx, true, showCheck)}</g>`;
 
-        if (useSpiral && animP >= 0.18) {
-          const swirlP = Math.min(1, (animP - 0.18) / 0.82);
-          const botY = (bBotY - 2) - neckOffsetY, topLimitY = 26, spanH = botY - topLimitY;
-          const activeTopY = Math.max(topLimitY, botY - Math.min(1, swirlP * 1.35) * spanH);
-          const activeBotY = Math.max(topLimitY + 28, botY - Math.max(0, (swirlP - 0.62) / 0.38) * spanH * 0.65);
-          fx += `<g style="filter: drop-shadow(0 0 6px rgba(255, 250, 220, 0.95));">`;
-          const buildSpiralRibbon = (phaseOffset) => {
-            const N = 26, leftPts = [], rightPts = [];
-            for (let i = 0; i <= N; i++) {
-              const u = i / N;
-              const y = activeBotY - (activeBotY - activeTopY) * u;
-              const theta = ((botY - y) / Math.max(40, spanH)) * Math.PI * 2.35 - swirlP * Math.PI * 6.4 + phaseOffset;
-              const radiusX = y < 44 ? (18 + (y - 24) * 0.95) : 39.5;
-              const x = 50 + Math.sin(theta) * radiusX;
-              const halfW = Math.sin(u * Math.PI) * 4.4 * (0.65 + 0.35 * Math.cos(theta));
-              leftPts.push(`${(x - halfW).toFixed(1)},${y.toFixed(1)}`);
-              rightPts.push(`${(x + halfW).toFixed(1)},${y.toFixed(1)}`);
-            }
-            return `M ${leftPts.join(' L ')} L ${rightPts.reverse().join(' L ')} Z`;
-          };
-          fx += `<path d="${buildSpiralRibbon(0)}" fill="#ffffff" opacity="0.96"/>`;
-          fx += `<path d="${buildSpiralRibbon(Math.PI)}" fill="#fef08a" opacity="0.90"/>`;
-          for (let p = 0; p < 55; p++) {
-            const u1 = hash01(p * 3 + 1), u2 = hash01(p * 3 + 2), u3 = hash01(p * 3 + 3);
-            const py = activeBotY - u1 * (activeBotY - activeTopY);
-            if (py >= 20 && py <= botY + 4) {
-              const ang = ((botY - py) / Math.max(40, spanH)) * Math.PI * 2.35 - swirlP * Math.PI * 6.4 + (p % 2) * Math.PI + (u2 - 0.5) * 1.3;
-              const radX = (py < 44 ? (18 + (py - 24) * 0.95) : 39.5) + (u3 - 0.5) * 18;
-              const px = 50 + Math.sin(ang) * radX;
-              fx += `<circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="${(0.85 + (p % 4) * 0.5).toFixed(2)}" fill="${p % 3 === 0 ? '#fde047' : '#ffffff'}" opacity="${(Math.sin(u1 * Math.PI) * (0.65 + 0.35 * u3)).toFixed(2)}"/>`;
+      if (animP < 0.24) {
+        // 阶段 1：木塞从瓶口上方 (-26px) 顺滑加速落向玻璃瓶口 (-2.2px)
+        const t = animP / 0.24;
+        const easeIn = t * t * (2.2 - 1.2 * t);
+        const corkY = -26 * (1 - easeIn) - 2.2 * easeIn;
+        const approachShadowOp = (0.12 + 0.32 * easeIn).toFixed(2);
+        fx += `<ellipse cx="50" cy="9.2" rx="${(7.5 + 3.5 * easeIn).toFixed(1)}" ry="${(1.5 + 0.6 * easeIn).toFixed(2)}" fill="rgba(75, 38, 8, ${approachShadowOp})"/>`;
+        fx += `<g transform="translate(0, ${corkY.toFixed(2)})">${renderIkeaWoodCorkSVG(idx, false, false, 1.0)}</g>`;
+      } else {
+        // 阶段 2 & 3：木塞缓缓挤入瓶颈并弹性落定 (0.24 -> 1.0)
+        const insertP = Math.min(1, (animP - 0.24) / 0.76);
+        // 阻尼压入曲线：先从 -2.2px 压入至 +1.5px（过压紧实），再柔和回弹至 0.0px
+        let corkY = 0;
+        let capScaleX = 1.0;
+        let capScaleY = 1.0;
+        let plugCompressX = 0.93;
+
+        if (insertP < 0.36) {
+          const u = insertP / 0.36;
+          const easePush = 1 - Math.pow(1 - u, 2.4);
+          corkY = -2.2 * (1 - easePush) + 1.5 * easePush;
+          capScaleX = 1 + 0.055 * Math.sin(u * Math.PI * 0.85);
+          capScaleY = 1 - 0.075 * Math.sin(u * Math.PI * 0.85);
+          plugCompressX = 1.0 - 0.07 * easePush;
+        } else {
+          const u2 = (insertP - 0.36) / 0.64;
+          const damped = Math.exp(-4.2 * u2) * Math.cos(u2 * Math.PI * 2.2);
+          corkY = 1.5 * damped;
+          capScaleX = 1 + 0.028 * damped;
+          capScaleY = 1 - 0.036 * damped;
+          plugCompressX = 0.93 + 0.02 * (1 - Math.exp(-3 * u2));
+        }
+
+        // 气密瞬间：瓶口四周柔和散开一圈温润的空气微雾波纹与 8 颗小巧香槟星芒
+        if (insertP < 0.72) {
+          const puffP = insertP / 0.72;
+          const puffEase = 1 - Math.pow(1 - puffP, 2.6);
+          const puffAlpha = Math.max(0, (1 - puffP) * 0.76);
+          const rxRing = 15 + puffEase * 17;
+          const ryRing = 3.2 + puffEase * 3.6;
+
+          fx += `
+            <ellipse cx="50" cy="9.2" rx="${rxRing.toFixed(1)}" ry="${ryRing.toFixed(1)}"
+                     fill="none" stroke="#fffbeb" stroke-width="${(2.2 * (1 - puffP * 0.7)).toFixed(2)}"
+                     opacity="${puffAlpha.toFixed(2)}"/>
+          `;
+
+          for (let s = 0; s < 8; s++) {
+            const ang = (s / 8) * Math.PI * 2 + 0.25;
+            const sx = 50 + Math.cos(ang) * (12 + puffEase * 18);
+            const sy = 9.0 + Math.sin(ang) * (2.8 + puffEase * 5.5) - puffEase * 6.5;
+            const sr = (1.6 - puffP * 1.1) * (s % 2 === 0 ? 1.15 : 0.85);
+            if (sr > 0.2) {
+              fx += `<circle cx="${sx.toFixed(1)}" cy="${sy.toFixed(1)}" r="${sr.toFixed(2)}"
+                             fill="${s % 2 === 0 ? '#fef08a' : '#ffffff'}" opacity="${(puffAlpha * 0.92).toFixed(2)}"/>`;
             }
           }
-          fx += `</g>`;
         }
+
+        fx += `<g transform="translate(50, ${(9.2 + corkY).toFixed(2)}) scale(${capScaleX.toFixed(3)}, ${capScaleY.toFixed(3)}) translate(-50, -9.2)">${renderIkeaWoodCorkSVG(idx, true, false, plugCompressX)}</g>`;
       }
+
       fx += `</g>`;
       return fx;
     }
@@ -6844,7 +6902,7 @@
         const prevIdx = selectedIndex;
         activeHintPair = { srcIdx: move.srcIdx, dstIdx: move.dstIdx };
         selectedIndex = move.srcIdx;
-        playSound('select');
+        playSound('btn_hint');
         const hintBadge = document.getElementById('hint-count');
         if (hintBadge) {
           hintBadge.textContent = hintUses > 0 ? hintUses : '+';
@@ -6952,7 +7010,7 @@
 
       activeHintPair = null;
       selectedIndex = null;
-      playSound('pack');
+      playSound('btn_shuffle');
       showToast('🔀 已为您打乱重排盘面剩余药水（药水总数保持不变）！');
       renderAll();
       const shuffleBadge = document.getElementById('shuffle-count');
@@ -7302,12 +7360,20 @@
 
       const gridEl = document.getElementById('bottles-grid');
       const srcEl = gridEl.children[srcIdx];
-      const wasAlreadyLifted = srcEl ? (srcEl.classList.contains('selected') || srcEl.classList.contains('hint-source-slot')) : false;
-      Array.from(gridEl.children).forEach(el => {
-        el.classList.remove('selected', 'settling', 'hint-source-slot', 'hint-target-slot', 'color-lock-match', 'color-lock-mismatch');
-      });
       const dstEl = gridEl.children[dstIdx];
       const srcSvgEl = srcEl.querySelector('.bottle-svg') || srcEl;
+
+      // 在移除 .selected 之前，先精确测量瓶口在当前抬起状态下的真实屏幕坐标，确保起飞第0帧零跳动！
+      const prePourDir = (srcEl.getBoundingClientRect().left <= dstEl.getBoundingClientRect().left) ? 1 : -1;
+      const preLipElL = document.getElementById(`lip-left-${srcIdx}`);
+      const preLipElR = document.getElementById(`lip-right-${srcIdx}`);
+      const preLiftedRectL = preLipElL ? preLipElL.getBoundingClientRect() : null;
+      const preLiftedRectR = preLipElR ? preLipElR.getBoundingClientRect() : null;
+
+      Array.from(gridEl.children).forEach(el => {
+        el.classList.remove('selected', 'settling', 'level-enter-anim', 'hint-source-slot', 'hint-target-slot', 'color-lock-match', 'color-lock-mismatch');
+        el.style.animationDelay = '';
+      });
 
       srcEl.style.transform = '';
       srcEl.style.transformOrigin = '';
@@ -7482,11 +7548,11 @@
         if (elapsed < moveDuration) {
           const p = elapsed / moveDuration;
           const ease = 1 - Math.pow(1 - p, 3);
-          // 从当前已抬起的悬停高度 (-22px) 无缝起飞，并沿柔美抛物线弧线飞向目标瓶口，彻底告别先瞬移回桌面再飞起的生硬跳帧！
-          const initialLiftScreenY = wasAlreadyLifted ? (-22 * zoomScale) : 0;
-          const startFlightLipY = srcLipY + initialLiftScreenY;
-          const arcLiftY = -Math.sin(p * Math.PI) * 14 * zoomScale;
-          const curLipX = srcLipX + (targetLipX - srcLipX) * ease;
+          const preLiftedRect = (pourDir === 1) ? preLiftedRectR : preLiftedRectL;
+          const startFlightLipX = preLiftedRect ? (preLiftedRect.left + preLiftedRect.width * 0.5) : srcLipX;
+          const startFlightLipY = preLiftedRect ? (preLiftedRect.top + preLiftedRect.height * 0.5) : srcLipY;
+          const arcLiftY = -Math.sin(p * Math.PI) * 12 * zoomScale;
+          const curLipX = startFlightLipX + (targetLipX - startFlightLipX) * ease;
           const curLipY = startFlightLipY + (targetLipY - startFlightLipY) * ease + arcLiftY;
           const curDeg = startTiltDeg * ease;
 
@@ -7746,45 +7812,29 @@
               const cp = Math.min(1, (tNow - corkStart) / corkDur);
               dstBottle.corkAnimProgress = cp;
 
-              if (cp >= 0.16 && !slamSoundPlayed) {
+              // 木塞接触瓶口开始塞入时（cp >= 0.18）触发真实软木摩擦与落座声效
+              if (cp >= 0.18 && !slamSoundPlayed) {
                 slamSoundPlayed = true;
                 playSound('cork_slam');
               }
 
-              if (cp >= 0.16 && cp < 0.38) {
-                const hitP = (cp - 0.16) / 0.22;
-                const squash = Math.sin(hitP * Math.PI * 2.2) * Math.exp(-3.0 * hitP);
+              // 瓶身随木塞压入产生自然轻微的整体下沉回弹（保持瓶颈与木塞100%刚性对齐，绝不错位）
+              if (cp >= 0.24 && cp < 0.62) {
+                const hitP = (cp - 0.24) / 0.38;
+                const squash = Math.sin(hitP * Math.PI) * Math.exp(-2.2 * hitP);
                 if (targetSlotEl) {
-                  const bScaleX = 1 + squash * 0.07;
-                  const bScaleY = 1 - squash * 0.09;
-                  const bTransY = squash * 6.5;
+                  const bScaleX = 1 + squash * 0.022;
+                  const bScaleY = 1 - squash * 0.028;
+                  const bTransY = squash * 2.6;
                   targetSlotEl.style.transformOrigin = '50% 100%';
                   targetSlotEl.style.transform = `translateY(${bTransY.toFixed(2)}px) scale(${bScaleX.toFixed(3)}, ${bScaleY.toFixed(3)})`;
                 }
-                if (neckGroupEl) {
-                  const nScaleX = 1 + squash * 0.12;
-                  const nScaleY = 1 - squash * 0.22;
-                  const nTransY = squash * 5.2;
-                  neckGroupEl.setAttribute(
-                    'transform',
-                    `translate(50, ${(16 + neckOff + nTransY).toFixed(2)}) scale(${nScaleX.toFixed(3)}, ${nScaleY.toFixed(3)}) translate(-50, -16)`
-                  );
-                }
-              } else if (cp >= 0.38) {
+              } else if (cp >= 0.62) {
                 if (targetSlotEl) targetSlotEl.style.transform = '';
-                if (neckGroupEl) neckGroupEl.setAttribute('transform', `translate(0, ${neckOff})`);
-              }
-
-              if (useBagSpiral && cp >= 0.20 && !packSoundPlayed) {
-                packSoundPlayed = true;
-                playSound('pack');
-              } else if (!useBagSpiral && cp >= 0.35 && !packSoundPlayed) {
-                packSoundPlayed = true;
-                playSound('pack');
               }
 
               if (corkFxEl) {
-                corkFxEl.innerHTML = renderRibbonAndDroppingCorkMarkup(dstIdx, cp, neckOff, dstBotY, useBagSpiral);
+                corkFxEl.innerHTML = renderRibbonAndDroppingCorkMarkup(dstIdx, cp, neckOff, dstBotY, false);
               }
 
               if (cp < 1) {
@@ -7818,14 +7868,10 @@
             requestAnimationFrame(stepCorkAnim);
           } else {
             isAnimating = false;
+            isLevelEntering = false;
             renderAll();
-            const landedSlot = document.getElementById('bottles-grid')?.children[srcIdx];
-            if (landedSlot && !bottles[srcIdx]?.removed) {
-              landedSlot.classList.remove('level-enter-anim', 'settling', 'selected');
-              landedSlot.style.animationDelay = '';
-            }
-            // 物理平稳落座：保持瓶身静止不动，仅触发水面微阻尼自平衡回弹波纹
-            startSettleSloshAnimation(srcIdx, 0.38);
+            playSound('bottle_land');
+            startSettleSloshAnimation(srcIdx, 0.36);
 
             if (revealedMysteryLayerIdx !== null && revealedMysteryLayerIdx >= 0) {
               playSound('mystery_reveal');
@@ -8227,23 +8273,25 @@
     document.getElementById('settings-btn').addEventListener('click', () => {
       updatePauseSwitchUI();
       pauseModalMask.classList.add('show');
-      playSound('select');
+      playSound('modal_open');
     });
     document.getElementById('pause-close-btn').addEventListener('click', () => {
       pauseModalMask.classList.remove('show');
-      playSound('select');
+      playSound('modal_close');
     });
     document.getElementById('pause-resume-btn').addEventListener('click', () => {
       pauseModalMask.classList.remove('show');
-      playSound('select');
+      playSound('modal_close');
     });
     document.getElementById('pause-restart-btn').addEventListener('click', () => {
       pauseModalMask.classList.remove('show');
+      playSound('btn_restart');
       initGame();
       showToast('🔄 当前关卡已重新开始');
     });
     document.getElementById('pause-skip-btn').addEventListener('click', () => {
       pauseModalMask.classList.remove('show');
+      playSound('ui_tap');
       currentLevelId = (currentLevelId % 200) + 1;
       initGame();
       showToast(`⏭️ 已跳过并进入：关卡 ${currentLevelId}`);
@@ -8256,26 +8304,26 @@
     document.getElementById('toggle-sound').addEventListener('click', () => {
       userSettings.sound = !userSettings.sound;
       updatePauseSwitchUI();
-      if (userSettings.sound) playSound('select');
+      if (userSettings.sound) playSound('toggle_on');
       showToast(userSettings.sound ? '🔊 声音已开启' : '🔇 声音已关闭');
     });
     document.getElementById('toggle-vibrate').addEventListener('click', () => {
       userSettings.vibrate = !userSettings.vibrate;
       updatePauseSwitchUI();
-      playSound('select');
+      playSound(userSettings.vibrate ? 'toggle_on' : 'toggle_off');
       showToast(userSettings.vibrate ? '📳 震动反馈已开启' : '📴 震动反馈已关闭');
     });
     document.getElementById('toggle-music').addEventListener('click', () => {
       userSettings.music = !userSettings.music;
       updatePauseSwitchUI();
-      playSound('select');
+      playSound(userSettings.music ? 'toggle_on' : 'toggle_off');
       showToast(userSettings.music ? '🎵 背景音乐已开启' : '🎵 背景音乐已静音');
     });
     document.getElementById('toggle-zoom').addEventListener('click', () => {
       userSettings.zoom = !userSettings.zoom;
       updatePauseSwitchUI();
       renderAll();
-      playSound('select');
+      playSound(userSettings.zoom ? 'toggle_on' : 'toggle_off');
       showToast(userSettings.zoom ? '🔍 舞台微缩模式已开启' : '🔍 舞台标准比例已恢复');
     });
 
@@ -8283,7 +8331,7 @@
     document.getElementById('speed-x2-btn').addEventListener('click', () => {
       isSpeed2x = !isSpeed2x;
       renderAll();
-      playSound('pack');
+      playSound(isSpeed2x ? 'toggle_on' : 'toggle_off');
       showToast(isSpeed2x ? '⚡ 已开启 2倍极速倒水模式！' : '⚡ 已恢复标准倒水速度');
     });
 
@@ -8469,7 +8517,7 @@
     document.getElementById('dock-restart-btn')?.addEventListener('click', () => {
       if (isAnimating) return;
       initGame();
-      playSound('select');
+      playSound('btn_restart');
       showToast('🔄 当前关卡已重新开始');
     });
 
@@ -8509,7 +8557,7 @@
       currentChapterTab = Math.floor((currentLevelId - 1) / 40);
       renderLevelModalCards();
       levelModalMask.classList.add('show');
-      playSound('select');
+      playSound('modal_open');
     }
 
     document.getElementById('level-pill-title').addEventListener('click', openLevelSelector);
@@ -8557,19 +8605,19 @@
         }
       }
       document.getElementById('mechanic-modal-mask')?.classList.add('show');
-      playSound('select');
+      playSound('modal_open');
     });
     document.getElementById('level-select-btn')?.addEventListener('click', openLevelSelector);
     document.getElementById('level-modal-close-btn').addEventListener('click', () => {
       levelModalMask.classList.remove('show');
-      playSound('select');
+      playSound('modal_close');
     });
 
     const mechModalMaskEl = document.getElementById('mechanic-modal-mask');
     if (mechModalMaskEl) {
       mechModalMaskEl.addEventListener('click', () => {
         mechModalMaskEl.classList.remove('show');
-        playSound('select');
+        playSound('modal_close');
       });
     }
 
@@ -8743,7 +8791,7 @@
       undoUses = Math.max(0, (undoUses || 1) - 1);
       selectedIndex = null;
       activeHintPair = null;
-      playSound('deselect');
+      playSound('btn_undo');
       showToast('↩️ 已为您撤回至上一步');
       renderAll();
       const undoBadge = document.getElementById('undo-count-badge');
@@ -8813,13 +8861,16 @@
     const modalMask = document.getElementById('modal-mask');
     document.getElementById('win-close-x-btn').addEventListener('click', () => {
       modalMask.classList.remove('show');
+      playSound('modal_close');
     });
     document.getElementById('modal-restart-btn')?.addEventListener('click', () => {
+      playSound('btn_restart');
       initGame();
       modalMask.classList.remove('show');
       showToast('🔄 已重新开始本关');
     });
     document.getElementById('modal-next-btn').addEventListener('click', () => {
+      playSound('ui_tap');
       currentLevelId = (currentLevelId % 200) + 1;
       initGame();
       modalMask.classList.remove('show');
