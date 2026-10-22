@@ -1,0 +1,9 @@
+{
+  "changes": [
+    {
+      "field_id": "region_flag_android",
+      "value": 3,
+      "force": true
+    }
+  ]
+}

@@ -1,0 +1,54 @@
+{
+  "ok": true,
+  "data": {
+    "result": {
+      "fields": {
+        "promotion_material_type": {
+          "field_id": "promotion_material_type",
+          "filled": false,
+          "input_type": "select",
+          "label": "首页推荐素材",
+          "options": [
+            "BANNER_4",
+            "GAMEPLAY_DEMO",
+            "TRAILER"
+          ],
+          "state": "required",
+          "value_labels": {
+            "BANNER_4": "宣传图",
+            "GAMEPLAY_DEMO": "实机演示",
+            "TRAILER": "预告片"
+          }
+        },
+        "promotion_text": {
+          "constraints": {
+            "max_length": 25
+          },
+          "field_id": "promotion_text",
+          "filled": false,
+          "input_type": "text",
+          "label": "首页推荐语",
+          "state": "suggested"
+        }
+      },
+      "module_id": "profile-promotion",
+      "revision": 1120637
+    },
+    "status": "completed"
+  },
+  "meta": {
+    "catalog": {
+      "source_version": "1.0.57",
+      "digest": "sha256:09bf765a71dd33e873dc3fdbcb73b6c6efb4275f93aeaaa6fe01eb7a1619f5c4",
+      "loaded_from": "embedded"
+    }
+  },
+  "_notice": {
+    "update_check": {
+      "command": "taptap-cli update --check --json",
+      "message": "Automatic update check could not complete; run: taptap-cli update --check --json",
+      "reason": "timeout",
+      "status": "unavailable"
+    }
+  }
+}

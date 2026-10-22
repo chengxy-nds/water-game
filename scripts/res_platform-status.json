@@ -1,0 +1,95 @@
+{
+  "ok": true,
+  "data": {
+    "result": {
+      "fields": {
+        "app_platforms": {
+          "current_value": [
+            "MOBILE"
+          ],
+          "field_id": "app_platforms",
+          "filled": true,
+          "input_type": "select",
+          "label": "发布平台",
+          "options": [
+            "MOBILE",
+            "PC_OFFICIAL",
+            "PC_STEAM",
+            "UNKNOWN"
+          ],
+          "state": "required",
+          "value_labels": {
+            "MOBILE": "手机",
+            "PC_OFFICIAL": "电脑端-官方下载",
+            "PC_STEAM": "电脑端-Steam",
+            "UNKNOWN": "未设置（仅存量可回写、不可新增；未登记的数字以 UNKNOWN_\u003cn\u003e 返回）"
+          }
+        },
+        "itunes_id": {
+          "constraints": {
+            "max_length": 18,
+            "pattern_hint": "须为最多 18 位 Apple ID 数字"
+          },
+          "field_id": "itunes_id",
+          "filled": false,
+          "input_type": "text",
+          "label": "App Store ID",
+          "state": "optional"
+        },
+        "region_flag_android": {
+          "current_value": 4,
+          "field_id": "region_flag_android",
+          "filled": true,
+          "input_type": "select",
+          "label": "Android 发布状态",
+          "options": [
+            "1",
+            "3",
+            "4"
+          ],
+          "state": "required",
+          "value_labels": {
+            "1": "敬请期待",
+            "3": "预约",
+            "4": "开放试玩"
+          }
+        },
+        "region_flag_ios": {
+          "field_id": "region_flag_ios",
+          "filled": false,
+          "input_type": "select",
+          "label": "iOS 发布状态",
+          "options": [
+            "1",
+            "3",
+            "0"
+          ],
+          "state": "required",
+          "value_labels": {
+            "0": "正式上线",
+            "1": "敬请期待",
+            "3": "预约"
+          }
+        }
+      },
+      "module_id": "platform-status",
+      "revision": 1120637
+    },
+    "status": "completed"
+  },
+  "meta": {
+    "catalog": {
+      "source_version": "1.0.57",
+      "digest": "sha256:09bf765a71dd33e873dc3fdbcb73b6c6efb4275f93aeaaa6fe01eb7a1619f5c4",
+      "loaded_from": "embedded"
+    }
+  },
+  "_notice": {
+    "update_check": {
+      "command": "taptap-cli update --check --json",
+      "message": "Automatic update check could not complete; run: taptap-cli update --check --json",
+      "reason": "timeout",
+      "status": "unavailable"
+    }
+  }
+}

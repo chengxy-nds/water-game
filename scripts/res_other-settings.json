@@ -1,0 +1,120 @@
+{
+  "ok": true,
+  "data": {
+    "result": {
+      "fields": {
+        "android_version": {
+          "current_value": "no",
+          "field_id": "android_version",
+          "filled": true,
+          "input_type": "text",
+          "label": "Android 系统版本",
+          "state": "optional"
+        },
+        "chatting_label": {
+          "field_id": "chatting_label",
+          "filled": false,
+          "input_type": "text",
+          "label": "社群名称",
+          "state": "optional"
+        },
+        "chatting_link": {
+          "constraints": {
+            "pattern_hint": "须以 http:// 或 https:// 开头"
+          },
+          "field_id": "chatting_link",
+          "filled": false,
+          "input_type": "text",
+          "label": "社群链接",
+          "state": "optional"
+        },
+        "chatting_number": {
+          "constraints": {
+            "max_length": 50
+          },
+          "field_id": "chatting_number",
+          "filled": false,
+          "input_type": "text",
+          "label": "社群号码",
+          "state": "optional"
+        },
+        "download_site": {
+          "constraints": {
+            "pattern_hint": "须以 http:// 或 https:// 开头"
+          },
+          "field_id": "download_site",
+          "filled": false,
+          "input_type": "text",
+          "label": "游戏官网",
+          "state": "optional"
+        },
+        "is_google_play_required": {
+          "current_value": "false",
+          "field_id": "is_google_play_required",
+          "filled": true,
+          "input_type": "select",
+          "label": "需要 Google Play 服务",
+          "options": [
+            "true",
+            "false"
+          ],
+          "state": "optional",
+          "value_labels": {
+            "false": "否",
+            "true": "是"
+          }
+        },
+        "is_proxy_required": {
+          "current_value": "false",
+          "field_id": "is_proxy_required",
+          "filled": true,
+          "input_type": "select",
+          "label": "需要网络工具",
+          "options": [
+            "true",
+            "false"
+          ],
+          "state": "optional",
+          "value_labels": {
+            "false": "否",
+            "true": "是"
+          }
+        },
+        "supported_vr": {
+          "current_value": "false",
+          "field_id": "supported_vr",
+          "filled": true,
+          "input_type": "select",
+          "label": "支持 VR",
+          "options": [
+            "true",
+            "false"
+          ],
+          "state": "optional",
+          "value_labels": {
+            "false": "否",
+            "true": "是"
+          }
+        }
+      },
+      "module_id": "other-settings",
+      "revision": 1120637
+    },
+    "status": "completed"
+  },
+  "meta": {
+    "catalog": {
+      "source_version": "1.0.57",
+      "digest": "sha256:09bf765a71dd33e873dc3fdbcb73b6c6efb4275f93aeaaa6fe01eb7a1619f5c4",
+      "loaded_from": "embedded"
+    }
+  },
+  "_notice": {
+    "update_check": {
+      "command": "taptap-cli update --check --json",
+      "message": "Automatic update check could not complete; run: taptap-cli update --check --json",
+      "reason": "timeout",
+      "status": "unavailable"
+    }
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "changes": [
+    {
+      "field_id": "banner_4",
+      "force": true,
+      "value": {
+        "url": "https://img-tc.tapimg.com/market/images/c331f36d3bf1479c89a72f2473be8f4f.jpg",
+        "info": {
+          "format": "jpeg",
+          "height": 1080,
+          "size": 307493,
+          "width": 1920
+        }
+      }
+    },
+    {
+      "field_id": "icon",
+      "force": true,
+      "value": {
+        "url": "https://img-tc.tapimg.com/market/images/0c1fac15006783ae9d9b82ed4e14d20a.jpg",
+        "info": {
+          "format": "jpeg",
+          "height": 512,
+          "size": 70609,
+          "width": 512
+        }
+      }
+    },
+    {
+      "field_id": "screenshots",
+      "force": true,
+      "op": "replace",
+      "value": [
+        {
+          "url": "https://img-tc.tapimg.com/market/images/f4ddf7fa17bf8796b26cd4d3cf917064.jpg",
+          "info": {
+            "format": "jpeg",
+            "height": 1920,
+            "size": 243486,
+            "width": 1080
+          }
+        },
+        {
+          "url": "https://img-tc.tapimg.com/market/images/341e20c2210e72a250920be1966a0b7d.jpg",
+          "info": {
+            "format": "jpeg",
+            "height": 1920,
+            "size": 322794,
+            "width": 1080
+          }
+        },
+        {
+          "url": "https://img-tc.tapimg.com/market/images/ea1f5830b73cce9fe2d9d1a5762588ca.jpg",
+          "info": {
+            "format": "jpeg",
+            "height": 1920,
+            "size": 194410,
+            "width": 1080
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "changes": [
+    {
+      "field_id": "description",
+      "value": "《倒水不能停》是一款极具沉浸感与解压乐趣的高拟真物理分水益智小游戏！\n\n【核心特色】\n1. 真实生活级流体物理：基于动力学算法模拟液体流动、液面倾斜与微阻尼水波回弹，倒水动作丝滑流畅，彻底告别僵硬与跳动。\n2. 沉浸式物理拟音 ASMR：精心调校不同瓶型与水流碰撞的原声拟音，从潺潺注水到稳稳落座，带来极致听觉治愈。\n3. 匠心关卡设计：数十种色彩交织，结合广告解密瓶、盲盒购物袋等创新机制，步步为营，开动脑筋打破死局！\n4. 轻松即点即玩：随时随地来一局，在指尖流动中洗去疲惫，享受纯粹的逻辑推理成就感！",
+      "force": true
+    },
+    {
+      "field_id": "region_flag_ios",
+      "value": "1",
+      "force": true
+    },
+    {
+      "field_id": "promotion_material_type",
+      "value": "BANNER_4",
+      "force": true
+    },
+    {
+      "field_id": "promotion_text",
+      "value": "高拟真流体ASMR，治愈分水停不下来！",
+      "force": true
+    }
+  ]
+}
