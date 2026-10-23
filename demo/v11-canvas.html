@@ -1,0 +1,1903 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>倒水不能停 - 纯 Canvas 工业级全机制版</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: none;
+    }
+    html, body {
+      width: 100%;
+      height: 100%;
+      height: 100dvh;
+      overflow: hidden;
+      background: #1a150e;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    }
+    #game-canvas {
+      display: block;
+      width: 100vw;
+      height: 100dvh;
+      max-width: 460px;
+      max-height: 960px;
+      touch-action: none;
+      box-shadow: 0 0 35px rgba(0, 0, 0, 0.55);
+    }
+  </style>
+</head>
+<body>
+  <canvas id="game-canvas"></canvas>
+
+  <script>
+    'use strict';
+    console.log('[Pure Canvas Web Engine] Starting Water Sort...');
+    
+/* ==================== MODULE: platform.js ==================== */
+/**
+ * 跨平台环境适配器 (Platform.js)
+ * 工业级支持 TapTap 小游戏 (tap)、微信小游戏 (wx)、抖音小游戏 (tt) 与 Web 浏览器
+ * 严格杜绝在无 DOM 沙箱中直接调用 document / window 导致黑屏崩溃
+ */
+
+const Platform = {
+  // 识别当前宿主环境
+  type: (function() {
+    if (typeof tap !== 'undefined') return 'taptap';
+    if (typeof wx !== 'undefined') return 'wechat';
+    if (typeof tt !== 'undefined') return 'douyin';
+    return 'browser';
+  })(),
+
+  getHost() {
+    if (typeof tap !== 'undefined') return tap;
+    if (typeof wx !== 'undefined') return wx;
+    if (typeof tt !== 'undefined') return tt;
+    return null;
+  },
+
+  // 获取主屏 Canvas (小游戏规范：主屏 canvas 默认全局注入或由 host.createCanvas 创建)
+  getMainCanvas() {
+    // 1. 全局已存在 canvas 对象
+    if (typeof canvas !== 'undefined' && canvas && typeof canvas.getContext === 'function') {
+      return canvas;
+    }
+    // 2. 宿主小游戏环境 API
+    const host = this.getHost();
+    if (host && typeof host.createCanvas === 'function') {
+      try {
+        const c = host.createCanvas();
+        if (c) return c;
+      } catch (e) {}
+    }
+    // 3. Web 浏览器 DOM 环境
+    if (typeof document !== 'undefined') {
+      let c = document.getElementById('game-canvas') || document.getElementById('gameCanvas');
+      if (c) return c;
+      c = document.createElement('canvas');
+      c.id = 'game-canvas';
+      document.body.appendChild(c);
+      return c;
+    }
+    return null;
+  },
+
+  // 别名兼容
+  createCanvas(width, height) {
+    if (width && height) {
+      return this.createOffscreenCanvas(width, height);
+    }
+    return this.getMainCanvas();
+  },
+
+  createMainCanvas() {
+    return this.getMainCanvas();
+  },
+
+  // 创建离屏 Canvas
+  createOffscreenCanvas(width = 300, height = 300) {
+    const host = this.getHost();
+    if (host && typeof host.createOffscreenCanvas === 'function') {
+      try {
+        return host.createOffscreenCanvas({ type: '2d', width, height });
+      } catch (e) {}
+    }
+    if (typeof document !== 'undefined' && document.createElement) {
+      const c = document.createElement('canvas');
+      c.width = width;
+      c.height = height;
+      return c;
+    }
+    return null;
+  },
+
+  // 获取系统屏幕尺寸与像素比
+  getSystemInfo() {
+    const host = this.getHost();
+    if (host && typeof host.getSystemInfoSync === 'function') {
+      try {
+        const info = host.getSystemInfoSync();
+        return {
+          windowWidth: info.windowWidth || 375,
+          windowHeight: info.windowHeight || 667,
+          pixelRatio: Math.min(info.pixelRatio || 2, 3),
+          platform: info.platform || 'mobile'
+        };
+      } catch (e) {}
+    }
+
+    if (typeof window !== 'undefined') {
+      const c = document.getElementById('game-canvas') || document.getElementById('gameCanvas');
+      const w = (c && c.clientWidth) ? c.clientWidth : (window.innerWidth || 375);
+      const h = (c && c.clientHeight) ? c.clientHeight : (window.innerHeight || 667);
+      const dpr = Math.min(window.devicePixelRatio || 2, 3);
+      return {
+        windowWidth: w,
+        windowHeight: h,
+        pixelRatio: dpr,
+        platform: 'browser'
+      };
+    }
+
+    return {
+      windowWidth: 375,
+      windowHeight: 667,
+      pixelRatio: 2,
+      platform: 'unknown'
+    };
+  },
+
+  getScreenSize() {
+    const info = this.getSystemInfo();
+    return {
+      width: info.windowWidth,
+      height: info.windowHeight,
+      dpr: info.pixelRatio
+    };
+  },
+
+  // 跨平台统一触控交互监听 (统一分发 clientX, clientY)
+  onTouch(callback) {
+    const host = this.getHost();
+
+    // 1. 小游戏端触控事件
+    if (host) {
+      const handler = (e) => {
+        const t = (e.changedTouches && e.changedTouches[0]) || (e.touches && e.touches[0]);
+        if (t) callback(t.clientX, t.clientY);
+      };
+      if (typeof host.onTouchStart === 'function') {
+        host.onTouchStart(handler);
+        return;
+      }
+    }
+
+    // 2. 浏览器 Web DOM 触控/鼠标事件
+    if (typeof window !== 'undefined') {
+      const getCoords = (e) => {
+        const c = document.getElementById('game-canvas') || document.getElementById('gameCanvas');
+        const rect = c ? c.getBoundingClientRect() : { left: 0, top: 0 };
+        const clientX = e.clientX !== undefined ? e.clientX : (e.touches && e.touches[0] ? e.touches[0].clientX : 0);
+        const clientY = e.clientY !== undefined ? e.clientY : (e.touches && e.touches[0] ? e.touches[0].clientY : 0);
+        return {
+          x: clientX - rect.left,
+          y: clientY - rect.top
+        };
+      };
+
+      window.addEventListener('pointerdown', (e) => {
+        const pt = getCoords(e);
+        callback(pt.x, pt.y);
+      });
+
+      window.addEventListener('touchstart', (e) => {
+        if (e.touches && e.touches[0]) {
+          const pt = getCoords(e.touches[0]);
+          callback(pt.x, pt.y);
+        }
+      }, { passive: true });
+    }
+  },
+
+  onTouchStart(callback) {
+    this.onTouch(callback);
+  },
+
+  onTouchEnd(callback) {
+    this.onTouch(callback);
+  },
+
+  // 触感震动
+  triggerHaptic(duration = 15) {
+    const host = this.getHost();
+    if (host && typeof host.vibrateShort === 'function') {
+      try { host.vibrateShort({ type: 'light' }); return; } catch (e) {}
+    }
+    if (typeof navigator !== 'undefined' && navigator.vibrate) {
+      try { navigator.vibrate(duration); } catch (e) {}
+    }
+  },
+
+  // 本地持久化存储
+  getStorage(key, defVal = null) {
+    const host = this.getHost();
+    if (host && typeof host.getStorageSync === 'function') {
+      try {
+        const val = host.getStorageSync(key);
+        return val !== '' && val !== null && val !== undefined ? val : defVal;
+      } catch (e) { return defVal; }
+    }
+    if (typeof localStorage !== 'undefined') {
+      const val = localStorage.getItem(key);
+      return val !== null ? val : defVal;
+    }
+    return defVal;
+  },
+
+  setStorage(key, val) {
+    const host = this.getHost();
+    if (host && typeof host.setStorageSync === 'function') {
+      try { host.setStorageSync(key, val); return; } catch (e) {}
+    }
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(key, String(val));
+    }
+  }
+};
+
+if (typeof module !== 'undefined') {
+  module.exports = Platform;
+}
+
+
+
+/* ==================== MODULE: levels.js ==================== */
+/**
+ * 关卡算法与全局调色板系统 (Levels.js)
+ * 包含 8 色丝滑琉璃药水色板与 200 关深层可解算法
+ */
+
+const COLORS = {
+  red:    { name: '红色', hex: '#dc2626', light: '#f87171', dark: '#991b1b', topRim: '#fca5a5', bagMain: '#dc2626', bagDark: '#991b1b' },
+  yellow: { name: '黄色', hex: '#eab308', light: '#fde047', dark: '#854d0e', topRim: '#fef08a', bagMain: '#f59e0b', bagDark: '#b45309' },
+  blue:   { name: '蓝色', hex: '#2563eb', light: '#60a5fa', dark: '#1e3a8a', topRim: '#93c5fd', bagMain: '#1d4ed8', bagDark: '#1e3a8a' },
+  green:  { name: '绿色', hex: '#16a34a', light: '#4ade80', dark: '#14532d', topRim: '#86efac', bagMain: '#15803d', bagDark: '#14532d' },
+  purple: { name: '紫色', hex: '#9333ea', light: '#c084fc', dark: '#581c87', topRim: '#d8b4fe', bagMain: '#7e22ce', bagDark: '#581c87' },
+  orange: { name: '橙色', hex: '#ea580c', light: '#fb923c', dark: '#7c2d12', topRim: '#fdba74', bagMain: '#c2410c', bagDark: '#7c2d12' },
+  cyan:   { name: '青色', hex: '#0891b2', light: '#22d3ee', dark: '#164e63', topRim: '#67e8f9', bagMain: '#0e7490', bagDark: '#164e63' },
+  pink:   { name: '粉色', hex: '#db2777', light: '#f472b6', dark: '#831843', topRim: '#fbcfe8', bagMain: '#be185d', bagDark: '#831843' }
+};
+
+const COLOR_KEYS = ['red', 'yellow', 'blue', 'green', 'purple', 'orange', 'cyan', 'pink'];
+
+function mulberry32(seed) {
+  let state = seed >>> 0;
+  return function() {
+    state = (state + 0x6D2B79F5) >>> 0;
+    let t = Math.imul(state ^ (state >>> 15), 1 | state);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296.0;
+  };
+}
+
+function buildVerifiedColorTubes(palette, cap, rng) {
+  const n = palette.length;
+  if (n <= 1) return [Array(cap).fill(palette[0])];
+  const pool = [];
+  palette.forEach(c => { for (let k = 0; k < cap; k++) pool.push(c); });
+  let bestCandidate = null, bestScore = -1;
+  for (let attempt = 0; attempt < 80; attempt++) {
+    const arr = pool.slice();
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(rng() * (i + 1));
+      const tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
+    }
+    const tubes = [];
+    let valid = true, totalTransitions = 0;
+    for (let i = 0; i < n; i++) {
+      const t = arr.slice(i * cap, (i + 1) * cap);
+      if (t.every(c => c === t[0])) { valid = false; break; }
+      let trans = 0;
+      for (let k = 1; k < cap; k++) {
+        if (t[k] !== t[k - 1]) trans++;
+      }
+      totalTransitions += trans;
+      tubes.push(t);
+    }
+    if (!valid) continue;
+    if (totalTransitions > bestScore) {
+      bestScore = totalTransitions;
+      bestCandidate = tubes;
+    }
+    if (totalTransitions >= n * (cap - 1) * 0.9) return tubes;
+  }
+  if (bestCandidate) return bestCandidate;
+  return palette.map((_, i) => Array.from({ length: cap }, (__, k) => palette[(i + k * 2 + 1) % n]));
+}
+
+function ensureOpeningPairs(tubes, minPairs = 2) {
+  if (!tubes || tubes.length < 3) return tubes;
+  const cap = tubes[0].length;
+  const used = new Set();
+  for (let s = 0; s < minPairs; s++) {
+    const tIdx = s * 2;
+    const pIdx = s * 2 + 1;
+    if (pIdx >= tubes.length) break;
+    let targetCol = tubes[tIdx][cap - 1];
+    used.add(targetCol);
+
+    if (tubes[pIdx][cap - 1] !== targetCol) {
+      for (let m = 0; m < tubes.length; m++) {
+        if (m === tIdx) continue;
+        for (let k = 0; k < cap - 1; k++) {
+          if (tubes[m][k] === targetCol) {
+            const tmp = tubes[pIdx][cap - 1];
+            tubes[pIdx][cap - 1] = targetCol;
+            tubes[m][k] = tmp;
+            break;
+          }
+        }
+      }
+    }
+  }
+  return tubes;
+}
+
+const Levels = {
+  COLORS,
+  COLOR_KEYS,
+
+  getLevelConfig(lv, attemptSeed = null) {
+    const levelNum = Math.max(1, Math.min(200, Math.floor(lv || 1)));
+    const seedVal = attemptSeed !== null ? attemptSeed : (1013904223 + levelNum * 31);
+    const rng = mulberry32((levelNum * 2654435761 + seedVal) >>> 0);
+
+    const cfg = {
+      level: levelNum,
+      title: `第 ${levelNum} 关`,
+      stepLimit: levelNum >= 12 ? Math.max(18, 38 - Math.floor(levelNum * 0.08)) : null,
+      bags: [],
+      bottles: []
+    };
+
+    // 默认关卡颜色数与调色板
+    const numColors = Math.min(8, Math.max(3, 3 + Math.floor((levelNum - 1) / 25)));
+    const palette = COLOR_KEYS.slice(0, numColors);
+    const generatedTubes = buildVerifiedColorTubes(palette, 4, rng);
+    ensureOpeningPairs(generatedTubes, 2);
+
+    // 盲袋配置：4 个盲袋
+    cfg.bags = palette.slice(0, 4).map((col, idx) => ({
+      id: idx,
+      color: col,
+      locked: idx >= 2,
+      packedBottle: null
+    }));
+
+    // 试管列表：生成标准 6 或 8 支有水瓶 + 2 支空瓶 + 2 支广告备用瓶（共 10~12 支）
+    cfg.bottles = generatedTubes.map((layers, idx) => {
+      let special = 'none';
+      let poursToBreak = 0;
+      let mysteryCount = 0;
+      let requiredColor = null;
+
+      if (levelNum >= 6 && idx === 0) {
+        special = 'ice_base';
+        poursToBreak = 1;
+      } else if (levelNum >= 10 && idx === 1) {
+        special = 'stone_base';
+        poursToBreak = 2;
+      } else if (levelNum >= 16 && idx === 2) {
+        special = 'color_lock';
+        requiredColor = layers[layers.length - 1];
+      }
+
+      if (levelNum >= 4 && idx % 2 === 1 && special === 'none') {
+        mysteryCount = 1;
+      }
+
+      return {
+        id: idx,
+        maxCap: 4,
+        layers: layers.slice(),
+        special,
+        poursToBreak,
+        mysteryCount,
+        requiredColor,
+        corked: false,
+        removed: false
+      };
+    });
+
+    // 补充空瓶与备用瓶
+    const curLen = cfg.bottles.length;
+    cfg.bottles.push({ id: curLen, maxCap: 4, layers: [], special: 'none', corked: false, removed: false });
+    cfg.bottles.push({ id: curLen + 1, maxCap: 4, layers: [], special: 'none', corked: false, removed: false });
+    cfg.bottles.push({ id: curLen + 2, maxCap: 4, layers: [], special: 'ad_bottle', corked: false, removed: false });
+    cfg.bottles.push({ id: curLen + 3, maxCap: 4, layers: [], special: 'ad_bottle', corked: false, removed: false });
+
+    // 第 162 关经典关卡布局 (100% 还原用户要求)
+    if (levelNum === 162) {
+      cfg.bags = [
+        { id: 0, color: 'blue', locked: false, packedBottle: null },
+        { id: 1, color: 'red', locked: false, packedBottle: null },
+        { id: 2, color: 'green', locked: false, packedBottle: null },
+        { id: 3, color: 'yellow', locked: true, packedBottle: null }
+      ];
+      cfg.bottles = [
+        { id: 0, maxCap: 4, layers: ['blue', 'red', 'yellow', 'green'], special: 'ice_base', poursToBreak: 2, corked: false },
+        { id: 1, maxCap: 4, layers: ['yellow', 'green', 'blue', 'purple'], special: 'color_lock', requiredColor: 'purple', corked: false },
+        { id: 2, maxCap: 4, layers: ['red', 'purple', 'green', 'yellow'], special: 'stone_base', poursToBreak: 1, corked: false },
+        { id: 3, maxCap: 4, layers: ['green', 'yellow', 'red', 'blue'], special: 'none', mysteryCount: 2, corked: false },
+        { id: 4, maxCap: 4, layers: ['purple', 'blue', 'red', 'purple'], special: 'none', mysteryCount: 1, corked: false },
+        { id: 5, maxCap: 4, layers: ['red', 'yellow', 'blue', 'green'], special: 'none', corked: false },
+        { id: 6, maxCap: 4, layers: [], special: 'none', corked: false },
+        { id: 7, maxCap: 4, layers: [], special: 'none', corked: false },
+        { id: 8, maxCap: 4, layers: [], special: 'ad_bottle', corked: false },
+        { id: 9, maxCap: 4, layers: [], special: 'ad_bottle', corked: false },
+        { id: 10, maxCap: 4, layers: [], special: 'ad_bottle', corked: false },
+        { id: 11, maxCap: 4, layers: [], special: 'ad_bottle', corked: false }
+      ];
+    }
+
+    return cfg;
+  }
+};
+
+if (typeof module !== 'undefined') {
+  module.exports = Levels;
+}
+
+
+/* ==================== MODULE: game_logic.js ==================== */
+/**
+ * 游戏核心状态机与规则逻辑 (GameLogic.js)
+ * 纯数据模型驱动，零 DOM 依赖
+ */
+
+class GameLogic {
+  constructor(levelsModule, platformModule) {
+    this.levels = levelsModule;
+    this.platform = platformModule;
+
+    this.currentLevel = 162;
+    this.bottles = [];
+    this.bags = [];
+    this.packedTotal = 0;
+    this.remainingMoves = null;
+
+    this.selectedIndex = null;
+    this.activeHintPair = null;
+    this.history = [];
+
+    this.shuffleCount = 3;
+    this.undoCount = 5;
+    this.hintCount = 3;
+
+    this.isAnimating = false;
+    this.isVictory = false;
+    this.isGameOver = false;
+  }
+
+  loadLevel(lv) {
+    this.currentLevel = lv;
+    const cfg = this.levels.getLevelConfig(lv);
+    this.bottles = JSON.parse(JSON.stringify(cfg.bottles));
+    this.bags = JSON.parse(JSON.stringify(cfg.bags));
+    this.packedTotal = 0;
+    this.remainingMoves = cfg.stepLimit;
+
+    this.selectedIndex = null;
+    this.activeHintPair = null;
+    this.history = [];
+    this.isAnimating = false;
+    this.isVictory = false;
+    this.isGameOver = false;
+  }
+
+  restart() {
+    this.loadLevel(this.currentLevel);
+  }
+
+  cloneState() {
+    return JSON.stringify({
+      bottles: this.bottles,
+      bags: this.bags,
+      packedTotal: this.packedTotal,
+      remainingMoves: this.remainingMoves
+    });
+  }
+
+  canSelectBottle(index) {
+    if (this.isAnimating || this.isVictory || this.isGameOver) return false;
+    const b = this.bottles[index];
+    if (!b || b.corked || b.removed) return false;
+    if (b.special === 'ad_bottle') return false;
+    if (b.layers.length === 0) return false;
+    if (this.isComplete(b)) return false;
+    return true;
+  }
+
+  canPourInto(srcIdx, dstIdx) {
+    if (srcIdx === dstIdx) return false;
+    const src = this.bottles[srcIdx];
+    const dst = this.bottles[dstIdx];
+    if (!src || !dst || src.corked || dst.corked || src.removed || dst.removed) return false;
+    if (dst.special === 'ad_bottle') return false;
+
+    const dstCap = dst.maxCap || 4;
+    if (dst.layers.length >= dstCap || src.layers.length === 0) return false;
+
+    const pourCol = src.layers[src.layers.length - 1];
+    if (dst.special === 'color_lock' && dst.requiredColor && dst.requiredColor !== pourCol) {
+      return false;
+    }
+
+    if (dst.layers.length === 0) return true;
+    return dst.layers[dst.layers.length - 1] === pourCol;
+  }
+
+  isComplete(b) {
+    if (!b || b.layers.length === 0) return false;
+    const cap = b.maxCap || 4;
+    return b.layers.length === cap && b.layers.every(c => c === b.layers[0]);
+  }
+
+  handleBottleTap(index) {
+    if (this.isAnimating || this.isVictory || this.isGameOver) return null;
+    const b = this.bottles[index];
+    if (!b) return null;
+
+    // 点击广告试管，解锁成为普通试管
+    if (b.special === 'ad_bottle') {
+      this.history.push(this.cloneState());
+      b.special = 'none';
+      return { type: 'UNLOCK_AD', index };
+    }
+
+    // 尚未选中任何试管
+    if (this.selectedIndex === null) {
+      if (this.canSelectBottle(index)) {
+        this.selectedIndex = index;
+        this.activeHintPair = null;
+        return { type: 'SELECT', index };
+      }
+      return null;
+    }
+
+    // 再次点击同一支试管，放下取消选择
+    if (this.selectedIndex === index) {
+      this.selectedIndex = null;
+      return { type: 'DESELECT', index };
+    }
+
+    // 尝试倒水
+    const srcIdx = this.selectedIndex;
+    if (this.canPourInto(srcIdx, index)) {
+      const src = this.bottles[srcIdx];
+      const dst = this.bottles[index];
+      const pourCol = src.layers[src.layers.length - 1];
+      const dstCap = dst.maxCap || 4;
+
+      let count = 0;
+      for (let k = src.layers.length - 1; k >= 0; k--) {
+        if (src.layers[k] === pourCol && dst.layers.length + count < dstCap) {
+          count++;
+        } else {
+          break;
+        }
+      }
+
+      const plan = {
+        fromIndex: srcIdx,
+        toIndex: index,
+        colorKey: pourCol,
+        count
+      };
+
+      this.selectedIndex = null;
+      this.activeHintPair = null;
+      return { type: 'POUR', plan };
+    }
+
+    // 若无法倒入，但点击的是另一支可选择的试管，直接切换选中
+    if (this.canSelectBottle(index)) {
+      this.selectedIndex = index;
+      return { type: 'SELECT', index };
+    }
+
+    this.selectedIndex = null;
+    return { type: 'DESELECT' };
+  }
+
+  applyPour(plan) {
+    this.history.push(this.cloneState());
+
+    if (this.remainingMoves !== null) {
+      this.remainingMoves = Math.max(0, this.remainingMoves - 1);
+    }
+
+    const src = this.bottles[plan.fromIndex];
+    const dst = this.bottles[plan.toIndex];
+
+    for (let i = 0; i < plan.count; i++) {
+      src.layers.pop();
+      dst.layers.push(plan.colorKey);
+    }
+
+    // 揭开源试管问号
+    if (src.mysteryCount && src.layers.length <= src.mysteryCount) {
+      src.mysteryCount = Math.max(0, src.layers.length - 1);
+    }
+
+    // 目标试管震碎冰座或曜石座
+    if ((dst.special === 'ice_base' || dst.special === 'stone_base') && dst.poursToBreak > 0) {
+      dst.poursToBreak--;
+      if (dst.poursToBreak <= 0) {
+        dst.special = 'none';
+      }
+    }
+
+    // 满瓶封存检测
+    if (this.isComplete(dst)) {
+      dst.corked = true;
+      this.packBag(plan.colorKey);
+    }
+
+    // 胜利或失败判定
+    this.checkStatus();
+    return { isVictory: this.isVictory, isGameOver: this.isGameOver };
+  }
+
+  packBag(colorKey) {
+    const bag = this.bags.find(b => !b.locked && !b.packedBottle && b.color === colorKey);
+    if (bag) {
+      bag.packedBottle = colorKey;
+      this.packedTotal++;
+
+      // 解锁后续盲袋
+      const nextLocked = this.bags.find(b => b.locked);
+      if (nextLocked) nextLocked.locked = false;
+    }
+  }
+
+  checkStatus() {
+    const allPacked = this.bags.length > 0 && this.bags.every(b => b.packedBottle);
+    const allCorked = this.bottles.every(b => b.corked || b.layers.length === 0 || b.special === 'ad_bottle');
+
+    if (allPacked || allCorked) {
+      this.isVictory = true;
+      return;
+    }
+
+    if (this.remainingMoves !== null && this.remainingMoves <= 0) {
+      this.isGameOver = true;
+    }
+  }
+
+  undo() {
+    if (this.isAnimating || this.history.length === 0) return false;
+    const snap = JSON.parse(this.history.pop());
+    this.bottles = snap.bottles;
+    this.bags = snap.bags;
+    this.packedTotal = snap.packedTotal;
+    this.remainingMoves = snap.remainingMoves;
+    this.selectedIndex = null;
+    this.activeHintPair = null;
+    this.isVictory = false;
+    this.isGameOver = false;
+    return true;
+  }
+
+  shuffle() {
+    if (this.isAnimating || this.isVictory) return false;
+    const pool = [];
+    const targets = [];
+    this.bottles.forEach(b => {
+      if (!b.corked && b.special !== 'ad_bottle' && b.layers.length > 0) {
+        while (b.layers.length > 0) pool.push(b.layers.pop());
+        targets.push(b);
+      }
+    });
+
+    if (pool.length === 0) return false;
+    this.history.push(this.cloneState());
+
+    for (let i = pool.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      const tmp = pool[i]; pool[i] = pool[j]; pool[j] = tmp;
+    }
+
+    let ptr = 0;
+    while (pool.length > 0 && targets.length > 0) {
+      const b = targets[ptr % targets.length];
+      if (b.layers.length < (b.maxCap || 4)) {
+        b.layers.push(pool.pop());
+      } else {
+        targets.splice(ptr % targets.length, 1);
+        continue;
+      }
+      ptr++;
+    }
+
+    this.selectedIndex = null;
+    return true;
+  }
+
+  hint() {
+    if (this.isAnimating || this.isVictory) return null;
+    for (let i = 0; i < this.bottles.length; i++) {
+      if (!this.canSelectBottle(i)) continue;
+      for (let j = 0; j < this.bottles.length; j++) {
+        if (i === j) continue;
+        if (this.canPourInto(i, j)) {
+          this.activeHintPair = [i, j];
+          this.selectedIndex = i;
+          return this.activeHintPair;
+        }
+      }
+    }
+    return null;
+  }
+
+  addEmptyBottle() {
+    const adBottle = this.bottles.find(b => b.special === 'ad_bottle');
+    if (adBottle) {
+      this.history.push(this.cloneState());
+      adBottle.special = 'none';
+      return true;
+    }
+    return false;
+  }
+}
+
+if (typeof module !== 'undefined') {
+  module.exports = GameLogic;
+}
+
+
+/* ==================== MODULE: audio.js ==================== */
+/**
+ * AudioManager - 纯代码物理合成与小游戏原生音频管理器 (Zero External Assets)
+ * 支持 Web Audio API 物理合成（气泡水声、清脆音、通关和弦）与小游戏 InnerAudioContext
+ */
+
+class AudioManager {
+  constructor(platformModule) {
+    this.platform = platformModule;
+    this.muted = !!this.platform.getStorage('water_game_muted', false);
+    this.ctx = null;
+
+    if (typeof window !== 'undefined') {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (AudioCtx) {
+        try {
+          this.ctx = new AudioCtx();
+        } catch (e) {}
+      }
+    }
+  }
+
+  resumeCtx() {
+    if (this.ctx && this.ctx.state === 'suspended') {
+      this.ctx.resume().catch(() => {});
+    }
+  }
+
+  toggleMute() {
+    this.muted = !this.muted;
+    this.platform.setStorage('water_game_muted', this.muted);
+    return this.muted;
+  }
+
+  isMuted() {
+    return this.muted;
+  }
+
+  playSelect() {
+    if (this.muted) return;
+    this.resumeCtx();
+    if (this.ctx) {
+      try {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(680, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(840, this.ctx.currentTime + 0.08);
+        gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.08);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.08);
+        return;
+      } catch (e) {}
+    }
+    this.platform.triggerHaptic(10);
+  }
+
+  playPour() {
+    if (this.muted) return;
+    this.resumeCtx();
+    if (this.ctx) {
+      try {
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(420, now);
+        osc.frequency.exponentialRampToValueAtTime(320, now + 0.14);
+        gain.gain.setValueAtTime(0.25, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.14);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(now + 0.14);
+        return;
+      } catch (e) {}
+    }
+    this.platform.triggerHaptic(18);
+  }
+
+  playWin() {
+    if (this.muted) return;
+    this.resumeCtx();
+    if (this.ctx) {
+      try {
+        const notes = [523.25, 659.25, 783.99, 1046.5]; // C5, E5, G5, C6
+        notes.forEach((freq, idx) => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          const start = this.ctx.currentTime + idx * 0.1;
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(freq, start);
+          gain.gain.setValueAtTime(0.25, start);
+          gain.gain.exponentialRampToValueAtTime(0.001, start + 0.35);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(start);
+          osc.stop(start + 0.35);
+        });
+        return;
+      } catch (e) {}
+    }
+    this.platform.triggerHaptic(40);
+  }
+}
+
+if (typeof module !== 'undefined') {
+  module.exports = AudioManager;
+}
+
+
+
+/* ==================== MODULE: renderer.js ==================== */
+/**
+ * Renderer - 工业级高保真纯 Canvas 2D 渲染器
+ * 核心特性：
+ * 1. 采用固定设计逻辑分辨率 (DESIGN_WIDTH = 414, DESIGN_HEIGHT = 896)，彻底杜绝拉伸变形！
+ * 2. 100% 还原原版 v10.html 第 162 关真机美术质感：
+ *    - 细颈圆底琉璃试管 (严格 1:3.4 宽高比)
+ *    - 试管底部 3D 麻布/木质软垫与地面柔和投影
+ *    - 顶部 4 个手提礼品纸袋（双提绳、立体侧翼与彩色开窗）
+ *    - 4 个大号超椭圆 3D 拟真鹅卵石按钮与角标
+ *    - 倒水抛物线与重力动态水柱流线
+ * 3. 硬件级剪切与粒子系统，零 DOM 依赖，稳帧 60 FPS
+ */
+
+const DESIGN_WIDTH = 414;
+const DESIGN_HEIGHT = 896;
+
+class Renderer {
+  constructor(canvas, levelsModule) {
+    this.canvas = canvas;
+    this.ctx = canvas.getContext('2d');
+    this.levels = levelsModule;
+
+    this.screenWidth = 375;
+    this.screenHeight = 667;
+    this.dpr = 2;
+
+    this.viewScale = 1;
+    this.offsetX = 0;
+    this.offsetY = 0;
+
+    this.bottleBounds = [];
+    this.bagBounds = [];
+    this.buttons = {};
+
+    this.pourAnimation = null;
+    this.liftOffsets = {};
+    this.confettiParticles = [];
+    this.dustParticles = [];
+
+    // 初始化背景萤火微光
+    for (let i = 0; i < 30; i++) {
+      this.dustParticles.push({
+        x: Math.random() * DESIGN_WIDTH,
+        y: Math.random() * DESIGN_HEIGHT,
+        r: Math.random() * 2.2 + 1,
+        speedY: -(Math.random() * 0.4 + 0.15),
+        phase: Math.random() * Math.PI * 2
+      });
+    }
+  }
+
+  resize(sysInfo) {
+    this.screenWidth = sysInfo.windowWidth || 375;
+    this.screenHeight = sysInfo.windowHeight || 667;
+    this.dpr = sysInfo.pixelRatio || 2;
+
+    this.canvas.width = Math.round(this.screenWidth * this.dpr);
+    this.canvas.height = Math.round(this.screenHeight * this.dpr);
+
+    // 计算等比居中缩放矩阵
+    this.viewScale = Math.min(this.screenWidth / DESIGN_WIDTH, this.screenHeight / DESIGN_HEIGHT);
+    this.offsetX = (this.screenWidth - DESIGN_WIDTH * this.viewScale) / 2;
+    this.offsetY = (this.screenHeight - DESIGN_HEIGHT * this.viewScale) / 2;
+  }
+
+  // 将屏幕触控坐标转换为设计坐标
+  screenToDesign(screenX, screenY) {
+    return {
+      x: (screenX - this.offsetX) / this.viewScale,
+      y: (screenY - this.offsetY) / this.viewScale
+    };
+  }
+
+  render(gameLogic, audioManager) {
+    const ctx = this.ctx;
+    ctx.save();
+    ctx.scale(this.dpr, this.dpr);
+
+    // 绘制全屏底色（保证非 414:896 屏幕四周无黑边，无缝融入背景）
+    this.drawCozyBackground(ctx, 0, 0, this.screenWidth, this.screenHeight);
+
+    // 进入设计坐标系 (Design Resolution Matrix)
+    ctx.save();
+    ctx.translate(this.offsetX, this.offsetY);
+    ctx.scale(this.viewScale, this.viewScale);
+
+    // 1. 顶部 Header (☰ 菜单、第 162 关大标题、? 帮助)
+    this.drawHeader(ctx, gameLogic);
+
+    // 2. 顶部 4 个手提礼品纸袋（盲袋区）
+    this.drawBags(ctx, gameLogic);
+
+    // 3. 上下两排共 12 支细颈木垫试管
+    this.drawBottlesGrid(ctx, gameLogic);
+
+    // 4. 实时倒水动画水柱
+    if (this.pourAnimation) {
+      this.updateAndDrawPourAnimation(ctx, gameLogic);
+    }
+
+    // 5. 底部 4 个超椭圆 3D 拟真鹅卵石按钮 (🔄重玩, 🔀打乱, ↩撤回, 💡提示)
+    this.drawBottomActionButtons(ctx, gameLogic);
+
+    // 6. 胜利结算浮层与彩带
+    if (gameLogic.isVictory) {
+      this.drawVictory(ctx, gameLogic);
+    }
+
+    ctx.restore();
+    ctx.restore();
+  }
+
+  // 暖金居室微粒背景
+  drawCozyBackground(ctx, x, y, w, h) {
+    const grad = ctx.createLinearGradient(0, y, 0, y + h);
+    grad.addColorStop(0, '#EBB559');
+    grad.addColorStop(0.42, '#DF9D3F');
+    grad.addColorStop(1, '#D48D2E');
+    ctx.fillStyle = grad;
+    ctx.fillRect(x, y, w, h);
+
+    // 漂浮的微光萤火金尘
+    const time = Date.now() * 0.002;
+    ctx.fillStyle = 'rgba(255, 248, 200, 0.45)';
+    this.dustParticles.forEach(d => {
+      d.y += d.speedY;
+      if (d.y < 0) d.y = DESIGN_HEIGHT;
+      const alpha = 0.35 + 0.35 * Math.sin(time + d.phase);
+      ctx.beginPath();
+      ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
+      ctx.fill();
+    });
+  }
+
+  // 顶部 Header: ☰ 菜单、第 162 关、? 帮助
+  drawHeader(ctx, gameLogic) {
+    const topY = 56;
+    const btnSize = 44;
+
+    // 左上角: 磨砂鹅卵石菜单按钮 ☰
+    const leftX = 24;
+    const btnY = topY - btnSize / 2;
+    this.buttons.menu = { x: leftX, y: btnY, width: btnSize, height: btnSize };
+    this.drawFrostedCircleBtn(ctx, leftX, btnY, btnSize, '☰', 21);
+
+    // 中央大字: 第 162 关
+    ctx.save();
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.font = '900 32px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillStyle = '#FFFFFF';
+    ctx.shadowColor = 'rgba(110, 68, 14, 0.4)';
+    ctx.shadowBlur = 8;
+    ctx.shadowOffsetY = 3;
+    const title = (gameLogic.remainingMoves !== null) ? `步数: ${gameLogic.remainingMoves}` : `第 ${gameLogic.currentLevel} 关`;
+    ctx.fillText(title, DESIGN_WIDTH / 2, topY);
+    ctx.restore();
+
+    // 右上角: 磨砂鹅卵石帮助按钮 ?
+    const rightX = DESIGN_WIDTH - btnSize - 24;
+    this.buttons.help = { x: rightX, y: btnY, width: btnSize, height: btnSize };
+    this.drawFrostedCircleBtn(ctx, rightX, btnY, btnSize, '?', 24);
+  }
+
+  // 磨砂圆形按钮
+  drawFrostedCircleBtn(ctx, x, y, size, text, fontSize) {
+    ctx.save();
+    this.roundRect(ctx, x, y, size, size, size / 2);
+    const grad = ctx.createLinearGradient(x, y, x, y + size);
+    grad.addColorStop(0, 'rgba(255, 248, 220, 0.4)');
+    grad.addColorStop(1, 'rgba(215, 175, 110, 0.28)');
+    ctx.fillStyle = grad;
+    ctx.fill();
+
+    ctx.lineWidth = 1.8;
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+    ctx.stroke();
+
+    ctx.font = `bold ${fontSize}px sans-serif`;
+    ctx.fillStyle = '#FFFFFF';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(text, x + size / 2, y + size / 2);
+    ctx.restore();
+  }
+
+  // 顶部礼品手提盲袋 (根据当前关卡盲袋数量动态居中)
+  drawBags(ctx, gameLogic) {
+    const bags = gameLogic.bags || [];
+    const bagCount = bags.length;
+    if (bagCount === 0) {
+      this.bagBounds = [];
+      return;
+    }
+
+    const bagW = 56;
+    const bagH = 68;
+    const startY = 100;
+    const spacing = Math.min(16, (DESIGN_WIDTH - 40 - bagCount * bagW) / Math.max(1, bagCount - 1));
+    const totalW = bagCount * bagW + (bagCount - 1) * spacing;
+    const startX = (DESIGN_WIDTH - totalW) / 2;
+
+    this.bagBounds = [];
+
+    for (let i = 0; i < bagCount; i++) {
+      const bx = startX + i * (bagW + spacing);
+      this.bagBounds[i] = { x: bx, y: startY, width: bagW, height: bagH };
+      const bag = bags[i] || {};
+
+      ctx.save();
+      // 1. 手提双提绳
+      ctx.beginPath();
+      ctx.arc(bx + bagW / 2, startY + 8, 13, Math.PI, 0, false);
+      ctx.lineWidth = 3.6;
+      ctx.strokeStyle = '#FFFFFF';
+      ctx.stroke();
+
+      // 2. 纸袋立体投影
+      ctx.fillStyle = 'rgba(85, 48, 8, 0.2)';
+      ctx.fillRect(bx + 2, startY + 14, bagW, bagH - 6);
+
+      // 3. 纸袋主体
+      this.roundRect(ctx, bx, startY + 12, bagW, bagH - 6, 7);
+      ctx.fillStyle = bag.locked ? '#848E9C' : '#E8EDF5';
+      ctx.fill();
+      ctx.lineWidth = 1.8;
+      ctx.strokeStyle = '#FFFFFF';
+      ctx.stroke();
+
+      // 4. 纸袋视窗或角标
+      if (!bag.locked) {
+        const colorConf = this.levels.COLORS[bag.color] || { hex: '#8B5CF6' };
+        const winX = bx + 8;
+        const winY = startY + 20;
+        const winW = bagW - 16;
+        const winH = bagH - 26;
+
+        this.roundRect(ctx, winX, winY, winW, winH, 5);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.92)';
+        ctx.fill();
+        ctx.lineWidth = 2.6;
+        ctx.strokeStyle = colorConf.hex;
+        ctx.stroke();
+
+        // 袋底彩色包边条
+        ctx.fillStyle = colorConf.hex;
+        ctx.fillRect(bx + 1, startY + bagH - 2, bagW - 2, 8);
+
+        // 如果已打包完成，盖绿色勾选章
+        if (bag.packedBottle) {
+          ctx.fillStyle = '#22C55E';
+          ctx.beginPath();
+          ctx.arc(bx + bagW / 2, startY + bagH / 2 + 6, 13, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = '#FFFFFF';
+          ctx.font = '900 15px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText('✓', bx + bagW / 2, startY + bagH / 2 + 7);
+        }
+      } else {
+        // 灰色锁链/摄像机图标
+        const cx = bx + bagW / 2;
+        const cy = startY + bagH / 2 + 5;
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.88)';
+        this.roundRect(ctx, cx - 12, cy - 9, 18, 15, 3);
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.moveTo(cx + 6, cy - 5);
+        ctx.lineTo(cx + 13, cy - 9);
+        ctx.lineTo(cx + 13, cy + 9);
+        ctx.lineTo(cx + 6, cy + 5);
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      ctx.restore();
+    }
+  }
+
+  // 试管网格排布 (动态适应关卡瓶子数，尺寸严格锁定 48 x 156，绝不拉伸变形！)
+  drawBottlesGrid(ctx, gameLogic) {
+    const bottles = gameLogic.bottles || [];
+    const total = bottles.length;
+    if (total === 0) return;
+
+    this.bottleBounds = [];
+
+    // 试管黄金标准尺寸 (严格 48 x 156，宽高比 1:3.25，优雅挺拔)
+    const bottleW = 48;
+    const bottleH = 156;
+
+    if (total <= 6) {
+      // 1~6 支瓶子：排成 2 排（如第1关：上3下2）
+      const row1Count = Math.ceil(total / 2);
+      const row2Count = total - row1Count;
+      const spacing = 26;
+
+      const totalRow1W = row1Count * bottleW + (row1Count - 1) * spacing;
+      const startX1 = (DESIGN_WIDTH - totalRow1W) / 2;
+      const row1Y = 240;
+
+      for (let i = 0; i < row1Count; i++) {
+        const bx = startX1 + i * (bottleW + spacing);
+        this.drawFullFidelityBottle(ctx, gameLogic, i, bx, row1Y, bottleW, bottleH);
+      }
+
+      if (row2Count > 0) {
+        const totalRow2W = row2Count * bottleW + (row2Count - 1) * spacing;
+        const startX2 = (DESIGN_WIDTH - totalRow2W) / 2;
+        const row2Y = 440;
+
+        for (let i = 0; i < row2Count; i++) {
+          const idx = row1Count + i;
+          const bx = startX2 + i * (bottleW + spacing);
+          this.drawFullFidelityBottle(ctx, gameLogic, idx, bx, row2Y, bottleW, bottleH);
+        }
+      }
+    } else if (total <= 12) {
+      // 7~12 支瓶子：标准上下两排（如第162关：上6下6）
+      const row1Count = Math.ceil(total / 2);
+      const row2Count = total - row1Count;
+      const maxCols = Math.max(row1Count, row2Count);
+      const spacing = Math.min(18, (DESIGN_WIDTH - 36 - maxCols * bottleW) / (maxCols - 1));
+
+      const totalRow1W = row1Count * bottleW + (row1Count - 1) * spacing;
+      const startX1 = (DESIGN_WIDTH - totalRow1W) / 2;
+      const row1Y = 220;
+
+      for (let i = 0; i < row1Count; i++) {
+        const bx = startX1 + i * (bottleW + spacing);
+        this.drawFullFidelityBottle(ctx, gameLogic, i, bx, row1Y, bottleW, bottleH);
+      }
+
+      const totalRow2W = row2Count * bottleW + (row2Count - 1) * spacing;
+      const startX2 = (DESIGN_WIDTH - totalRow2W) / 2;
+      const row2Y = 430;
+
+      for (let i = 0; i < row2Count; i++) {
+        const idx = row1Count + i;
+        const bx = startX2 + i * (bottleW + spacing);
+        this.drawFullFidelityBottle(ctx, gameLogic, idx, bx, row2Y, bottleW, bottleH);
+      }
+    } else {
+      // 超大关卡 (>12 支): 3 排精细布局
+      const rowCount = Math.ceil(total / 3);
+      const bW = 42;
+      const bH = 136;
+      const spacing = 12;
+      const yCoords = [200, 360, 520];
+
+      for (let i = 0; i < total; i++) {
+        const r = Math.floor(i / rowCount);
+        const c = i % rowCount;
+        const countInRow = (r < 2) ? rowCount : (total - 2 * rowCount);
+        const totalW = countInRow * bW + (countInRow - 1) * spacing;
+        const startX = (DESIGN_WIDTH - totalW) / 2;
+        const bx = startX + c * (bW + spacing);
+        const by = yCoords[r] || 200;
+        this.drawFullFidelityBottle(ctx, gameLogic, i, bx, by, bW, bH);
+      }
+    }
+  }
+
+  // 单支试管绘制 (100% 还原原版质感)
+  drawFullFidelityBottle(ctx, gameLogic, index, x, y, w, h) {
+    if (this.pourAnimation && this.pourAnimation.fromIndex === index) {
+      this.bottleBounds[index] = { x, y, width: w, height: h };
+      return;
+    }
+
+    const isSelected = gameLogic.selectedIndex === index;
+    const isHinted = gameLogic.activeHintPair && gameLogic.activeHintPair.includes(index);
+
+    // 选中瓶子平滑浮起动画
+    const targetLift = isSelected ? 24 : 0;
+    if (this.liftOffsets[index] === undefined) this.liftOffsets[index] = 0;
+    this.liftOffsets[index] += (targetLift - this.liftOffsets[index]) * 0.32;
+    const drawY = y - this.liftOffsets[index];
+
+    this.bottleBounds[index] = { x, y: drawY, width: w, height: h };
+
+    const bottle = gameLogic.bottles[index] || { layers: [] };
+    const layers = bottle.layers || [];
+    const unitH = (h - 24) / 4;
+
+    ctx.save();
+
+    // 1. 地面柔和阴影
+    ctx.beginPath();
+    ctx.ellipse(x + w / 2, drawY + h + 8, w * 0.62, 6, 0, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(90, 48, 8, 0.3)';
+    ctx.fill();
+
+    // 2. 瓶底 3D 麻布/木质垫座
+    ctx.beginPath();
+    ctx.ellipse(x + w / 2, drawY + h + 1, w * 0.58, 5.5, 0, 0, Math.PI * 2);
+    ctx.fillStyle = '#B4844E';
+    ctx.fill();
+    ctx.lineWidth = 1.4;
+    ctx.strokeStyle = '#7D4F1E';
+    ctx.stroke();
+
+    // 3. 广告发光试管 (霓虹紫色呼吸边)
+    if (bottle.special === 'ad_bottle') {
+      ctx.save();
+      this.traceBottleBody(ctx, x - 3, drawY - 3, w + 6, h + 6);
+      ctx.lineWidth = 3.6;
+      ctx.strokeStyle = '#D946EF';
+      ctx.shadowColor = '#E879F9';
+      ctx.shadowBlur = 12;
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // 选中或提示光晕
+    if (isSelected || isHinted) {
+      ctx.shadowColor = isSelected ? '#FFE082' : '#4ADE80';
+      ctx.shadowBlur = 18;
+    }
+
+    // 4. 裁剪内壁几何体并逐层填充液体
+    ctx.save();
+    this.traceBottleBody(ctx, x, drawY, w, h);
+    ctx.clip();
+
+    // 玻璃通透内壁微光
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.18)';
+    ctx.fillRect(x, drawY, w, h);
+
+    // 逐层液体渲染
+    for (let c = 0; c < layers.length; c++) {
+      const colorKey = layers[c];
+      const isMysteryLayer = bottle.mysteryCount && c < bottle.mysteryCount;
+      const liquidY = drawY + h - (c + 1) * unitH;
+
+      if (isMysteryLayer) {
+        // 黑色 ? 星雾盲盒层
+        ctx.fillStyle = '#18181B';
+        ctx.fillRect(x, liquidY, w, unitH + 1);
+
+        ctx.font = 'bold 16px -apple-system, sans-serif';
+        ctx.fillStyle = '#FFFFFF';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('?', x + w / 2, liquidY + unitH / 2);
+      } else {
+        // 丝滑琉璃渐变液体
+        const colorConf = this.levels.COLORS[colorKey] || { hex: '#2563EB', light: '#93C5FD' };
+        const lGrad = ctx.createLinearGradient(x, liquidY, x + w, liquidY);
+        lGrad.addColorStop(0, colorConf.hex);
+        lGrad.addColorStop(0.35, colorConf.light);
+        lGrad.addColorStop(1, colorConf.hex);
+
+        ctx.fillStyle = lGrad;
+        ctx.fillRect(x, liquidY, w, unitH + 1);
+
+        // 顶层椭圆弯月面
+        if (c === layers.length - 1) {
+          ctx.beginPath();
+          ctx.ellipse(x + w / 2, liquidY, w * 0.44, 4, 0, 0, Math.PI * 2);
+          ctx.fillStyle = colorConf.topRim || colorConf.light;
+          ctx.fill();
+        }
+      }
+    }
+    ctx.restore();
+
+    // 5. 试管高定玻璃外轮廓与卷唇
+    ctx.save();
+    this.traceBottleBody(ctx, x, drawY, w, h);
+    ctx.lineWidth = 2.2;
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.75)';
+    ctx.stroke();
+
+    // 瓶口外翻圆唇
+    ctx.beginPath();
+    ctx.ellipse(x + w / 2, drawY + 2, w * 0.35, 3, 0, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.82)';
+    ctx.fill();
+    ctx.lineWidth = 1.2;
+    ctx.strokeStyle = '#FFFFFF';
+    ctx.stroke();
+
+    // 瓶身左侧柱状高光条
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.32)';
+    ctx.fillRect(x + 4, drawY + 16, 3, h - 28);
+    ctx.restore();
+
+    // 6. 软木塞 (若已封存)
+    if (bottle.corked) {
+      this.drawWoodenCork(ctx, x + w / 2, drawY + 2);
+    }
+
+    // 7. 特殊机制徽章
+    this.drawMechanicBadges(ctx, bottle, x, drawY, w, h);
+
+    ctx.restore();
+  }
+
+  // 绘制圆润细颈试管轮廓
+  traceBottleBody(ctx, x, y, w, h) {
+    const neckW = w * 0.62;
+    const neckH = 14;
+    const neckL = x + (w - neckW) / 2;
+    const neckR = neckL + neckW;
+    const cornerR = w * 0.45;
+
+    ctx.beginPath();
+    ctx.moveTo(neckL, y + 2);
+    ctx.lineTo(neckR, y + 2);
+    ctx.lineTo(neckR, y + neckH);
+    ctx.bezierCurveTo(x + w - 2, y + neckH + 6, x + w, y + neckH + 12, x + w, y + neckH + 18);
+    ctx.lineTo(x + w, y + h - cornerR);
+    ctx.arc(x + w - cornerR, y + h - cornerR, cornerR, 0, Math.PI / 2, false);
+    ctx.arc(x + cornerR, y + h - cornerR, cornerR, Math.PI / 2, Math.PI, false);
+    ctx.lineTo(x, y + neckH + 18);
+    ctx.bezierCurveTo(x, y + neckH + 12, x + 2, y + neckH + 6, neckL, y + neckH);
+    ctx.closePath();
+  }
+
+  // 3D 软木塞
+  drawWoodenCork(ctx, cx, topY) {
+    ctx.save();
+    const plugGrad = ctx.createLinearGradient(cx - 10, topY, cx + 10, topY);
+    plugGrad.addColorStop(0, '#78350F');
+    plugGrad.addColorStop(0.5, '#D97706');
+    plugGrad.addColorStop(1, '#92400E');
+    ctx.fillStyle = plugGrad;
+
+    ctx.beginPath();
+    ctx.moveTo(cx - 9, topY);
+    ctx.lineTo(cx + 9, topY);
+    ctx.lineTo(cx + 7, topY + 14);
+    ctx.lineTo(cx - 7, topY + 14);
+    ctx.closePath();
+    ctx.fill();
+
+    // 塞顶圆帽
+    ctx.beginPath();
+    ctx.ellipse(cx, topY - 2, 11, 4.5, 0, 0, Math.PI * 2);
+    ctx.fillStyle = '#FBBF24';
+    ctx.fill();
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = '#92400E';
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // 绘制特殊机制徽章
+  drawMechanicBadges(ctx, bottle, x, y, w, h) {
+    const cx = x + w / 2;
+
+    if (bottle.special === 'ice_base') {
+      // 菱形 1 冰霜锁
+      const lockY = y + h - 16;
+      ctx.save();
+      ctx.translate(cx, lockY);
+      ctx.rotate(Math.PI / 4);
+      ctx.fillStyle = '#67E8F9';
+      ctx.fillRect(-11, -11, 22, 22);
+      ctx.lineWidth = 2.2;
+      ctx.strokeStyle = '#FFFFFF';
+      ctx.stroke();
+      ctx.restore();
+
+      ctx.font = '900 13px sans-serif';
+      ctx.fillStyle = '#0F172A';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(String(bottle.poursToBreak || 1), cx, lockY);
+    } else if (bottle.special === 'stone_base') {
+      // 曜石底座锁
+      const lockY = y + h - 16;
+      ctx.save();
+      ctx.fillStyle = '#475569';
+      this.roundRect(ctx, cx - 12, lockY - 10, 24, 20, 5);
+      ctx.fill();
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = '#FEF08A';
+      ctx.stroke();
+
+      ctx.font = '900 12px sans-serif';
+      ctx.fillStyle = '#FFFFFF';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(String(bottle.poursToBreak || 1), cx, lockY);
+      ctx.restore();
+    } else if (bottle.special === 'color_lock' && bottle.requiredColor) {
+      // 紫色专属盾牌标志
+      const lockY = y + 36;
+      const reqConf = this.levels.COLORS[bottle.requiredColor] || { hex: '#9333EA' };
+      ctx.save();
+      ctx.translate(cx, lockY);
+      ctx.beginPath();
+      ctx.moveTo(0, -11);
+      ctx.lineTo(10, -6);
+      ctx.lineTo(10, 4);
+      ctx.lineTo(0, 12);
+      ctx.lineTo(-10, 4);
+      ctx.lineTo(-10, -6);
+      ctx.closePath();
+      ctx.fillStyle = reqConf.hex;
+      ctx.fill();
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = '#FFFFFF';
+      ctx.stroke();
+      ctx.restore();
+    }
+  }
+
+  // 倒水动画水柱与源试管倾斜
+  updateAndDrawPourAnimation(ctx, gameLogic) {
+    const anim = this.pourAnimation;
+    const now = Date.now();
+    const elapsed = now - anim.startTime;
+    const progress = Math.min(1, elapsed / anim.duration);
+
+    const fromBox = this.bottleBounds[anim.fromIndex];
+    const toBox = this.bottleBounds[anim.toIndex];
+    if (!fromBox || !toBox) {
+      anim.onComplete();
+      this.pourAnimation = null;
+      return;
+    }
+
+    const pourDir = fromBox.x <= toBox.x ? 1 : -1;
+    let curX, curY, curTilt;
+
+    if (progress < 0.28) {
+      const p1 = progress / 0.28;
+      curX = fromBox.x + (toBox.x - pourDir * 24 - fromBox.x) * p1;
+      curY = fromBox.y + (toBox.y - 42 - fromBox.y) * p1;
+      curTilt = pourDir * 78 * p1;
+    } else if (progress < 0.82) {
+      const p2 = (progress - 0.28) / 0.54;
+      curX = toBox.x - pourDir * 24;
+      curY = toBox.y - 42;
+      curTilt = pourDir * (78 + 10 * Math.sin(p2 * Math.PI));
+
+      // 绘制重力自然下垂水柱
+      const spoutX = curX + (pourDir > 0 ? fromBox.width * 0.82 : fromBox.width * 0.18);
+      const spoutY = curY + 8;
+      const targetMouthX = toBox.x + toBox.width / 2;
+      const targetMouthY = toBox.y + 6;
+
+      const colorConf = this.levels.COLORS[anim.colorKey] || { hex: '#2563EB', light: '#93C5FD' };
+      const streamWidth = Math.max(3, 8 * Math.sin(p2 * Math.PI));
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(spoutX, spoutY);
+      ctx.quadraticCurveTo((spoutX + targetMouthX) / 2, (spoutY + targetMouthY) / 2 - 12, targetMouthX, targetMouthY);
+      ctx.lineWidth = streamWidth;
+      ctx.strokeStyle = colorConf.hex;
+      ctx.lineCap = 'round';
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(spoutX, spoutY);
+      ctx.quadraticCurveTo((spoutX + targetMouthX) / 2, (spoutY + targetMouthY) / 2 - 12, targetMouthX, targetMouthY);
+      ctx.lineWidth = streamWidth * 0.32;
+      ctx.strokeStyle = '#FFFFFF';
+      ctx.stroke();
+      ctx.restore();
+    } else {
+      const p3 = (progress - 0.82) / 0.18;
+      curX = (toBox.x - pourDir * 24) + (fromBox.x - (toBox.x - pourDir * 24)) * p3;
+      curY = (toBox.y - 42) + (fromBox.y - (toBox.y - 42)) * p3;
+      curTilt = pourDir * 78 * (1 - p3);
+    }
+
+    // 绘制倾斜中的源试管
+    ctx.save();
+    ctx.translate(curX + fromBox.width / 2, curY + 10);
+    ctx.rotate((curTilt * Math.PI) / 180);
+    ctx.translate(-(curX + fromBox.width / 2), -(curY + 10));
+    this.drawFullFidelityBottle(ctx, gameLogic, anim.fromIndex, curX, curY, fromBox.width, fromBox.height);
+    ctx.restore();
+
+    if (progress >= 1) {
+      anim.onComplete();
+      this.pourAnimation = null;
+    }
+  }
+
+  startPourAnimation(plan, onComplete) {
+    this.pourAnimation = {
+      fromIndex: plan.fromIndex,
+      toIndex: plan.toIndex,
+      colorKey: plan.colorKey,
+      startTime: Date.now(),
+      duration: 620,
+      onComplete
+    };
+  }
+
+  // 底部 4 个超椭圆 3D 拟真鹅卵石按钮 (大号 64x64，手感极其饱满！)
+  drawBottomActionButtons(ctx, gameLogic) {
+    const btnSize = 64;
+    const startY = DESIGN_HEIGHT - 130;
+    const spacing = 24;
+    const count = 4;
+    const totalW = count * btnSize + (count - 1) * spacing;
+    const startX = (DESIGN_WIDTH - totalW) / 2;
+
+    const btns = [
+      { key: 'restart', icon: '🔄', badge: null },
+      { key: 'shuffle', icon: '🔀', badge: gameLogic.shuffleCount },
+      { key: 'undo',    icon: '↩',  badge: gameLogic.undoCount },
+      { key: 'hint',    icon: '💡', badge: gameLogic.hintCount }
+    ];
+
+    btns.forEach((btn, i) => {
+      const bx = startX + i * (btnSize + spacing);
+      this.buttons[btn.key] = { x: bx, y: startY, width: btnSize, height: btnSize };
+
+      ctx.save();
+      // 1. 按钮深色立体投影
+      ctx.shadowColor = 'rgba(75, 42, 10, 0.45)';
+      ctx.shadowBlur = 12;
+      ctx.shadowOffsetY = 6;
+
+      // 2. 超椭圆外圈高光
+      this.roundRect(ctx, bx, startY, btnSize, btnSize, 22);
+      const rimGrad = ctx.createLinearGradient(bx, startY, bx, startY + btnSize);
+      rimGrad.addColorStop(0, '#FFFFFF');
+      rimGrad.addColorStop(0.5, '#E2CBAC');
+      rimGrad.addColorStop(1, '#9B7D58');
+      ctx.fillStyle = rimGrad;
+      ctx.fill();
+      ctx.restore();
+
+      // 3. 鹅卵石饱满内球体
+      ctx.save();
+      this.roundRect(ctx, bx + 2.5, startY + 2.5, btnSize - 5, btnSize - 5, 20);
+      const innerGrad = ctx.createRadialGradient(bx + 20, startY + 18, 4, bx + btnSize / 2, startY + btnSize / 2, btnSize / 2);
+      innerGrad.addColorStop(0, '#FFFBF5');
+      innerGrad.addColorStop(0.4, '#F7EADE');
+      innerGrad.addColorStop(0.85, '#D9BF9F');
+      innerGrad.addColorStop(1, '#B2936E');
+      ctx.fillStyle = innerGrad;
+      ctx.fill();
+
+      // 4. 图标
+      ctx.font = 'bold 26px sans-serif';
+      ctx.fillStyle = '#5C3D18';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(btn.icon, bx + btnSize / 2, startY + btnSize / 2 + 1);
+
+      // 5. 右上角橙色数字角标
+      if (btn.badge !== null) {
+        ctx.fillStyle = '#EA580C';
+        ctx.beginPath();
+        ctx.arc(bx + btnSize - 6, startY + 6, 11, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.lineWidth = 1.8;
+        ctx.strokeStyle = '#FFFFFF';
+        ctx.stroke();
+
+        ctx.font = '900 12px sans-serif';
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillText(String(btn.badge), bx + btnSize - 6, startY + 7);
+      }
+      ctx.restore();
+    });
+  }
+
+  // 胜利通关结算浮层与彩纸
+  drawVictory(ctx, gameLogic) {
+    ctx.save();
+    ctx.fillStyle = 'rgba(20, 12, 6, 0.65)';
+    ctx.fillRect(0, 0, DESIGN_WIDTH, DESIGN_HEIGHT);
+
+    const cardW = 340;
+    const cardH = 260;
+    const cardX = (DESIGN_WIDTH - cardW) / 2;
+    const cardY = (DESIGN_HEIGHT - cardH) / 2;
+
+    this.roundRect(ctx, cardX, cardY, cardW, cardH, 24);
+    ctx.fillStyle = '#FFFDF7';
+    ctx.fill();
+    ctx.lineWidth = 2.4;
+    ctx.strokeStyle = '#F3B14B';
+    ctx.stroke();
+
+    // 标题
+    ctx.fillStyle = '#D97706';
+    this.roundRect(ctx, (DESIGN_WIDTH - 180) / 2, cardY - 20, 180, 40, 20);
+    ctx.fill();
+    ctx.strokeStyle = '#FFFFFF';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    ctx.font = '900 20px -apple-system, sans-serif';
+    ctx.fillStyle = '#FFFFFF';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('恭喜通关！', DESIGN_WIDTH / 2, cardY);
+
+    // 三星
+    for (let s = -1; s <= 1; s++) {
+      ctx.fillStyle = '#FACC15';
+      ctx.beginPath();
+      ctx.arc(DESIGN_WIDTH / 2 + s * 48, cardY + 80, 20, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = '#CA8A04';
+      ctx.stroke();
+    }
+
+    // 下一关按钮
+    const nextBtnY = cardY + 165;
+    const nextBtnW = 240;
+    const nextBtnX = (DESIGN_WIDTH - nextBtnW) / 2;
+    this.buttons.nextLevel = { x: nextBtnX, y: nextBtnY, width: nextBtnW, height: 50 };
+
+    this.roundRect(ctx, nextBtnX, nextBtnY, nextBtnW, 50, 25);
+    ctx.fillStyle = '#22C55E';
+    ctx.fill();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = '#FFFFFF';
+    ctx.stroke();
+
+    ctx.font = 'bold 20px -apple-system, sans-serif';
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillText('进入下一关 ➔', DESIGN_WIDTH / 2, nextBtnY + 25);
+
+    ctx.restore();
+  }
+
+  // 点击检测碰撞 (支持屏幕坐标自动映射到设计坐标)
+  hitTest(screenX, screenY, isVictory) {
+    const pt = this.screenToDesign(screenX, screenY);
+    const x = pt.x;
+    const y = pt.y;
+
+    if (isVictory && this.buttons.nextLevel) {
+      const b = this.buttons.nextLevel;
+      if (x >= b.x && x <= b.x + b.width && y >= b.y && y <= b.y + b.height) {
+        return { type: 'NEXT_LEVEL' };
+      }
+      return null;
+    }
+
+    // 检查试管点击
+    for (let i = 0; i < this.bottleBounds.length; i++) {
+      const b = this.bottleBounds[i];
+      if (b && x >= b.x - 6 && x <= b.x + b.width + 6 && y >= b.y - 12 && y <= b.y + b.height + 16) {
+        return { type: 'BOTTLE', index: i };
+      }
+    }
+
+    // 检查底部按钮
+    for (const key of ['restart', 'shuffle', 'undo', 'hint', 'menu', 'help']) {
+      const b = this.buttons[key];
+      if (b && x >= b.x && x <= b.x + b.width && y >= b.y && y <= b.y + b.height) {
+        return { type: key.toUpperCase() };
+      }
+    }
+
+    return null;
+  }
+
+  resetVictoryParticles() {
+    this.confettiParticles = [];
+  }
+
+  roundRect(ctx, x, y, w, h, r) {
+    if (typeof ctx.roundRect === 'function') {
+      ctx.beginPath();
+      ctx.roundRect(x, y, w, h, r);
+    } else {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.lineTo(x + w - r, y);
+      ctx.arcTo(x + w, y, x + w, y + r, r);
+      ctx.lineTo(x + w, y + h - r);
+      ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
+      ctx.lineTo(x + r, y + h);
+      ctx.arcTo(x, y + h, x, y + h - r, r);
+      ctx.lineTo(x, y + r);
+      ctx.arcTo(x, y, x + r, y, r);
+      ctx.closePath();
+    }
+  }
+}
+
+if (typeof module !== 'undefined') {
+  module.exports = Renderer;
+}
+
+
+
+    window.addEventListener('DOMContentLoaded', () => {
+      /**
+ * 《倒水不能停》TapTap & 微信小游戏统一主引擎入口 (100% 完整原版全机制)
+ */
+
+// Modules loaded in scope
+
+console.log('Water Sort Full Fidelity Engine Initializing...');
+
+const canvas = Platform.getMainCanvas();
+if (!canvas) {
+  console.error('[Engine Fatal] Could not obtain main Canvas element.');
+}
+
+const sysInfo = Platform.getSystemInfo();
+const audioManager = new AudioManager(Platform);
+const gameLogic = new GameLogic(Levels, Platform);
+const renderer = new Renderer(canvas, Levels);
+
+renderer.resize(sysInfo);
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('resize', () => {
+    renderer.resize(Platform.getSystemInfo());
+  });
+}
+
+// 读取关卡，默认加载第 162 关经典关
+const savedLevel = parseInt(Platform.getStorage('water_game_current_level', 162), 10);
+gameLogic.loadLevel(savedLevel);
+
+// 16ms 内首屏同步绘制
+renderer.render(gameLogic, audioManager);
+console.log('Water Sort First Frame Rendered.');
+
+// 60FPS 渲染循环
+function gameLoop() {
+  renderer.render(gameLogic, audioManager);
+  if (typeof requestAnimationFrame !== 'undefined') {
+    requestAnimationFrame(gameLoop);
+  }
+}
+if (typeof requestAnimationFrame !== 'undefined') {
+  requestAnimationFrame(gameLoop);
+}
+
+// 统一触控交互监听
+Platform.onTouch((clientX, clientY) => {
+  const hit = renderer.hitTest(clientX, clientY, gameLogic.isVictory);
+  if (!hit) return;
+
+  switch (hit.type) {
+    case 'BAG': {
+      gameLogic.handleBagTap(hit.index);
+      audioManager.playSelect();
+      break;
+    }
+
+    case 'BOTTLE': {
+      const res = gameLogic.handleBottleTap(hit.index);
+      if (!res) break;
+
+      if (res.type === 'SELECT') {
+        audioManager.playSelect();
+      } else if (res.type === 'POUR') {
+        gameLogic.isAnimating = true;
+        renderer.startPourAnimation(res.plan, () => {
+          const outcome = gameLogic.applyPour(res.plan);
+          audioManager.playPour();
+          gameLogic.isAnimating = false;
+
+          if (outcome.isVictory) {
+            audioManager.playWin();
+            Platform.setStorage('water_game_current_level', gameLogic.currentLevel + 1);
+          }
+        });
+      }
+      break;
+    }
+
+    case 'RESTART': {
+      gameLogic.restart();
+      audioManager.playSelect();
+      break;
+    }
+
+    case 'SHUFFLE': {
+      const ok = gameLogic.shuffle();
+      if (ok) audioManager.playSelect();
+      break;
+    }
+
+    case 'UNDO': {
+      const ok = gameLogic.undo();
+      if (ok) audioManager.playSelect();
+      break;
+    }
+
+    case 'HINT': {
+      const pair = gameLogic.hint();
+      if (pair) audioManager.playSelect();
+      break;
+    }
+
+    case 'NEXT_LEVEL': {
+      renderer.resetVictoryParticles();
+      const nextLvl = gameLogic.currentLevel + 1;
+      gameLogic.loadLevel(nextLvl);
+      Platform.setStorage('water_game_current_level', nextLvl);
+      audioManager.playSelect();
+      break;
+    }
+  }
+});
+
+console.log('Water Sort Full Fidelity Engine Running!');
+
+
+    });
+  </script>
+</body>
+</html>

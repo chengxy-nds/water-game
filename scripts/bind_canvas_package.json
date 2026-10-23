@@ -1,0 +1,11 @@
+{
+  "slot": "main",
+  "package": {
+    "id": "347414",
+    "type": "mini_app"
+  },
+  "expected": {
+    "kind": "none"
+  },
+  "force": false
+}

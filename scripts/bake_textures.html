@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background: transparent; overflow: hidden; }
+  .asset-box { position: absolute; overflow: visible; }
+  svg { width: 100%; height: 100%; display: block; overflow: visible; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute; width:0; height:0;">
+  <defs>
+    <linearGradient id="liq-red" x1="0%" y1="0%" x2="100%" y2="8%"><stop offset="0%" stop-color="#dc1e18"/><stop offset="18%" stop-color="#e31a1a"/><stop offset="52%" stop-color="#c40a05"/><stop offset="84%" stop-color="#9c0603"/><stop offset="100%" stop-color="#b30804"/></linearGradient><linearGradient id="top-red" x1="15%" y1="0%" x2="85%" y2="100%"><stop offset="0%" stop-color="#ff7878"/><stop offset="38%" stop-color="#fc2829"/><stop offset="85%" stop-color="#e31a1a"/><stop offset="100%" stop-color="#c40a05"/></linearGradient><linearGradient id="liq-yellow" x1="0%" y1="0%" x2="100%" y2="8%"><stop offset="0%" stop-color="#ffd438"/><stop offset="18%" stop-color="#fbd126"/><stop offset="52%" stop-color="#fcc00b"/><stop offset="84%" stop-color="#d99f04"/><stop offset="100%" stop-color="#ebb008"/></linearGradient><linearGradient id="top-yellow" x1="15%" y1="0%" x2="85%" y2="100%"><stop offset="0%" stop-color="#fffb8b"/><stop offset="38%" stop-color="#ffdb2c"/><stop offset="85%" stop-color="#fbd126"/><stop offset="100%" stop-color="#fcc00b"/></linearGradient><linearGradient id="liq-blue" x1="0%" y1="0%" x2="100%" y2="8%"><stop offset="0%" stop-color="#3238d9"/><stop offset="18%" stop-color="#3a56ca"/><stop offset="52%" stop-color="#1b1bc0"/><stop offset="84%" stop-color="#101096"/><stop offset="100%" stop-color="#1515ad"/></linearGradient><linearGradient id="top-blue" x1="15%" y1="0%" x2="85%" y2="100%"><stop offset="0%" stop-color="#7a96ff"/><stop offset="38%" stop-color="#4a68d8"/><stop offset="85%" stop-color="#3a56ca"/><stop offset="100%" stop-color="#1b1bc0"/></linearGradient><linearGradient id="liq-green" x1="0%" y1="0%" x2="100%" y2="8%"><stop offset="0%" stop-color="#86ba14"/><stop offset="18%" stop-color="#97cb1d"/><stop offset="52%" stop-color="#72a506"/><stop offset="84%" stop-color="#588503"/><stop offset="100%" stop-color="#689905"/></linearGradient><linearGradient id="top-green" x1="15%" y1="0%" x2="85%" y2="100%"><stop offset="0%" stop-color="#cff877"/><stop offset="38%" stop-color="#b2df4f"/><stop offset="85%" stop-color="#97cb1d"/><stop offset="100%" stop-color="#72a506"/></linearGradient><linearGradient id="liq-purple" x1="0%" y1="0%" x2="100%" y2="8%"><stop offset="0%" stop-color="#8e2dcf"/><stop offset="18%" stop-color="#9638d6"/><stop offset="52%" stop-color="#7319b0"/><stop offset="84%" stop-color="#4b0c78"/><stop offset="100%" stop-color="#5f1294"/></linearGradient><linearGradient id="top-purple" x1="15%" y1="0%" x2="85%" y2="100%"><stop offset="0%" stop-color="#deb3ff"/><stop offset="38%" stop-color="#b055ed"/><stop offset="85%" stop-color="#9638d6"/><stop offset="100%" stop-color="#7319b0"/></linearGradient><linearGradient id="liq-orange" x1="0%" y1="0%" x2="100%" y2="8%"><stop offset="0%" stop-color="#f5681a"/><stop offset="18%" stop-color="#ff731c"/><stop offset="52%" stop-color="#e65000"/><stop offset="84%" stop-color="#b03800"/><stop offset="100%" stop-color="#cf4400"/></linearGradient><linearGradient id="top-orange" x1="15%" y1="0%" x2="85%" y2="100%"><stop offset="0%" stop-color="#ffc285"/><stop offset="38%" stop-color="#ff8f3d"/><stop offset="85%" stop-color="#ff731c"/><stop offset="100%" stop-color="#e65000"/></linearGradient><linearGradient id="liq-cyan" x1="0%" y1="0%" x2="100%" y2="8%"><stop offset="0%" stop-color="#2bb6f7"/><stop offset="18%" stop-color="#2cb9fc"/><stop offset="52%" stop-color="#0e9ae0"/><stop offset="84%" stop-color="#056da6"/><stop offset="100%" stop-color="#0784c4"/></linearGradient><linearGradient id="top-cyan" x1="15%" y1="0%" x2="85%" y2="100%"><stop offset="0%" stop-color="#a6e9ff"/><stop offset="38%" stop-color="#57ccff"/><stop offset="85%" stop-color="#2cb9fc"/><stop offset="100%" stop-color="#0e9ae0"/></linearGradient><linearGradient id="liq-pink" x1="0%" y1="0%" x2="100%" y2="8%"><stop offset="0%" stop-color="#f54290"/><stop offset="18%" stop-color="#f74d97"/><stop offset="52%" stop-color="#e02476"/><stop offset="84%" stop-color="#a31050"/><stop offset="100%" stop-color="#c71864"/></linearGradient><linearGradient id="top-pink" x1="15%" y1="0%" x2="85%" y2="100%"><stop offset="0%" stop-color="#ffb3d2"/><stop offset="38%" stop-color="#ff70ae"/><stop offset="85%" stop-color="#f74d97"/><stop offset="100%" stop-color="#e02476"/></linearGradient>
+
+        <linearGradient id="liq-mystery" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#03050a"/><stop offset="35%" stop-color="#090c16"/><stop offset="76%" stop-color="#1c2236"/><stop offset="100%" stop-color="#020308"/></linearGradient>
+        <linearGradient id="top-mystery" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#151b2e"/><stop offset="70%" stop-color="#252f4a"/><stop offset="100%" stop-color="#090c16"/></linearGradient>
+        <linearGradient id="checkGreenGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#86efac"/><stop offset="45%" stop-color="#22c55e"/><stop offset="100%" stop-color="#15803d"/></linearGradient>
+        <linearGradient id="neckLipGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="rgba(255, 248, 230, 0.65)"/><stop offset="18%" stop-color="rgba(255, 255, 255, 0.88)"/><stop offset="48%" stop-color="rgba(240, 225, 195, 0.42)"/><stop offset="76%" stop-color="rgba(255, 255, 255, 0.92)"/><stop offset="100%" stop-color="rgba(245, 230, 200, 0.68)"/></linearGradient>
+        <linearGradient id="neckTopRimGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="rgba(255, 250, 235, 0.82)"/><stop offset="30%" stop-color="#ffffff"/><stop offset="65%" stop-color="rgba(254, 243, 199, 0.75)"/><stop offset="100%" stop-color="#ffffff"/></linearGradient>
+        <linearGradient id="mouthBoreGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="rgba(180, 140, 85, 0.28)"/><stop offset="60%" stop-color="rgba(255, 248, 230, 0.36)"/><stop offset="100%" stop-color="rgba(255, 255, 255, 0.65)"/></linearGradient>
+        <radialGradient id="leftShoulderDomeGrad" cx="35%" cy="35%" r="65%"><stop offset="0%" stop-color="rgba(255, 255, 255, 0.42)"/><stop offset="58%" stop-color="rgba(255, 250, 235, 0.14)"/><stop offset="100%" stop-color="rgba(255, 250, 235, 0.0)"/></radialGradient>
+        <radialGradient id="rightShoulderSoftGrad" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="rgba(255, 255, 255, 0.48)"/><stop offset="55%" stop-color="rgba(255, 250, 235, 0.20)"/><stop offset="100%" stop-color="rgba(255, 250, 235, 0.0)"/></radialGradient>
+        <filter id="naturalGlassBlur" x="-15%" y="-10%" width="130%" height="120%"><feGaussianBlur stdDeviation="1.05"/></filter>
+        <filter id="warmCastShadowBlur" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="4.6"/></filter>
+        <linearGradient id="naturalRimGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="rgba(255, 255, 255, 0.85)"/><stop offset="25%" stop-color="rgba(255, 248, 225, 0.65)"/><stop offset="65%" stop-color="rgba(255, 255, 255, 0.48)"/><stop offset="90%" stop-color="rgba(255, 244, 210, 0.52)"/><stop offset="100%" stop-color="rgba(255, 250, 235, 0.38)"/></linearGradient>
+        <linearGradient id="windowShoulderGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="rgba(255, 255, 255, 0.52)"/><stop offset="50%" stop-color="rgba(255, 253, 245, 0.62)"/><stop offset="90%" stop-color="rgba(255, 248, 225, 0.30)"/><stop offset="100%" stop-color="rgba(255, 248, 225, 0.05)"/></linearGradient>
+        <linearGradient id="rightPillarSheen" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="rgba(255, 255, 255, 0.38)"/><stop offset="45%" stop-color="rgba(255, 252, 240, 0.22)"/><stop offset="85%" stop-color="rgba(255, 248, 225, 0.08)"/><stop offset="100%" stop-color="rgba(255, 255, 255, 0.0)"/></linearGradient>
+        <linearGradient id="leftWallSheen" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="rgba(255, 255, 255, 0.28)"/><stop offset="65%" stop-color="rgba(255, 250, 235, 0.10)"/><stop offset="100%" stop-color="rgba(255, 250, 235, 0.0)"/></linearGradient>
+        <linearGradient id="glassBodyGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="rgba(255, 252, 242, 0.24)"/><stop offset="22%" stop-color="rgba(255, 248, 232, 0.09)"/><stop offset="58%" stop-color="rgba(255, 246, 225, 0.06)"/><stop offset="84%" stop-color="rgba(255, 254, 248, 0.26)"/><stop offset="100%" stop-color="rgba(255, 250, 235, 0.20)"/></linearGradient>
+        <!-- 借鉴参考图3 (image_6ee02d) 的 3D 沉底厚玻璃折射渐变：深邃玻璃内折射暗部 + 两侧高折射冷暖焦散亮翼 -->
+        <linearGradient id="baseCushionGrad" x1="0%" y1="0%" x2="100%" y2="12%">
+          <stop offset="0%" stop-color="rgba(255, 252, 240, 0.62)"/>
+          <stop offset="14%" stop-color="rgba(165, 215, 255, 0.34)"/>
+          <stop offset="32%" stop-color="rgba(28, 36, 58, 0.44)"/>
+          <stop offset="52%" stop-color="rgba(18, 26, 48, 0.52)"/>
+          <stop offset="72%" stop-color="rgba(42, 56, 88, 0.38)"/>
+          <stop offset="88%" stop-color="rgba(195, 232, 255, 0.58)"/>
+          <stop offset="100%" stop-color="rgba(255, 252, 240, 0.68)"/>
+        </linearGradient>
+        <linearGradient id="glassBaseInnerFloorGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="rgba(255, 255, 255, 0.55)"/>
+          <stop offset="25%" stop-color="rgba(160, 212, 255, 0.28)"/>
+          <stop offset="50%" stop-color="rgba(30, 42, 68, 0.35)"/>
+          <stop offset="78%" stop-color="rgba(175, 224, 255, 0.42)"/>
+          <stop offset="100%" stop-color="rgba(255, 255, 255, 0.62)"/>
+        </linearGradient>
+        <linearGradient id="glassBaseRimHighlight" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="rgba(255, 255, 255, 0.15)"/>
+          <stop offset="18%" stop-color="rgba(255, 255, 255, 0.78)"/>
+          <stop offset="50%" stop-color="rgba(190, 230, 255, 0.42)"/>
+          <stop offset="82%" stop-color="rgba(255, 255, 255, 0.88)"/>
+          <stop offset="100%" stop-color="rgba(255, 255, 255, 0.18)"/>
+        </linearGradient>
+        <linearGradient id="glassWallSideRefractL" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="rgba(255, 255, 255, 0.42)"/>
+          <stop offset="60%" stop-color="rgba(175, 220, 255, 0.16)"/>
+          <stop offset="100%" stop-color="rgba(255, 255, 255, 0.0)"/>
+        </linearGradient>
+        <linearGradient id="glassWallSideRefractR" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="rgba(255, 255, 255, 0.0)"/>
+          <stop offset="40%" stop-color="rgba(175, 220, 255, 0.18)"/>
+          <stop offset="100%" stop-color="rgba(255, 255, 255, 0.48)"/>
+        </linearGradient>
+        <linearGradient id="ikeaCorkTopGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fef9c3"/><stop offset="45%" stop-color="#facc15"/><stop offset="100%" stop-color="#d97706"/></linearGradient>
+        <linearGradient id="ikeaCorkSideGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#b45309"/><stop offset="25%" stop-color="#fde047"/><stop offset="55%" stop-color="#f59e0b"/><stop offset="82%" stop-color="#fef08a"/><stop offset="100%" stop-color="#92400e"/></linearGradient>
+        <linearGradient id="ikeaCorkPlugGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#78350f"/><stop offset="45%" stop-color="#d97706"/><stop offset="80%" stop-color="#f59e0b"/><stop offset="100%" stop-color="#652b0d"/></linearGradient>
+        <linearGradient id="catEarInnerGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#ffb8dc" stop-opacity="0.72"/><stop offset="60%" stop-color="#ff6fae" stop-opacity="0.45"/><stop offset="100%" stop-color="#b8256e" stop-opacity="0.28"/></linearGradient>
+        <radialGradient id="catBellGrad" cx="35%" cy="30%" r="65%"><stop offset="0%" stop-color="#fff8c4"/><stop offset="45%" stop-color="#ffd54f"/><stop offset="85%" stop-color="#e68a00"/><stop offset="100%" stop-color="#8c4b00"/></radialGradient>
+        <linearGradient id="catCollarGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#9e1446"/><stop offset="28%" stop-color="#ff4d8d"/><stop offset="55%" stop-color="#ff85b3"/><stop offset="82%" stop-color="#e01e63"/><stop offset="100%" stop-color="#800b34"/></linearGradient>
+        <radialGradient id="mystGoldGlow" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="rgba(253, 224, 71, 0.55)"/><stop offset="60%" stop-color="rgba(234, 179, 8, 0.22)"/><stop offset="100%" stop-color="rgba(234, 179, 8, 0.0)"/></radialGradient>
+        <radialGradient id="purpleVortexGrad" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="rgba(216, 180, 254, 0.55)"/><stop offset="55%" stop-color="rgba(168, 85, 247, 0.28)"/><stop offset="100%" stop-color="rgba(107, 33, 168, 0.0)"/></radialGradient>
+        <radialGradient id="purpleSideGlow" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="rgba(232, 121, 249, 0.52)"/><stop offset="100%" stop-color="rgba(168, 85, 247, 0.0)"/></radialGradient>
+        <linearGradient id="camPurpleFaceGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#c084fc"/><stop offset="55%" stop-color="#9333ea"/><stop offset="100%" stop-color="#581c87"/></linearGradient>
+        <linearGradient id="camBlueFaceGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#ffffff"/><stop offset="65%" stop-color="#e3f3ff"/><stop offset="100%" stop-color="#b3dcff"/></linearGradient>
+        <linearGradient id="silkDrapeGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#bfdbfe"/><stop offset="28%" stop-color="#ffffff"/><stop offset="62%" stop-color="#dbeafe"/><stop offset="100%" stop-color="#7dd3fc"/></linearGradient>
+        <!-- 高定凝霜玻璃与磨砂琉璃渐变（贴合瓶身真实轮廓，告别塑料多边形） -->
+        <linearGradient id="frostGlazeVertGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stop-color="rgba(224, 247, 255, 0.0)"/>
+          <stop offset="18%" stop-color="rgba(210, 245, 255, 0.38)"/>
+          <stop offset="55%" stop-color="rgba(165, 230, 255, 0.62)"/>
+          <stop offset="88%" stop-color="rgba(125, 211, 252, 0.78)"/>
+          <stop offset="100%" stop-color="rgba(224, 247, 255, 0.88)"/>
+        </linearGradient>
+        <linearGradient id="fullFrostGlassGrad" x1="0%" y1="0%" x2="100%" y2="12%">
+          <stop offset="0%" stop-color="rgba(224, 247, 255, 0.78)"/>
+          <stop offset="25%" stop-color="rgba(165, 232, 255, 0.56)"/>
+          <stop offset="58%" stop-color="rgba(56, 189, 248, 0.48)"/>
+          <stop offset="84%" stop-color="rgba(224, 247, 255, 0.75)"/>
+          <stop offset="100%" stop-color="rgba(125, 211, 252, 0.68)"/>
+        </linearGradient>
+        <linearGradient id="smokedAmberFrostedGrad" x1="0%" y1="0%" x2="100%" y2="8%">
+          <stop offset="0%" stop-color="rgba(120, 72, 28, 0.86)"/>
+          <stop offset="24%" stop-color="rgba(168, 108, 48, 0.78)"/>
+          <stop offset="55%" stop-color="rgba(92, 52, 18, 0.88)"/>
+          <stop offset="84%" stop-color="rgba(212, 152, 82, 0.82)"/>
+          <stop offset="100%" stop-color="rgba(82, 44, 14, 0.88)"/>
+        </linearGradient>
+        <linearGradient id="royalVelvetFrostedGrad" x1="0%" y1="0%" x2="100%" y2="8%">
+          <stop offset="0%" stop-color="rgba(46, 68, 118, 0.86)"/>
+          <stop offset="24%" stop-color="rgba(88, 124, 188, 0.78)"/>
+          <stop offset="56%" stop-color="rgba(32, 48, 92, 0.88)"/>
+          <stop offset="84%" stop-color="rgba(148, 188, 242, 0.82)"/>
+          <stop offset="100%" stop-color="rgba(28, 42, 82, 0.88)"/>
+        </linearGradient>
+        <linearGradient id="iceBaseBackGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="rgba(130, 235, 255, 0.72)"/><stop offset="100%" stop-color="rgba(20, 130, 210, 0.85)"/></linearGradient>
+        <linearGradient id="iceFacetLeftGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#67e8f9"/><stop offset="100%" stop-color="#0891b2"/></linearGradient>
+        <linearGradient id="iceFacetMidGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#cffafe"/><stop offset="52%" stop-color="#22d3ee"/><stop offset="100%" stop-color="#0e7490"/></linearGradient>
+        <linearGradient id="iceFacetRightGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#22d3ee"/><stop offset="100%" stop-color="#155e75"/></linearGradient>
+        <linearGradient id="fullIceGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#38bdf8"/><stop offset="32%" stop-color="#bae6fd"/><stop offset="68%" stop-color="#7dd3fc"/><stop offset="100%" stop-color="#0284c7"/></linearGradient>
+        <linearGradient id="stoneLeftGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#e3c9a8"/><stop offset="60%" stop-color="#b8936a"/><stop offset="100%" stop-color="#7d5a38"/></linearGradient>
+        <linearGradient id="stoneMidGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#edd6b8"/><stop offset="50%" stop-color="#c49d71"/><stop offset="100%" stop-color="#6e4b2a"/></linearGradient>
+        <linearGradient id="stoneRightGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#d4b28c"/><stop offset="100%" stop-color="#694626"/></linearGradient>
+        <linearGradient id="kraftInnerMouthGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#6e3f16"/><stop offset="50%" stop-color="#8f5522"/><stop offset="100%" stop-color="#542e0e"/></linearGradient>
+        <linearGradient id="kraftBagFrontGrad" x1="0%" y1="0%" x2="100%" y2="12%"><stop offset="0%" stop-color="#e3ae78"/><stop offset="42%" stop-color="#d4985e"/><stop offset="82%" stop-color="#bd7e43"/><stop offset="100%" stop-color="#a6682e"/></linearGradient>
+        <linearGradient id="kraftSunlitGrad" x1="0%" y1="0%" x2="80%" y2="100%"><stop offset="0%" stop-color="rgba(255, 236, 208, 0.34)"/><stop offset="60%" stop-color="rgba(255, 230, 195, 0.12)"/><stop offset="100%" stop-color="rgba(255, 230, 195, 0.0)"/></linearGradient>
+        <linearGradient id="kraftSideLeftGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#a86b34"/><stop offset="100%" stop-color="#7d491b"/></linearGradient>
+        <linearGradient id="kraftSideRightGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#734216"/><stop offset="100%" stop-color="#9c622d"/></linearGradient>
+        <linearGradient id="stickerRedLiqGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#b91c1c"/><stop offset="35%" stop-color="#dc2626"/><stop offset="78%" stop-color="#ef4444"/><stop offset="100%" stop-color="#991b1b"/></linearGradient>
+      
+<pattern id="burlapWeaveLightPat" width="8" height="8" patternUnits="userSpaceOnUse">
+        <rect width="8" height="8" fill="#8c6236"/>
+        <!-- 经纬交错的饱满枕状粗麻线节 -->
+        <rect x="0.5" y="0.6" width="3.3" height="2.9" rx="1.1" fill="#edd1a1"/>
+        <rect x="0.9" y="0.9" width="2.4" height="1.2" rx="0.5" fill="#fff0cf" opacity="0.75"/>
+        <rect x="4.4" y="0.5" width="2.9" height="3.3" rx="1.1" fill="#d9b077"/>
+        <rect x="4.8" y="0.9" width="1.3" height="2.4" rx="0.5" fill="#f7dfb2" opacity="0.65"/>
+        <rect x="0.5" y="4.4" width="2.9" height="3.3" rx="1.1" fill="#d6ac72"/>
+        <rect x="0.9" y="4.8" width="1.3" height="2.4" rx="0.5" fill="#f5dca8" opacity="0.65"/>
+        <rect x="4.5" y="4.6" width="3.3" height="2.9" rx="1.1" fill="#e8c896"/>
+        <rect x="4.9" y="4.9" width="2.4" height="1.2" rx="0.5" fill="#ffeed0" opacity="0.72"/>
+      </pattern>
+      <pattern id="burlapWeaveDarkPat" width="8" height="8" patternUnits="userSpaceOnUse">
+        <rect width="8" height="8" fill="#362718"/>
+        <rect x="0.5" y="0.6" width="3.3" height="2.9" rx="1.1" fill="#7c6348"/>
+        <rect x="0.9" y="0.9" width="2.4" height="1.2" rx="0.5" fill="#9c8062" opacity="0.65"/>
+        <rect x="4.4" y="0.5" width="2.9" height="3.3" rx="1.1" fill="#634d36"/>
+        <rect x="0.5" y="4.4" width="2.9" height="3.3" rx="1.1" fill="#5e4832"/>
+        <rect x="4.5" y="4.6" width="3.3" height="2.9" rx="1.1" fill="#755c42"/>
+        <rect x="4.9" y="4.9" width="2.4" height="1.2" rx="0.5" fill="#94785a" opacity="0.6"/>
+      </pattern>
+      <!-- 软垫顶面左上受光、右下暖褐的立体球面光影罩 -->
+      <linearGradient id="burlapTopShade" x1="12%" y1="8%" x2="88%" y2="92%">
+        <stop offset="0%" stop-color="#fff8e6" stop-opacity="0.38"/>
+        <stop offset="45%" stop-color="#d49e5c" stop-opacity="0.06"/>
+        <stop offset="82%" stop-color="#5c3b18" stop-opacity="0.36"/>
+        <stop offset="100%" stop-color="#38220c" stop-opacity="0.58"/>
+      </linearGradient>
+      <!-- 软垫厚实侧面：原图标志性的上亮金棕、下深巧克力的体积过渡 -->
+      <linearGradient id="burlapSideWallLight" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#c4945a"/>
+        <stop offset="38%" stop-color="#8c6032"/>
+        <stop offset="78%" stop-color="#543618"/>
+        <stop offset="100%" stop-color="#331f0c"/>
+      </linearGradient>
+      <linearGradient id="burlapSideWallDark" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#69523a"/>
+        <stop offset="42%" stop-color="#473524"/>
+        <stop offset="82%" stop-color="#2b1f14"/>
+        <stop offset="100%" stop-color="#1a110a"/>
+      </linearGradient>
+      <!-- 原图浮空麻布块下方的暖赤陶橘色柔和投影 -->
+      <radialGradient id="terracottaShadowGrad" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="rgba(148, 62, 14, 0.62)"/>
+        <stop offset="48%" stop-color="rgba(168, 78, 20, 0.36)"/>
+        <stop offset="78%" stop-color="rgba(185, 92, 28, 0.12)"/>
+        <stop offset="100%" stop-color="rgba(185, 92, 28, 0.0)"/>
+      </radialGradient>
+      <!-- 瓶底与麻布软垫接触处的暖琥珀柔和遮蔽影（杜绝空瓶底部发灰发脏） -->
+      <radialGradient id="burlapContactAOGrad" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="rgba(98, 52, 12, 0.42)"/>
+        <stop offset="60%" stop-color="rgba(115, 62, 16, 0.18)"/>
+        <stop offset="100%" stop-color="rgba(115, 62, 16, 0.0)"/>
+      </radialGradient>
+      
+
+      <!-- 100% 移植自用户 HTML 的原图级超椭圆玻璃按钮滤镜与材质渐变 -->
+      <filter id="btnDropShadow" x="-20%" y="-15%" width="140%" height="145%">
+        <feDropShadow dx="0" dy="5" stdDeviation="4.5" flood-color="#6e4414" flood-opacity="0.34"/>
+      </filter>
+      <filter id="rulesDropShadow" x="-20%" y="-15%" width="140%" height="145%">
+        <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#3c4c34" flood-opacity="0.34"/>
+      </filter>
+      <filter id="iconShadow" x="-25%" y="-25%" width="150%" height="150%">
+        <feDropShadow dx="0" dy="2" stdDeviation="1.6" flood-color="#8c581c" flood-opacity="0.42"/>
+      </filter>
+      <filter id="bulbGlow" x="-40%" y="-40%" width="180%" height="180%">
+        <feGaussianBlur stdDeviation="3.5" result="blur"/>
+        <feMerge>
+          <feMergeNode in="blur"/>
+          <feMergeNode in="SourceGraphic"/>
+        </feMerge>
+      </filter>
+      <linearGradient id="warmGlassBase" x1="15%" y1="5%" x2="85%" y2="95%">
+        <stop offset="0%" stop-color="#f7dfb8" stop-opacity="0.48"/>
+        <stop offset="38%" stop-color="#dfad64" stop-opacity="0.28"/>
+        <stop offset="72%" stop-color="#b87b31" stop-opacity="0.40"/>
+        <stop offset="100%" stop-color="#d89d4e" stop-opacity="0.50"/>
+      </linearGradient>
+      <linearGradient id="hintGlassBase" x1="15%" y1="5%" x2="85%" y2="95%">
+        <stop offset="0%" stop-color="#ede2be" stop-opacity="0.46"/>
+        <stop offset="45%" stop-color="#b69f62" stop-opacity="0.30"/>
+        <stop offset="80%" stop-color="#877b48" stop-opacity="0.40"/>
+        <stop offset="100%" stop-color="#a8995c" stop-opacity="0.48"/>
+      </linearGradient>
+      <linearGradient id="rulesGlassBase" x1="15%" y1="5%" x2="85%" y2="95%">
+        <stop offset="0%" stop-color="#e4efe2" stop-opacity="0.48"/>
+        <stop offset="45%" stop-color="#9cb298" stop-opacity="0.30"/>
+        <stop offset="82%" stop-color="#6b8368" stop-opacity="0.40"/>
+        <stop offset="100%" stop-color="#8da387" stop-opacity="0.50"/>
+      </linearGradient>
+      <linearGradient id="topCrescentSheen" x1="30%" y1="0%" x2="65%" y2="100%">
+        <stop offset="0%" stop-color="#ffffff" stop-opacity="0.64"/>
+        <stop offset="45%" stop-color="#fff6e4" stop-opacity="0.30"/>
+        <stop offset="100%" stop-color="#ffffff" stop-opacity="0.0"/>
+      </linearGradient>
+      <radialGradient id="innerBottomShade" cx="52%" cy="68%" r="48%">
+        <stop offset="0%" stop-color="#8a5216" stop-opacity="0.26"/>
+        <stop offset="65%" stop-color="#9c6222" stop-opacity="0.12"/>
+        <stop offset="100%" stop-color="#9c6222" stop-opacity="0.0"/>
+      </radialGradient>
+      <linearGradient id="glassRimStroke" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#ffffff" stop-opacity="0.95"/>
+        <stop offset="30%" stop-color="#fff8eb" stop-opacity="0.72"/>
+        <stop offset="65%" stop-color="#ffe7c2" stop-opacity="0.42"/>
+        <stop offset="100%" stop-color="#ffffff" stop-opacity="0.88"/>
+      </linearGradient>
+      <radialGradient id="bulb3DGrad" cx="36%" cy="32%" r="64%">
+        <stop offset="0%" stop-color="#ffffc8"/>
+        <stop offset="32%" stop-color="#ffea38"/>
+        <stop offset="72%" stop-color="#f7b718"/>
+        <stop offset="100%" stop-color="#d97f08"/>
+      </radialGradient>
+      <linearGradient id="question3DGrad" x1="25%" y1="10%" x2="75%" y2="90%">
+        <stop offset="0%" stop-color="#ffffff"/>
+        <stop offset="48%" stop-color="#d4ecff"/>
+        <stop offset="100%" stop-color="#8ec0e4"/>
+      </linearGradient>
+
+      <!-- 100% 复刻原图 image_55d85b 的 3D 粗麻布编织软垫纹理与立体体积光影定义 -->
+      <pattern id="burlapWeaveLightPat" width="8" height="8" patternUnits="userSpaceOnUse">
+        <rect width="8" height="8" fill="#8c6236"/>
+        <!-- 经纬交错的饱满枕状粗麻线节 -->
+        <rect x="0.5" y="0.6" width="3.3" height="2.9" rx="1.1" fill="#edd1a1"/>
+        <rect x="0.9" y="0.9" width="2.4" height="1.2" rx="0.5" fill="#fff0cf" opacity="0.75"/>
+        <rect x="4.4" y="0.5" width="2.9" height="3.3" rx="1.1" fill="#d9b077"/>
+        <rect x="4.8" y="0.9" width="1.3" height="2.4" rx="0.5" fill="#f7dfb2" opacity="0.65"/>
+        <rect x="0.5" y="4.4" width="2.9" height="3.3" rx="1.1" fill="#d6ac72"/>
+        <rect x="0.9" y="4.8" width="1.3" height="2.4" rx="0.5" fill="#f5dca8" opacity="0.65"/>
+        <rect x="4.5" y="4.6" width="3.3" height="2.9" rx="1.1" fill="#e8c896"/>
+        <rect x="4.9" y="4.9" width="2.4" height="1.2" rx="0.5" fill="#ffeed0" opacity="0.72"/>
+      </pattern>
+      <pattern id="burlapWeaveDarkPat" width="8" height="8" patternUnits="userSpaceOnUse">
+        <rect width="8" height="8" fill="#362718"/>
+        <rect x="0.5" y="0.6" width="3.3" height="2.9" rx="1.1" fill="#7c6348"/>
+        <rect x="0.9" y="0.9" width="2.4" height="1.2" rx="0.5" fill="#9c8062" opacity="0.65"/>
+        <rect x="4.4" y="0.5" width="2.9" height="3.3" rx="1.1" fill="#634d36"/>
+        <rect x="0.5" y="4.4" width="2.9" height="3.3" rx="1.1" fill="#5e4832"/>
+        <rect x="4.5" y="4.6" width="3.3" height="2.9" rx="1.1" fill="#755c42"/>
+        <rect x="4.9" y="4.9" width="2.4" height="1.2" rx="0.5" fill="#94785a" opacity="0.6"/>
+      </pattern>
+      <!-- 软垫顶面左上受光、右下暖褐的立体球面光影罩 -->
+      <linearGradient id="burlapTopShade" x1="12%" y1="8%" x2="88%" y2="92%">
+        <stop offset="0%" stop-color="#fff8e6" stop-opacity="0.38"/>
+        <stop offset="45%" stop-color="#d49e5c" stop-opacity="0.06"/>
+        <stop offset="82%" stop-color="#5c3b18" stop-opacity="0.36"/>
+        <stop offset="100%" stop-color="#38220c" stop-opacity="0.58"/>
+      </linearGradient>
+      <!-- 软垫厚实侧面：原图标志性的上亮金棕、下深巧克力的体积过渡 -->
+      <linearGradient id="burlapSideWallLight" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#c4945a"/>
+        <stop offset="38%" stop-color="#8c6032"/>
+        <stop offset="78%" stop-color="#543618"/>
+        <stop offset="100%" stop-color="#331f0c"/>
+      </linearGradient>
+      <linearGradient id="burlapSideWallDark" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#69523a"/>
+        <stop offset="42%" stop-color="#473524"/>
+        <stop offset="82%" stop-color="#2b1f14"/>
+        <stop offset="100%" stop-color="#1a110a"/>
+      </linearGradient>
+      <!-- 原图浮空麻布块下方的暖赤陶橘色柔和投影 -->
+      <radialGradient id="terracottaShadowGrad" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="rgba(148, 62, 14, 0.62)"/>
+        <stop offset="48%" stop-color="rgba(168, 78, 20, 0.36)"/>
+        <stop offset="78%" stop-color="rgba(185, 92, 28, 0.12)"/>
+        <stop offset="100%" stop-color="rgba(185, 92, 28, 0.0)"/>
+      </radialGradient>
+      <!-- 瓶底与麻布软垫接触处的暖琥珀柔和遮蔽影（杜绝空瓶底部发灰发脏） -->
+      <radialGradient id="burlapContactAOGrad" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="rgba(98, 52, 12, 0.42)"/>
+        <stop offset="60%" stop-color="rgba(115, 62, 16, 0.18)"/>
+        <stop offset="100%" stop-color="rgba(115, 62, 16, 0.0)"/>
+      </radialGradient>
+      <!-- 3D 黄色旋转箭头（顶面高光渐变 + 底部温暖琥珀3D立体厚度渐变，完全复刻参考图） -->
+      <linearGradient id="arrowYellowTop3D" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#fff978"/>
+        <stop offset="45%" stop-color="#ffdd14"/>
+        <stop offset="100%" stop-color="#f5a600"/>
+      </linearGradient>
+      <linearGradient id="arrowYellowSide3D" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#e68a00"/>
+        <stop offset="100%" stop-color="#b85d00"/>
+      </linearGradient>
+      <!-- 3D 玫粉旋转箭头（顶面高光渐变 + 底部深玫红3D立体厚度渐变，完全复刻参考图） -->
+      <linearGradient id="arrowPinkTop3D" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#ff99d6"/>
+        <stop offset="45%" stop-color="#ff4da6"/>
+        <stop offset="100%" stop-color="#e01972"/>
+      </linearGradient>
+      <linearGradient id="arrowPinkSide3D" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#c91464"/>
+        <stop offset="100%" stop-color="#8f0843"/>
+      </linearGradient>
+      <!-- 3D 速度升级小黄人全身球面立体光影 -->
+      <radialGradient id="mascotHead3D" cx="35%" cy="28%" r="72%">
+        <stop offset="0%" stop-color="#fffb9e"/>
+        <stop offset="36%" stop-color="#ffe119"/>
+        <stop offset="78%" stop-color="#f5a600"/>
+        <stop offset="100%" stop-color="#c27400"/>
+      </radialGradient>
+      <radialGradient id="mascotTorso3D" cx="38%" cy="30%" r="70%">
+        <stop offset="0%" stop-color="#fff580"/>
+        <stop offset="45%" stop-color="#ffd60a"/>
+        <stop offset="85%" stop-color="#e09000"/>
+        <stop offset="100%" stop-color="#ad6200"/>
+      </radialGradient>
+      <linearGradient id="mascotLimb3D" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#fff275"/>
+        <stop offset="50%" stop-color="#ffd000"/>
+        <stop offset="100%" stop-color="#bf6e00"/>
+      </linearGradient>
+      <filter id="ui3dDropShadow" x="-20%" y="-15%" width="140%" height="145%">
+        <feDropShadow dx="0" dy="6" stdDeviation="4.5" flood-color="#2c1654" flood-opacity="0.28"/>
+      </filter>
+    
+      <linearGradient id="funnelGoldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#fffbeb"/>
+        <stop offset="35%" stop-color="#fde047"/>
+        <stop offset="75%" stop-color="#eab308"/>
+        <stop offset="100%" stop-color="#a16207"/>
+      </linearGradient>
+      <linearGradient id="ancientSpoutGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stop-color="#78350f"/>
+        <stop offset="30%" stop-color="#f59e0b"/>
+        <stop offset="65%" stop-color="#fef08a"/>
+        <stop offset="100%" stop-color="#92400e"/>
+      </linearGradient>
+      <linearGradient id="bombGoldBadgeGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#fef08a"/>
+        <stop offset="50%" stop-color="#f59e0b"/>
+        <stop offset="100%" stop-color="#b45309"/>
+      </linearGradient>
+      <linearGradient id="bombRedBadgeGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#fda4af"/>
+        <stop offset="45%" stop-color="#f43f5e"/>
+        <stop offset="100%" stop-color="#9f1239"/>
+      </linearGradient>
+    
+    <clipPath id="smoothClipDef">
+      <path d="
+  M 37.2,9.2
+  L 62.8,9.2
+  L 62.8,26
+  C 74.8,30.2 80.2,39 80.2,55
+  L 80.2,191.2
+  A 30.2,7.5 0 0,1 19.8,191.2
+  L 19.8,55
+  C 19.8,39 25.2,30.2 37.2,26
+  Z
+" />
+    </clipPath>
+  </defs>
+</svg>
+
+<!-- 1. tube_empty (201 x 612) -->
+<div id="tube_empty" class="asset-box" style="left:0; top:0; width:201px; height:612px;">
+  <svg viewBox="16.5 3 67 204" xmlns="http://www.w3.org/2000/svg">
+    
+  
+  <path d="
+  M 36.4,20
+  L 63.6,20
+  L 63.6,26
+  C 76.4,29.8 82.2,38.5 82.2,55
+  L 82.2,195.4
+  A 32.2,8.8 0 0,1 17.8,195.4
+  L 17.8,55
+  C 17.8,38.5 23.6,29.8 36.4,26
+  Z
+" fill="url(#glassBodyGrad)" />
+  <rect x="17.8" y="55" width="2.4" height="136.2" fill="url(#glassWallSideRefractL)" opacity="0.78" />
+  <rect x="79.8" y="55" width="2.4" height="136.2" fill="url(#glassWallSideRefractR)" opacity="0.82" />
+  <ellipse cx="50" cy="191.2" rx="30.2" ry="6.6" fill="rgba(22, 32, 58, 0.16)" stroke="url(#glassBaseInnerFloorGrad)" stroke-width="1.15" />
+
+  
+  <g clip-path="url(#smoothClipDef)">
+    <ellipse cx="34" cy="37.5" rx="13.5" ry="9.2" fill="url(#leftShoulderDomeGrad)" />
+    <rect x="21.0" y="46.5" width="5.5" height="137.5" rx="2.7" fill="url(#leftWallSheen)" />
+    <path class="shoulder-sheen" d="M 53.8,28.2 C 64.8,30.2 72.0,35.5 74.5,42.8 L 62.5,43.2 C 60.6,36.5 56.8,31.5 51.2,29.8 Z" fill="url(#windowShoulderGrad)" />
+    <rect x="63.0" y="46.5" width="11.4" height="137.5" rx="2.4" fill="url(#rightPillarSheen)" />
+    <path class="shoulder-sheen" d="M 65.2,29.8 C 74.2,34.2 78.0,40.2 78.6,47.5" fill="none" stroke="rgba(225, 242, 255, 0.65)" stroke-width="1.5" stroke-linecap="round" />
+  </g>
+  <path d="M 19.6,191.2 A 30.4,7.5 0 0,0 80.4,191.2 L 82.2,195.4 A 32.2,8.8 0 0,1 17.8,195.4 Z" fill="url(#baseCushionGrad)" />
+  <path d="M 20.5,192.6 A 29.8,7.8 0 0,0 79.5,192.6 A 30.8,8.5 0 0,1 20.5,192.6 Z" fill="url(#glassBaseRimHighlight)" opacity="0.68" />
+  <path d="M 19.8,191.2 A 30.2,7.5 0 0,0 80.2,191.2" fill="none" stroke="url(#glassBaseRimHighlight)" stroke-width="1.25" stroke-linecap="round" />
+  <path d="M 18.4,195.1 A 31.6,8.6 0 0,0 81.6,195.1" fill="none" stroke="url(#glassBaseRimHighlight)" stroke-width="1.55" stroke-linecap="round" />
+  <path d="M 26.0,200.20000000000002 A 25.0,5.2 0 0,0 74.0,200.20000000000002" fill="none" stroke="rgba(255, 255, 255, 0.52)" stroke-width="0.95" stroke-linecap="round" />
+  <path d="M 32.0,9.2 C 30.2,13.4 31.4,18.2 36.4,20.4 C 37.5,22.2 37.5,24.4 36.4,26 C 23.6,30.2 17.8,39 17.8,55 L 17.8,195.4 A 32.2,8.8 0 0,0 82.2,195.4 L 82.2,55 C 82.2,39 76.4,30.2 63.6,26 C 62.5,24.4 62.5,22.2 63.6,20.4 C 68.6,18.2 69.8,13.4 68.0,9.2" fill="none" stroke="url(#naturalRimGrad)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" />
+  
+  <g id="neck-group">
+    <path d="M 36.0,20.2 Q 37.2,23.2 36.4,26.2 A 13.8,2.7 0 0,0 63.6,26.2 Q 62.8,23.2 64.0,20.2 Z" class="neck-dark-bg" fill="#1b438a" opacity="0.32" />
+    <ellipse cx="50" cy="24.5" rx="10.4" ry="1.6" fill="rgba(120, 175, 255, 0.24)" />
+    <path d="M 36.6,25.8 A 13.4,2.5 0 0,0 63.4,25.8" fill="none" stroke="#4a80db" stroke-width="1.15" opacity="0.88" />
+    <path d="M 31.4,9.2 C 29.8,13.5 31.0,18.2 36.2,20.6 A 14.2,3.3 0 0,0 63.8,20.6 C 69.0,18.2 70.2,13.5 68.6,9.2 A 18.6,3.8 0 0,1 31.4,9.2 Z" class="neck-glass-lip" fill="url(#neckLipGrad)" opacity="0.82" stroke="#3b73cc" stroke-width="1.0" />
+    <path d="M 57.2,11.2 C 61.5,11.0 63.6,11.6 62.8,15.2 C 62.2,18.2 60.0,19.8 56.4,20.1 C 57.0,17.2 57.5,14.0 57.2,11.2 Z" fill="rgba(230, 245, 255, 0.85)" />
+    <path d="M 32.8,11.0 C 35.2,11.4 36.4,12.8 36.6,16.2 C 36.8,18.6 35.8,19.6 34.0,19.0 C 32.4,16.8 32.0,13.5 32.8,11.0 Z" fill="rgba(140, 190, 255, 0.62)" />
+    <path d="M 35.8,20.4 A 14.6,3.3 0 0,0 64.2,20.4" fill="none" stroke="#6ea6f7" stroke-width="1.3" stroke-linecap="round" />
+    <ellipse cx="50" cy="9.2" rx="18.5" ry="3.7" fill="url(#neckTopRimGrad)" opacity="0.82" stroke="#6b9fed" stroke-width="1.0" />
+    <path d="M 32.0,9.6 A 18.1,3.5 0 0,0 68.0,9.6" fill="none" stroke="#b8d8ff" stroke-width="1.3" stroke-linecap="round" />
+    <ellipse cx="50" cy="9.0" rx="10.2" ry="1.9" class="neck-dark-bg" fill="url(#mouthBoreGrad)" opacity="0.72" stroke="#5c92e6" stroke-width="0.95" />
+    <path d="M 40.6,9.4 A 9.5,1.7 0 0,0 59.4,9.4" fill="none" stroke="#8cbaff" stroke-width="0.95" stroke-linecap="round" opacity="0.88" />
+  </g>
+
+
+
+  </svg>
+</div>
+
+<!-- 1. tube_empty (201 x 612) -->
+<div id="tube_empty" class="asset-box" style="left:0; top:0; width:201px; height:612px;">
+  <svg viewBox="16.5 3 67 204" xmlns="http://www.w3.org/2000/svg">
+    
+  
+  <path d="
+  M 36.4,20
+  L 63.6,20
+  L 63.6,26
+  C 76.4,29.8 82.2,38.5 82.2,55
+  L 82.2,195.4
+  A 32.2,8.8 0 0,1 17.8,195.4
+  L 17.8,55
+  C 17.8,38.5 23.6,29.8 36.4,26
+  Z
+" fill="url(#glassBodyGrad)" />
+  <rect x="17.8" y="55" width="2.4" height="136.2" fill="url(#glassWallSideRefractL)" opacity="0.78" />
+  <rect x="79.8" y="55" width="2.4" height="136.2" fill="url(#glassWallSideRefractR)" opacity="0.82" />
+  <ellipse cx="50" cy="191.2" rx="30.2" ry="6.6" fill="rgba(22, 32, 58, 0.16)" stroke="url(#glassBaseInnerFloorGrad)" stroke-width="1.15" />
+
+  
+  <g clip-path="url(#smoothClipDef)">
+    <ellipse cx="34" cy="37.5" rx="13.5" ry="9.2" fill="url(#leftShoulderDomeGrad)" />
+    <rect x="21.0" y="46.5" width="5.5" height="137.5" rx="2.7" fill="url(#leftWallSheen)" />
+    <path class="shoulder-sheen" d="M 53.8,28.2 C 64.8,30.2 72.0,35.5 74.5,42.8 L 62.5,43.2 C 60.6,36.5 56.8,31.5 51.2,29.8 Z" fill="url(#windowShoulderGrad)" />
+    <rect x="63.0" y="46.5" width="11.4" height="137.5" rx="2.4" fill="url(#rightPillarSheen)" />
+    <path class="shoulder-sheen" d="M 65.2,29.8 C 74.2,34.2 78.0,40.2 78.6,47.5" fill="none" stroke="rgba(225, 242, 255, 0.65)" stroke-width="1.5" stroke-linecap="round" />
+  </g>
+  <path d="M 19.6,191.2 A 30.4,7.5 0 0,0 80.4,191.2 L 82.2,195.4 A 32.2,8.8 0 0,1 17.8,195.4 Z" fill="url(#baseCushionGrad)" />
+  <path d="M 20.5,192.6 A 29.8,7.8 0 0,0 79.5,192.6 A 30.8,8.5 0 0,1 20.5,192.6 Z" fill="url(#glassBaseRimHighlight)" opacity="0.68" />
+  <path d="M 19.8,191.2 A 30.2,7.5 0 0,0 80.2,191.2" fill="none" stroke="url(#glassBaseRimHighlight)" stroke-width="1.25" stroke-linecap="round" />
+  <path d="M 18.4,195.1 A 31.6,8.6 0 0,0 81.6,195.1" fill="none" stroke="url(#glassBaseRimHighlight)" stroke-width="1.55" stroke-linecap="round" />
+  <path d="M 26.0,200.20000000000002 A 25.0,5.2 0 0,0 74.0,200.20000000000002" fill="none" stroke="rgba(255, 255, 255, 0.52)" stroke-width="0.95" stroke-linecap="round" />
+  <path d="M 32.0,9.2 C 30.2,13.4 31.4,18.2 36.4,20.4 C 37.5,22.2 37.5,24.4 36.4,26 C 23.6,30.2 17.8,39 17.8,55 L 17.8,195.4 A 32.2,8.8 0 0,0 82.2,195.4 L 82.2,55 C 82.2,39 76.4,30.2 63.6,26 C 62.5,24.4 62.5,22.2 63.6,20.4 C 68.6,18.2 69.8,13.4 68.0,9.2" fill="none" stroke="url(#naturalRimGrad)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" />
+  
+  <g id="neck-group">
+    <path d="M 36.0,20.2 Q 37.2,23.2 36.4,26.2 A 13.8,2.7 0 0,0 63.6,26.2 Q 62.8,23.2 64.0,20.2 Z" class="neck-dark-bg" fill="#1b438a" opacity="0.32" />
+    <ellipse cx="50" cy="24.5" rx="10.4" ry="1.6" fill="rgba(120, 175, 255, 0.24)" />
+    <path d="M 36.6,25.8 A 13.4,2.5 0 0,0 63.4,25.8" fill="none" stroke="#4a80db" stroke-width="1.15" opacity="0.88" />
+    <path d="M 31.4,9.2 C 29.8,13.5 31.0,18.2 36.2,20.6 A 14.2,3.3 0 0,0 63.8,20.6 C 69.0,18.2 70.2,13.5 68.6,9.2 A 18.6,3.8 0 0,1 31.4,9.2 Z" class="neck-glass-lip" fill="url(#neckLipGrad)" opacity="0.82" stroke="#3b73cc" stroke-width="1.0" />
+    <path d="M 57.2,11.2 C 61.5,11.0 63.6,11.6 62.8,15.2 C 62.2,18.2 60.0,19.8 56.4,20.1 C 57.0,17.2 57.5,14.0 57.2,11.2 Z" fill="rgba(230, 245, 255, 0.85)" />
+    <path d="M 32.8,11.0 C 35.2,11.4 36.4,12.8 36.6,16.2 C 36.8,18.6 35.8,19.6 34.0,19.0 C 32.4,16.8 32.0,13.5 32.8,11.0 Z" fill="rgba(140, 190, 255, 0.62)" />
+    <path d="M 35.8,20.4 A 14.6,3.3 0 0,0 64.2,20.4" fill="none" stroke="#6ea6f7" stroke-width="1.3" stroke-linecap="round" />
+    <ellipse cx="50" cy="9.2" rx="18.5" ry="3.7" fill="url(#neckTopRimGrad)" opacity="0.82" stroke="#6b9fed" stroke-width="1.0" />
+    <path d="M 32.0,9.6 A 18.1,3.5 0 0,0 68.0,9.6" fill="none" stroke="#b8d8ff" stroke-width="1.3" stroke-linecap="round" />
+    <ellipse cx="50" cy="9.0" rx="10.2" ry="1.9" class="neck-dark-bg" fill="url(#mouthBoreGrad)" opacity="0.72" stroke="#5c92e6" stroke-width="0.95" />
+    <path d="M 40.6,9.4 A 9.5,1.7 0 0,0 59.4,9.4" fill="none" stroke="#8cbaff" stroke-width="0.95" stroke-linecap="round" opacity="0.88" />
+  </g>
+
+
+
+  </svg>
+</div>
+
+<!-- 2. tube_glass_back (201 x 612) -->
+<div id="tube_glass_back" class="asset-box" style="left:300px; top:0; width:201px; height:612px;">
+  <svg viewBox="16.5 3 67 204" xmlns="http://www.w3.org/2000/svg">
+    
+  <path d="
+  M 36.4,20
+  L 63.6,20
+  L 63.6,26
+  C 76.4,29.8 82.2,38.5 82.2,55
+  L 82.2,195.4
+  A 32.2,8.8 0 0,1 17.8,195.4
+  L 17.8,55
+  C 17.8,38.5 23.6,29.8 36.4,26
+  Z
+" fill="url(#glassBodyGrad)" />
+  <rect x="17.8" y="55" width="2.4" height="136.2" fill="url(#glassWallSideRefractL)" opacity="0.78" />
+  <rect x="79.8" y="55" width="2.4" height="136.2" fill="url(#glassWallSideRefractR)" opacity="0.82" />
+  <ellipse cx="50" cy="191.2" rx="30.2" ry="6.6" fill="rgba(22, 32, 58, 0.16)" stroke="url(#glassBaseInnerFloorGrad)" stroke-width="1.15" />
+
+  </svg>
+</div>
+
+<!-- 3. tube_glass_front (201 x 612) -->
+<div id="tube_glass_front" class="asset-box" style="left:600px; top:0; width:201px; height:612px;">
+  <svg viewBox="16.5 3 67 204" xmlns="http://www.w3.org/2000/svg">
+    
+  <g clip-path="url(#smoothClipDef)">
+    <ellipse cx="34" cy="37.5" rx="13.5" ry="9.2" fill="url(#leftShoulderDomeGrad)" />
+    <rect x="21.0" y="46.5" width="5.5" height="137.5" rx="2.7" fill="url(#leftWallSheen)" />
+    <path class="shoulder-sheen" d="M 53.8,28.2 C 64.8,30.2 72.0,35.5 74.5,42.8 L 62.5,43.2 C 60.6,36.5 56.8,31.5 51.2,29.8 Z" fill="url(#windowShoulderGrad)" />
+    <rect x="63.0" y="46.5" width="11.4" height="137.5" rx="2.4" fill="url(#rightPillarSheen)" />
+    <path class="shoulder-sheen" d="M 65.2,29.8 C 74.2,34.2 78.0,40.2 78.6,47.5" fill="none" stroke="rgba(225, 242, 255, 0.65)" stroke-width="1.5" stroke-linecap="round" />
+  </g>
+  <path d="M 19.6,191.2 A 30.4,7.5 0 0,0 80.4,191.2 L 82.2,195.4 A 32.2,8.8 0 0,1 17.8,195.4 Z" fill="url(#baseCushionGrad)" />
+  <path d="M 20.5,192.6 A 29.8,7.8 0 0,0 79.5,192.6 A 30.8,8.5 0 0,1 20.5,192.6 Z" fill="url(#glassBaseRimHighlight)" opacity="0.68" />
+  <path d="M 19.8,191.2 A 30.2,7.5 0 0,0 80.2,191.2" fill="none" stroke="url(#glassBaseRimHighlight)" stroke-width="1.25" stroke-linecap="round" />
+  <path d="M 18.4,195.1 A 31.6,8.6 0 0,0 81.6,195.1" fill="none" stroke="url(#glassBaseRimHighlight)" stroke-width="1.55" stroke-linecap="round" />
+  <path d="M 26.0,200.20000000000002 A 25.0,5.2 0 0,0 74.0,200.20000000000002" fill="none" stroke="rgba(255, 255, 255, 0.52)" stroke-width="0.95" stroke-linecap="round" />
+  <path d="M 32.0,9.2 C 30.2,13.4 31.4,18.2 36.4,20.4 C 37.5,22.2 37.5,24.4 36.4,26 C 23.6,30.2 17.8,39 17.8,55 L 17.8,195.4 A 32.2,8.8 0 0,0 82.2,195.4 L 82.2,55 C 82.2,39 76.4,30.2 63.6,26 C 62.5,24.4 62.5,22.2 63.6,20.4 C 68.6,18.2 69.8,13.4 68.0,9.2" fill="none" stroke="url(#naturalRimGrad)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" />
+  
+  <g id="neck-group">
+    <path d="M 36.0,20.2 Q 37.2,23.2 36.4,26.2 A 13.8,2.7 0 0,0 63.6,26.2 Q 62.8,23.2 64.0,20.2 Z" class="neck-dark-bg" fill="#1b438a" opacity="0.32" />
+    <ellipse cx="50" cy="24.5" rx="10.4" ry="1.6" fill="rgba(120, 175, 255, 0.24)" />
+    <path d="M 36.6,25.8 A 13.4,2.5 0 0,0 63.4,25.8" fill="none" stroke="#4a80db" stroke-width="1.15" opacity="0.88" />
+    <path d="M 31.4,9.2 C 29.8,13.5 31.0,18.2 36.2,20.6 A 14.2,3.3 0 0,0 63.8,20.6 C 69.0,18.2 70.2,13.5 68.6,9.2 A 18.6,3.8 0 0,1 31.4,9.2 Z" class="neck-glass-lip" fill="url(#neckLipGrad)" opacity="0.82" stroke="#3b73cc" stroke-width="1.0" />
+    <path d="M 57.2,11.2 C 61.5,11.0 63.6,11.6 62.8,15.2 C 62.2,18.2 60.0,19.8 56.4,20.1 C 57.0,17.2 57.5,14.0 57.2,11.2 Z" fill="rgba(230, 245, 255, 0.85)" />
+    <path d="M 32.8,11.0 C 35.2,11.4 36.4,12.8 36.6,16.2 C 36.8,18.6 35.8,19.6 34.0,19.0 C 32.4,16.8 32.0,13.5 32.8,11.0 Z" fill="rgba(140, 190, 255, 0.62)" />
+    <path d="M 35.8,20.4 A 14.6,3.3 0 0,0 64.2,20.4" fill="none" stroke="#6ea6f7" stroke-width="1.3" stroke-linecap="round" />
+    <ellipse cx="50" cy="9.2" rx="18.5" ry="3.7" fill="url(#neckTopRimGrad)" opacity="0.82" stroke="#6b9fed" stroke-width="1.0" />
+    <path d="M 32.0,9.6 A 18.1,3.5 0 0,0 68.0,9.6" fill="none" stroke="#b8d8ff" stroke-width="1.3" stroke-linecap="round" />
+    <ellipse cx="50" cy="9.0" rx="10.2" ry="1.9" class="neck-dark-bg" fill="url(#mouthBoreGrad)" opacity="0.72" stroke="#5c92e6" stroke-width="0.95" />
+    <path d="M 40.6,9.4 A 9.5,1.7 0 0,0 59.4,9.4" fill="none" stroke="#8cbaff" stroke-width="0.95" stroke-linecap="round" opacity="0.88" />
+  </g>
+
+
+  </svg>
+</div>
+
+<!-- 4. tube_ad_aura (201 x 612) -->
+<div id="tube_ad_aura" class="asset-box" style="left:900px; top:0; width:201px; height:612px;">
+  <svg viewBox="16.5 3 67 204" xmlns="http://www.w3.org/2000/svg">
+    
+  <ellipse cx="50" cy="197" rx="44" ry="11" fill="url(#purpleVortexGrad)" />
+  <ellipse cx="50" cy="197" rx="38" ry="8.5" fill="none" stroke="#e879f9" stroke-width="1.8" stroke-dasharray="22 8" opacity="0.88"/>
+  <ellipse cx="50" cy="197" rx="28" ry="5.8" fill="none" stroke="#f0abfc" stroke-width="1.5" stroke-dasharray="14 6" opacity="0.92"/>
+  <ellipse cx="13" cy="122" rx="5" ry="55" fill="url(#purpleSideGlow)" />
+  <ellipse cx="87" cy="122" rx="5" ry="55" fill="url(#purpleSideGlow)" />
+  <g transform="translate(50, 112) rotate(-12) scale(1.28)" style="filter:drop-shadow(0 4px 8px rgba(59, 7, 100, 0.45));">
+    <rect x="-15" y="-6" width="30" height="22" rx="4.5" fill="#581c87" stroke="#e9d5ff" stroke-width="1.4"/>
+    <rect x="-15" y="-8" width="30" height="21" rx="4.5" fill="url(#camPurpleFaceGrad)" />
+    <g transform="rotate(-10, -15, -8)">
+      <rect x="-15" y="-14" width="30" height="6.5" rx="2" fill="#3b0764" stroke="#ffffff" stroke-width="0.9"/>
+      <polygon points="-11,-14 -6,-14 -9,-7.5 -14,-7.5" fill="#ffffff"/>
+      <polygon points="-1,-14 4,-14 1,-7.5 -4,-7.5" fill="#ffffff"/>
+      <polygon points="9,-14 14,-14 11,-7.5 6,-7.5" fill="#ffffff"/>
+    </g>
+    <polygon points="-4,-2 6,4 -4,10" fill="#a3e635" stroke="#ffffff" stroke-width="1.1" stroke-linejoin="round"/>
+    <circle cx="9" cy="-3.5" r="1.3" fill="#ffffff" opacity="0.9"/>
+  </g>
+
+  </svg>
+</div>
+
+<!-- 5. burlap_coaster_normal (300 x 138) -->
+<div id="burlap_coaster_normal" class="asset-box" style="left:0; top:700px; width:300px; height:138px;">
+  <svg viewBox="0 0 100 46" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+    
+  <ellipse cx="42" cy="34" rx="45" ry="11.5" transform="rotate(-5, 42, 34)" fill="url(#terracottaShadowGrad)" />
+  <ellipse cx="48" cy="31" rx="38" ry="8.5" fill="rgba(115, 48, 8, 0.36)" />
+  <path d="M 11,19.5 C 11,13 25,10 50,10 C 75,10 89,13 89,19.5 L 87.5,27.5 C 86,35.5 72,39.5 50,39.5 C 28,39.5 14,35.5 12.5,27.5 Z" fill="url(#burlapSideWallLight)" />
+  <path d="M 11,19.5 C 11,13 25,10 50,10 C 75,10 89,13 89,19.5 L 87.5,27.5 C 86,35.5 72,39.5 50,39.5 C 28,39.5 14,35.5 12.5,27.5 Z" fill="url(#burlapWeaveLightPat)" opacity="0.28" />
+  <path d="M 50,7.5 C 76,7.5 89,11.5 89,19.2 C 89,26.8 76,31.2 50,31.2 C 24,31.2 11,26.8 11,19.2 C 11,11.5 24,7.5 50,7.5 Z" fill="url(#burlapWeaveLightPat)" />
+  <path d="M 50,7.5 C 76,7.5 89,11.5 89,19.2 C 89,26.8 76,31.2 50,31.2 C 24,31.2 11,26.8 11,19.2 C 11,11.5 24,7.5 50,7.5 Z" fill="url(#burlapTopShade)" stroke="rgba(255, 248, 225, 0.68)" stroke-width="1.1" />
+
+  </svg>
+</div>
+
+<!-- 6. burlap_coaster_special (300 x 138) -->
+<div id="burlap_coaster_special" class="asset-box" style="left:400px; top:700px; width:300px; height:138px;">
+  <svg viewBox="0 0 100 46" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+    
+  
+  <ellipse cx="42" cy="34" rx="45" ry="11.5" transform="rotate(-5, 42, 34)" fill="url(#terracottaShadowGrad)" />
+  <ellipse cx="48" cy="31" rx="38" ry="8.5" fill="rgba(115, 48, 8, 0.36)" />
+  <path d="M 11,19.5 C 11,13 25,10 50,10 C 75,10 89,13 89,19.5 L 87.5,27.5 C 86,35.5 72,39.5 50,39.5 C 28,39.5 14,35.5 12.5,27.5 Z" fill="url(#burlapSideWallLight)" />
+  <path d="M 11,19.5 C 11,13 25,10 50,10 C 75,10 89,13 89,19.5 L 87.5,27.5 C 86,35.5 72,39.5 50,39.5 C 28,39.5 14,35.5 12.5,27.5 Z" fill="url(#burlapWeaveLightPat)" opacity="0.28" />
+  <path d="M 50,7.5 C 76,7.5 89,11.5 89,19.2 C 89,26.8 76,31.2 50,31.2 C 24,31.2 11,26.8 11,19.2 C 11,11.5 24,7.5 50,7.5 Z" fill="url(#burlapWeaveLightPat)" />
+  <path d="M 50,7.5 C 76,7.5 89,11.5 89,19.2 C 89,26.8 76,31.2 50,31.2 C 24,31.2 11,26.8 11,19.2 C 11,11.5 24,7.5 50,7.5 Z" fill="url(#burlapTopShade)" stroke="rgba(255, 248, 225, 0.68)" stroke-width="1.1" />
+
+  <g transform="translate(50, 19.5)">
+    <ellipse cx="0" cy="0" rx="22" ry="6.2" fill="none" stroke="#fffdf7" stroke-width="1.9" stroke-dasharray="1.8 3.2" stroke-linecap="round" opacity="0.88"/>
+    <ellipse cx="0" cy="0" rx="17" ry="4.6" fill="none" stroke="#fffdf7" stroke-width="1.5" stroke-dasharray="1.5 2.8" stroke-linecap="round" opacity="0.78"/>
+  </g>
+
+  </svg>
+</div>
+
+<!-- 7. liquid_gradients_atlas (256 x 64: 8 rows of 8px height) -->
+<div id="liquid_gradients_atlas" class="asset-box" style="left:800px; top:700px; width:256px; height:64px;">
+  <svg viewBox="0 0 256 64" width="256" height="64" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+    <rect x="0" y="0" width="256" height="8" fill="url(#liq-red)" />
+    <rect x="0" y="8" width="256" height="8" fill="url(#liq-yellow)" />
+    <rect x="0" y="16" width="256" height="8" fill="url(#liq-blue)" />
+    <rect x="0" y="24" width="256" height="8" fill="url(#liq-green)" />
+    <rect x="0" y="32" width="256" height="8" fill="url(#liq-purple)" />
+    <rect x="0" y="40" width="256" height="8" fill="url(#liq-orange)" />
+    <rect x="0" y="48" width="256" height="8" fill="url(#liq-cyan)" />
+    <rect x="0" y="56" width="256" height="8" fill="url(#liq-pink)" />
+  </svg>
+</div>
+
+<!-- 8. meniscus_gradients_atlas (512 x 64: 8 squares of 64x64) -->
+<div id="meniscus_gradients_atlas" class="asset-box" style="left:800px; top:780px; width:512px; height:64px;">
+  <svg viewBox="0 0 512 64" width="512" height="64" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+    <rect x="0" y="0" width="64" height="64" fill="url(#top-red)" />
+    <rect x="64" y="0" width="64" height="64" fill="url(#top-yellow)" />
+    <rect x="128" y="0" width="64" height="64" fill="url(#top-blue)" />
+    <rect x="192" y="0" width="64" height="64" fill="url(#top-green)" />
+    <rect x="256" y="0" width="64" height="64" fill="url(#top-purple)" />
+    <rect x="320" y="0" width="64" height="64" fill="url(#top-orange)" />
+    <rect x="384" y="0" width="64" height="64" fill="url(#top-cyan)" />
+    <rect x="448" y="0" width="64" height="64" fill="url(#top-pink)" />
+  </svg>
+</div>
+
+</body>
+</html>

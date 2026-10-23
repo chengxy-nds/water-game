@@ -1,0 +1,12 @@
+{
+  "slot": "main",
+  "package": {
+    "id": "347464",
+    "type": "mini_app"
+  },
+  "expected": {
+    "kind": "mini_app",
+    "mini_app_package_id": "347414"
+  },
+  "force": false
+}
